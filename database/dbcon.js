@@ -1,20 +1,22 @@
 const { Client } = require('pg')
 
 const client = new Client({
-    host: 'localhost',
-    user: 'postgres',
-    password: 'prosen',
-    database: 'neurovision_ai',
-    port: 5432,
-})
-
-client.connect();
-
-client.query('Select * from users', (err, res) => {
-    if (err) {
-        console.error(err.message);
-    } else {
-        console.log(res.rows);
-    }
-    client.end();
+    host: process.env.PGHOST || 'localhost',
+    user: process.env.PGUSER || 'postgres',
+    password: process.env.PGPASSWORD || 'prosen',
+    database: process.env.PGDATABASE || 'neurovision_ai',
+    port: process.env.PGPORT ? parseInt(process.env.PGPORT, 10) : 5432,
 });
+
+(async () => {
+    try {
+        await client.connect()
+        const res = await client.query('SELECT * FROM users LIMIT 5')
+        console.log('Connected to DB — sample rows:')
+        console.log(res.rows)
+    } catch (err) {
+        console.error('DB connection error:', err.message)
+    } finally {
+        try { await client.end() } catch (e) { }
+    }
+})()
