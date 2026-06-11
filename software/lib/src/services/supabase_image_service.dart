@@ -1,4 +1,4 @@
-import 'dart:io' show File;
+import 'dart:io' if (dart.library.html) 'io_stub.dart' show File;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as p;

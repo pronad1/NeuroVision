@@ -2,8 +2,8 @@
 /// NeuroVision AI — Client service for the FastAPI inference server.
 /// Sends images to the backend and parses AI predictions.
 
-import 'dart:io';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -196,7 +196,7 @@ class AIService {
         final error = jsonDecode(response.body);
         throw Exception('Server error ${response.statusCode}: ${error['detail'] ?? error}');
       }
-    } on SocketException {
+    } on http.ClientException {
       throw Exception('Cannot connect to AI server. Ensure the FastAPI server is running on $_baseUrl');
     } catch (e) {
       throw Exception('AI analysis failed: $e');
