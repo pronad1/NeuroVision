@@ -199,5 +199,3 @@ flutter build apk --debug
 # Build for iOS
 flutter build ios
 ```
-
-## 👨‍💻 Development
