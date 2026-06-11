@@ -1,1 +1,4 @@
 .pth
+
+# Ignore large local model artifacts
+/server/ml/
