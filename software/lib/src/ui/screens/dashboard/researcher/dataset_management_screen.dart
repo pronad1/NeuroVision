@@ -100,50 +100,35 @@ class _DatasetManagementScreenState extends State<DatasetManagementScreen>
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<NVAuthProvider>(context).nvUser;
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
+    return NVScaffold(
+      currentRoute: '/dashboard/researcher/datasets',
+      role: AppConstants.roleResearcher,
+      title: 'Dataset Management',
+      subtitle: 'Dataset analytics, class distribution & train/validation/test split management',
+      userName: user?.name ?? 'Researcher',
+      roleColor: NVColors.researcherColor,
+      fadeAnimation: _fade,
+      body: Column(
         children: [
-          NVSidebar(
-            currentRoute: '/dashboard/researcher/datasets',
-            role: AppConstants.roleResearcher,
+          NVTopBar(
+            title: 'Dataset Management',
+            subtitle: 'Dataset analytics, class distribution & train/validation/test split management',
+            user: user?.name ?? 'Researcher',
+            roleColor: NVColors.researcherColor,
           ),
           Expanded(
-            child: FadeTransition(
-              opacity: _fade,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  NVTopBar(
-                    title: 'Dataset Management',
-                    subtitle:
-                        'Dataset analytics, class distribution & train/validation/test split management',
-                    user: user?.name ?? 'Researcher',
-                    roleColor: NVColors.researcherColor,
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // ── Stats Row ──────────────────────────────────
-                          _buildStats(),
-                          const SizedBox(height: 24),
-
-                          // ── Datasets List ──────────────────────────────
-                          _buildDatasetsSection(),
-                          const SizedBox(height: 24),
-
-                          // ── Selected Dataset Detail ────────────────────
-                          _buildDetailRow(),
-                          const SizedBox(height: 24),
-
-                          // ── Quality Report ─────────────────────────────
-                          _buildQualityReport(),
-                        ],
-                      ),
-                    ),
-                  ),
+                  _buildStats(),
+                  const SizedBox(height: 24),
+                  _buildDatasetsSection(),
+                  const SizedBox(height: 24),
+                  _buildDetailRow(),
+                  const SizedBox(height: 24),
+                  _buildQualityReport(),
                 ],
               ),
             ),
@@ -201,61 +186,51 @@ class _DatasetManagementScreenState extends State<DatasetManagementScreen>
 
   Widget _buildDatasetsSection() {
     return NVGlassCard(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
           Row(
             children: [
-              const Icon(Icons.dataset_rounded,
-                  color: NVColors.researcherColor, size: 18),
+              const Icon(Icons.dataset_rounded, color: NVColors.researcherColor, size: 18),
               const SizedBox(width: 8),
-              const Text(
-                'Datasets',
-                style: TextStyle(
-                    color: NVColors.textPrimary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 15),
-              ),
+              const Text('Datasets', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 15)),
               const Spacer(),
               ElevatedButton.icon(
                 onPressed: _showImportDialog,
-                icon:
-                    const Icon(Icons.upload_rounded, size: 15, color: Colors.black),
+                icon: const Icon(Icons.upload_rounded, size: 15, color: Colors.black),
                 label: const Text('Import New'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: NVColors.researcherColor,
                   foregroundColor: Colors.black,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                  textStyle: const TextStyle(
-                      fontSize: 12, fontWeight: FontWeight.w600),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                   elevation: 0,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          // Dataset cards grid
-          GridView.count(
-            crossAxisCount: 3,
-            crossAxisSpacing: 14,
-            mainAxisSpacing: 14,
-            childAspectRatio: 1.55,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            children: List.generate(_datasets.length, (i) {
-              return _DatasetCard(
+          // Dataset cards grid - responsive
+          LayoutBuilder(builder: (context, constraints) {
+            final count = constraints.maxWidth > 700 ? 3 : constraints.maxWidth > 400 ? 2 : 1;
+            return GridView.count(
+              crossAxisCount: count,
+              crossAxisSpacing: 14,
+              mainAxisSpacing: 14,
+              childAspectRatio: constraints.maxWidth > 700 ? 1.55 : 1.4,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              children: List.generate(_datasets.length, (i) => _DatasetCard(
                 dataset: _datasets[i],
                 isSelected: _selectedDatasetIndex == i,
                 onTap: () => setState(() => _selectedDatasetIndex = i),
                 onAnalyze: () => setState(() => _selectedDatasetIndex = i),
-              );
-            }),
-          ),
+              )),
+            );
+          }),
         ],
       ),
     );
@@ -265,21 +240,30 @@ class _DatasetManagementScreenState extends State<DatasetManagementScreen>
 
   Widget _buildDetailRow() {
     final ds = _selected;
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Left: Class Distribution
-          Expanded(flex: 2, child: _buildClassDistribution()),
-          const SizedBox(width: 16),
-          // Center: Split Panel
-          Expanded(flex: 2, child: _buildSplitPanel(ds)),
-          const SizedBox(width: 16),
-          // Right: Dataset Info
-          Expanded(flex: 1, child: _buildDatasetInfo(ds)),
-        ],
-      ),
-    );
+    return LayoutBuilder(builder: (context, constraints) {
+      final isWide = constraints.maxWidth > 700;
+      if (isWide) {
+        return IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(flex: 2, child: _buildClassDistribution()),
+              const SizedBox(width: 16),
+              Expanded(flex: 2, child: _buildSplitPanel(ds)),
+              const SizedBox(width: 16),
+              Expanded(flex: 1, child: _buildDatasetInfo(ds)),
+            ],
+          ),
+        );
+      }
+      return Column(children: [
+        _buildClassDistribution(),
+        const SizedBox(height: 16),
+        _buildSplitPanel(ds),
+        const SizedBox(height: 16),
+        _buildDatasetInfo(ds),
+      ]);
+    });
   }
 
   Widget _buildClassDistribution() {
@@ -585,8 +569,7 @@ class _DatasetManagementScreenState extends State<DatasetManagementScreen>
           _InfoRow(
               label: 'Augmentations', value: 'Flip, Rotate, Noise'),
           _InfoRow(label: 'Annotation', value: 'Semi-automated'),
-          const Spacer(),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           // Action buttons
           SizedBox(
             width: double.infinity,

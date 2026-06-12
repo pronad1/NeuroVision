@@ -47,35 +47,40 @@ class _SegmentationScreenState extends State<SegmentationScreen>
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<NVAuthProvider>(context).nvUser;
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
-        children: [
-          NVSidebar(currentRoute: '/dashboard/doctor/segmentation', role: AppConstants.roleDoctor),
-          Expanded(
-            child: FadeTransition(
-              opacity: _fade,
-              child: Column(children: [
-                NVTopBar(title: 'Segmentation Analysis', subtitle: 'AI-powered lesion segmentation and volume measurement', user: user?.name ?? 'Doctor', roleColor: NVColors.doctorColor),
-                Expanded(child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    _buildStats(),
-                    const SizedBox(height: 24),
-                    Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Expanded(flex: 3, child: _buildViewer()),
-                      const SizedBox(width: 16),
-                      SizedBox(width: 300, child: _buildControls()),
-                    ]),
-                    const SizedBox(height: 16),
-                    _buildRegionTable(),
-                  ]),
-                )),
-              ]),
-            ),
-          ),
-        ],
-      ),
+    return NVScaffold(
+      currentRoute: '/dashboard/doctor/segmentation',
+      role: AppConstants.roleDoctor,
+      title: 'Segmentation Analysis',
+      subtitle: 'AI-powered lesion segmentation and volume measurement',
+      userName: user?.name ?? 'Doctor',
+      roleColor: NVColors.doctorColor,
+      fadeAnimation: _fade,
+      body: Column(children: [
+        NVTopBar(title: 'Segmentation Analysis', subtitle: 'AI-powered lesion segmentation and volume measurement', user: user?.name ?? 'Doctor', roleColor: NVColors.doctorColor),
+        Expanded(child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            _buildStats(),
+            const SizedBox(height: 24),
+            LayoutBuilder(builder: (context, constraints) {
+              if (constraints.maxWidth > 700) {
+                return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Expanded(flex: 3, child: _buildViewer()),
+                  const SizedBox(width: 16),
+                  SizedBox(width: 280, child: _buildControls()),
+                ]);
+              }
+              return Column(children: [
+                _buildViewer(),
+                const SizedBox(height: 16),
+                _buildControls(),
+              ]);
+            }),
+            const SizedBox(height: 16),
+            _buildRegionTable(),
+          ]),
+        )),
+      ]),
     );
   }
 

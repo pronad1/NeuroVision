@@ -153,65 +153,66 @@ class _GpuMonitorScreenState extends State<GpuMonitorScreen>
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<NVAuthProvider>(context).nvUser;
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
+    return NVScaffold(
+      currentRoute: '/dashboard/researcher/gpu',
+      role: AppConstants.roleResearcher,
+      title: 'GPU Monitor',
+      subtitle: 'Real-time GPU utilization, VRAM usage & training job queue',
+      userName: user?.name ?? 'Researcher',
+      roleColor: NVColors.researcherColor,
+      fadeAnimation: _fade,
+      body: Column(
         children: [
-          NVSidebar(
-            currentRoute: '/dashboard/researcher/gpu',
-            role: AppConstants.roleResearcher,
+          NVTopBar(
+            title: 'GPU Monitor',
+            subtitle: 'Real-time GPU utilization, VRAM usage & training job queue',
+            user: user?.name ?? 'Researcher',
+            roleColor: NVColors.researcherColor,
           ),
           Expanded(
-            child: FadeTransition(
-              opacity: _fade,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  NVTopBar(
-                    title: 'GPU Monitor',
-                    subtitle: 'Real-time GPU utilization, VRAM usage & training job queue',
-                    user: user?.name ?? 'Researcher',
-                    roleColor: NVColors.researcherColor,
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
+                  // 1) Stats row
+                  _buildStats(),
+                  const SizedBox(height: 24),
+
+                  // 2) GPU cards
+                  LayoutBuilder(builder: (context, constraints) {
+                    final isWide = constraints.maxWidth > 600;
+                    if (isWide) {
+                      return Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 1) Stats row
-                          _buildStats(),
-                          const SizedBox(height: 24),
-
-                          // 2) GPU cards
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: _gpus
-                                .map((g) => Expanded(
-                                      child: Padding(
-                                        padding: EdgeInsets.only(
-                                            right: g == _gpus.last ? 0 : 16),
-                                        child: _buildGpuCard(g),
-                                      ),
-                                    ))
-                                .toList(),
+                        children: _gpus.map((g) => Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(right: g == _gpus.last ? 0 : 16),
+                            child: _buildGpuCard(g),
                           ),
-                          const SizedBox(height: 24),
+                        )).toList(),
+                      );
+                    }
+                    return Column(
+                      children: _gpus.map((g) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: _buildGpuCard(g),
+                      )).toList(),
+                    );
+                  }),
+                  const SizedBox(height: 24),
 
-                          // 3) VRAM history chart
-                          _buildVramChart(),
-                          const SizedBox(height: 24),
+                  // 3) VRAM history chart
+                  _buildVramChart(),
+                  const SizedBox(height: 24),
 
-                          // 4) Job queue
-                          _buildJobQueue(),
-                          const SizedBox(height: 24),
+                  // 4) Job queue
+                  _buildJobQueue(),
+                  const SizedBox(height: 24),
 
-                          // 5) System metrics
-                          _buildSystemMetrics(),
-                          const SizedBox(height: 16),
-                        ],
-                      ),
-                    ),
-                  ),
+                  // 5) System metrics
+                  _buildSystemMetrics(),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),

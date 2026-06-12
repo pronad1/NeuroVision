@@ -29,135 +29,133 @@ class _MedicalCasesScreenState extends State<MedicalCasesScreen> {
     final auth = Provider.of<NVAuthProvider>(context);
     final user = auth.nvUser;
 
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
+    return NVScaffold(
+      currentRoute: '/dashboard/doctor/cases',
+      role: AppConstants.roleDoctor,
+      title: 'Medical Cases',
+      subtitle: 'Anonymized case management & AI review',
+      userName: user?.name ?? 'Doctor',
+      roleColor: NVColors.doctorColor,
+      body: Column(
         children: [
-          NVSidebar(currentRoute: '/dashboard/doctor/cases', role: AppConstants.roleDoctor),
+          NVTopBar(
+            title: 'Medical Cases',
+            subtitle: 'Anonymized case management & AI review',
+            user: user?.name ?? 'Doctor',
+            roleColor: NVColors.doctorColor,
+          ),
           Expanded(
-            child: Column(
-              children: [
-                NVTopBar(
-                  title: 'Medical Cases',
-                  subtitle: 'Anonymized case management & AI review',
-                  user: user?.name ?? 'Doctor',
-                  roleColor: NVColors.doctorColor,
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header row with filter + new case button
-                        Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            const Text('Cases', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 20)),
-                            const SizedBox(width: 8),
-                            // Status filter
-                            _FilterChips(
-                              items: _statuses,
-                              selected: _filterStatus,
-                              onSelected: (v) => setState(() => _filterStatus = v),
-                              colorMap: {
-                                'all': NVColors.textMuted,
-                                'pending': NVColors.info,
-                                'in_review': NVColors.warning,
-                                'validated': NVColors.success,
-                                'completed': NVColors.primary,
-                              },
-                            ),
-                            const SizedBox(width: 12),
-                            ElevatedButton.icon(
-                              onPressed: () => _showNewCaseDialog(context, user?.uid ?? ''),
-                              icon: const Icon(Icons.add_rounded, size: 16),
-                              label: const Text('New Case'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: NVColors.doctorColor,
-                                foregroundColor: Colors.black,
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header row with filter + new case button
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      const Text('Cases', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 20)),
+                      const SizedBox(width: 8),
+                      // Status filter
+                      _FilterChips(
+                        items: _statuses,
+                        selected: _filterStatus,
+                        onSelected: (v) => setState(() => _filterStatus = v),
+                        colorMap: {
+                          'all': NVColors.textMuted,
+                          'pending': NVColors.info,
+                          'in_review': NVColors.warning,
+                          'validated': NVColors.success,
+                          'completed': NVColors.primary,
+                        },
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton.icon(
+                        onPressed: () => _showNewCaseDialog(context, user?.uid ?? ''),
+                        icon: const Icon(Icons.add_rounded, size: 16),
+                        label: const Text('New Case'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: NVColors.doctorColor,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Modality filter row
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _modalities.map((m) {
+                      final isSelected = _filterModality == m;
+                      return GestureDetector(
+                          onTap: () => setState(() => _filterModality = m),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: isSelected ? NVColors.doctorColor.withValues(alpha: 0.15) : NVColors.bgCard,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isSelected ? NVColors.doctorColor : NVColors.border,
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Modality filter row
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: _modalities.map((m) {
-                            final isSelected = _filterModality == m;
-                            return GestureDetector(
-                                onTap: () => setState(() => _filterModality = m),
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 150),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: isSelected ? NVColors.doctorColor.withValues(alpha: 0.15) : NVColors.bgCard,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: isSelected ? NVColors.doctorColor : NVColors.border,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    m == 'all' ? 'All Modalities' : m,
-                                    style: TextStyle(
-                                      color: isSelected ? NVColors.doctorColor : NVColors.textMuted,
-                                      fontSize: 12,
-                                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                                    ),
-                                  ),
-                                ),
-                              );
-                          }).toList(),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Cases list
-                        Expanded(
-                          child: StreamBuilder<List<MedicalCase>>(
-                            stream: _medService.casesStream(
-                              uploadedBy: user?.uid,
-                              status: _filterStatus == 'all' ? null : _filterStatus,
+                            child: Text(
+                              m == 'all' ? 'All Modalities' : m,
+                              style: TextStyle(
+                                color: isSelected ? NVColors.doctorColor : NVColors.textMuted,
+                                fontSize: 12,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              ),
                             ),
-                            builder: (context, snap) {
-                              if (snap.hasError) {
-                                return Center(child: Text('Error: ${snap.error}', style: const TextStyle(color: NVColors.error)));
-                              }
-                              if (!snap.hasData) {
-                                return const Center(child: CircularProgressIndicator(color: NVColors.doctorColor));
-                              }
-                              var cases = snap.data!;
-                              if (_filterModality != 'all') {
-                                cases = cases.where((c) => c.modality == _filterModality).toList();
-                              }
-                              if (cases.isEmpty) {
-                                return _EmptyState(
-                                  icon: Icons.cases_rounded,
-                                  message: 'No cases found',
-                                  subtitle: 'Create a new case to get started',
-                                  color: NVColors.doctorColor,
-                                );
-                              }
-                              return ListView.separated(
-                                itemCount: cases.length,
-                                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                                itemBuilder: (context, i) => _CaseCard(case_: cases[i]),
-                              );
-                            },
                           ),
-                        ),
-                      ],
+                        );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Cases list
+                  Expanded(
+                    child: StreamBuilder<List<MedicalCase>>(
+                      stream: _medService.casesStream(
+                        uploadedBy: user?.uid,
+                        status: _filterStatus == 'all' ? null : _filterStatus,
+                      ),
+                      builder: (context, snap) {
+                        if (snap.hasError) {
+                          return Center(child: Text('Error: ${snap.error}', style: const TextStyle(color: NVColors.error)));
+                        }
+                        if (!snap.hasData) {
+                          return const Center(child: CircularProgressIndicator(color: NVColors.doctorColor));
+                        }
+                        var cases = snap.data!;
+                        if (_filterModality != 'all') {
+                          cases = cases.where((c) => c.modality == _filterModality).toList();
+                        }
+                        if (cases.isEmpty) {
+                          return _EmptyState(
+                            icon: Icons.cases_rounded,
+                            message: 'No cases found',
+                            subtitle: 'Create a new case to get started',
+                            color: NVColors.doctorColor,
+                          );
+                        }
+                        return ListView.separated(
+                          itemCount: cases.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 10),
+                          itemBuilder: (context, i) => _CaseCard(case_: cases[i]),
+                        );
+                      },
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

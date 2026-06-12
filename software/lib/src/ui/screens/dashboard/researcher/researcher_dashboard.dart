@@ -51,39 +51,35 @@ class _ResearcherDashboardState extends State<ResearcherDashboard>
     final auth = Provider.of<NVAuthProvider>(context);
     final user = auth.nvUser;
 
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
+    return NVScaffold(
+      currentRoute: '/dashboard/researcher',
+      role: AppConstants.roleResearcher,
+      title: 'Researcher Dashboard',
+      subtitle: 'Model Monitoring, Experiments & AI Performance',
+      userName: user?.name ?? 'Researcher',
+      roleColor: NVColors.researcherColor,
+      fadeAnimation: _fadeAnim,
+      body: Column(
         children: [
-          NVSidebar(currentRoute: '/dashboard/researcher', role: AppConstants.roleResearcher),
+          NVTopBar(
+            title: 'Researcher Dashboard',
+            subtitle: 'Model Monitoring, Experiments & AI Performance',
+            user: user?.name ?? 'Researcher',
+            roleColor: NVColors.researcherColor,
+          ),
           Expanded(
-            child: FadeTransition(
-              opacity: _fadeAnim,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  NVTopBar(
-                    title: 'Researcher Dashboard',
-                    subtitle: 'Model Monitoring, Experiments & AI Performance',
-                    user: user?.name ?? 'Researcher',
-                    roleColor: NVColors.researcherColor,
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildStatsRow(),
-                          const SizedBox(height: 24),
-                          _buildModelsSection(),
-                          const SizedBox(height: 24),
-                          _buildBottomGrid(),
-                          const SizedBox(height: 24),
-                          _buildExperimentsTable(),
-                        ],
-                      ),
-                    ),
-                  ),
+                  _buildStatsRow(),
+                  const SizedBox(height: 24),
+                  _buildModelsSection(),
+                  const SizedBox(height: 24),
+                  _buildBottomGrid(),
+                  const SizedBox(height: 24),
+                  _buildExperimentsTable(),
                 ],
               ),
             ),
@@ -399,8 +395,9 @@ class _ResearcherDashboardState extends State<ResearcherDashboard>
   }
 
   Widget _buildExperimentsTable() {
+    final isMobile = MediaQuery.of(context).size.width < 600;
     return NVGlassCard(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -426,21 +423,25 @@ class _ResearcherDashboardState extends State<ResearcherDashboard>
             ],
           ),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(color: NVColors.bgDeep, borderRadius: BorderRadius.circular(8)),
-            child: const Row(
-              children: [
-                Expanded(flex: 2, child: Text('Experiment ID', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                Expanded(flex: 2, child: Text('Model', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                Expanded(flex: 2, child: Text('Modality', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                Expanded(flex: 2, child: Text('Accuracy', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                Expanded(flex: 2, child: Text('Status', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-              ],
+          if (isMobile)
+            Column(children: _experiments.map((e) => _MobileExperimentCard(item: e)).toList())
+          else ...[  
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(color: NVColors.bgDeep, borderRadius: BorderRadius.circular(8)),
+              child: const Row(
+                children: [
+                  Expanded(flex: 2, child: Text('Experiment ID', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                  Expanded(flex: 2, child: Text('Model', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                  Expanded(flex: 2, child: Text('Modality', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                  Expanded(flex: 2, child: Text('Accuracy', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                  Expanded(flex: 2, child: Text('Status', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          ..._experiments.map((e) => _ExperimentRow(item: e)),
+            const SizedBox(height: 4),
+            ..._experiments.map((e) => _ExperimentRow(item: e)),
+          ],
         ],
       ),
     );
@@ -525,6 +526,62 @@ class _Experiment {
   final String status;
   final Color statusColor;
   _Experiment(this.id, this.model, this.modality, this.accuracy, this.status, this.statusColor);
+}
+
+class _MobileExperimentCard extends StatelessWidget {
+  final _Experiment item;
+  const _MobileExperimentCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: NVColors.bgDeep,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: NVColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(item.id, style: const TextStyle(color: NVColors.primary, fontSize: 12, fontWeight: FontWeight.w600)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: item.statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: item.statusColor.withValues(alpha: 0.3)),
+                ),
+                child: Text(item.status, style: TextStyle(color: item.statusColor, fontSize: 11, fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text('${item.model} · ${item.modality}', style: const TextStyle(color: NVColors.textSecondary, fontSize: 12)),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Text('${item.accuracy}%', style: const TextStyle(color: NVColors.researcherColor, fontWeight: FontWeight.bold, fontSize: 14)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: LinearProgressIndicator(
+                  value: item.accuracy / 100,
+                  backgroundColor: NVColors.border,
+                  valueColor: AlwaysStoppedAnimation<Color>(item.statusColor),
+                  minHeight: 4,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ExperimentRow extends StatelessWidget {

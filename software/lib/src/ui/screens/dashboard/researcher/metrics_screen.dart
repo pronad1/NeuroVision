@@ -114,59 +114,42 @@ class _MetricsScreenState extends State<MetricsScreen>
     final auth = context.watch<NVAuthProvider>();
     final userName = auth.nvUser?.name ?? 'Researcher';
 
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
+    return NVScaffold(
+      currentRoute: MetricsScreen.routeName,
+      role: AppConstants.roleResearcher,
+      title: 'Performance Metrics',
+      subtitle: 'Detailed precision, recall, F1-score & AUC-ROC analysis per class',
+      userName: userName,
+      roleColor: NVColors.researcherColor,
+      fadeAnimation: _fadeAnim,
+      body: Column(
         children: [
-          // ── Sidebar ────────────────────────────────────────────────────────
-          NVSidebar(
-            currentRoute: MetricsScreen.routeName,
-            role: AppConstants.roleResearcher,
+          NVTopBar(
+            title: 'Performance Metrics',
+            subtitle: 'Detailed precision, recall, F1-score & AUC-ROC analysis per class',
+            user: userName,
+            roleColor: NVColors.researcherColor,
           ),
-
-          // ── Main content ──────────────────────────────────────────────────
           Expanded(
-            child: Column(
-              children: [
-                NVTopBar(
-                  title: 'Performance Metrics',
-                  subtitle:
-                      'Detailed precision, recall, F1-score & AUC-ROC analysis per class',
-                  user: userName,
-                  roleColor: NVColors.researcherColor,
+            child: FadeTransition(
+              opacity: _fadeAnim,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildStatRow(),
+                    const SizedBox(height: 20),
+                    _buildSelectorCard(),
+                    const SizedBox(height: 20),
+                    _buildPerClassCharts(),
+                    const SizedBox(height: 20),
+                    _buildMetricsTable(),
+                    const SizedBox(height: 20),
+                    _buildCurveRow(),
+                  ],
                 ),
-                Expanded(
-                  child: FadeTransition(
-                    opacity: _fadeAnim,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // ── 1. Stat cards ────────────────────────────────
-                          _buildStatRow(),
-                          const SizedBox(height: 20),
-
-                          // ── 2. Model / dataset selector ──────────────────
-                          _buildSelectorCard(),
-                          const SizedBox(height: 20),
-
-                          // ── 3. Per-class metric charts ───────────────────
-                          _buildPerClassCharts(),
-                          const SizedBox(height: 20),
-
-                          // ── 4. Detailed table ────────────────────────────
-                          _buildMetricsTable(),
-                          const SizedBox(height: 20),
-
-                          // ── 5. ROC + PR curves ───────────────────────────
-                          _buildCurveRow(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ],
@@ -174,14 +157,22 @@ class _MetricsScreenState extends State<MetricsScreen>
     );
   }
 
+
   // ---------------------------------------------------------------------------
   // 1 ─ Stat row
   // ---------------------------------------------------------------------------
   Widget _buildStatRow() {
-    return Row(
-      children: [
-        Expanded(
-          child: NVStatCard(
+    return LayoutBuilder(builder: (context, constraints) {
+      final count = constraints.maxWidth > 700 ? 4 : 2;
+      return GridView.count(
+        crossAxisCount: count,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: constraints.maxWidth > 700 ? 1.7 : 1.8,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        children: const [
+          NVStatCard(
             label: 'Avg Precision',
             value: '0.941',
             icon: Icons.precision_manufacturing_rounded,
@@ -189,19 +180,13 @@ class _MetricsScreenState extends State<MetricsScreen>
             trend: '+0.009',
             trendPositive: true,
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: NVStatCard(
+          NVStatCard(
             label: 'Avg Recall',
             value: '0.928',
             icon: Icons.manage_search_rounded,
             color: NVColors.success,
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: NVStatCard(
+          NVStatCard(
             label: 'Macro F1',
             value: '0.934',
             icon: Icons.star_rounded,
@@ -209,19 +194,16 @@ class _MetricsScreenState extends State<MetricsScreen>
             trend: '+0.008',
             trendPositive: true,
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: NVStatCard(
+          NVStatCard(
             label: 'Best AUC-ROC',
             value: '0.987',
             icon: Icons.show_chart_rounded,
             color: NVColors.info,
             subtitle: 'DERNet v2.1',
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -328,82 +310,127 @@ class _MetricsScreenState extends State<MetricsScreen>
   Widget _buildPerClassCharts() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Left: grouped bar chart
-            Expanded(
-              flex: 3,
-              child: NVGlassCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionTitle('Per-Class Precision & Recall',
-                        Icons.bar_chart_rounded),
-                    const SizedBox(height: 4),
-                    Text(
-                      _selectedModel,
-                      style: const TextStyle(
-                          color: NVColors.textMuted, fontSize: 11),
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      height: 220,
-                      child: _buildGroupedBarChart(),
-                    ),
-                    const SizedBox(height: 16),
-                    // Legend
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _legendDot(NVColors.researcherColor, 'Precision'),
-                        const SizedBox(width: 20),
-                        _legendDot(NVColors.doctorColor, 'Recall'),
-                      ],
-                    ),
-                  ],
+        final isWide = constraints.maxWidth > 700;
+        if (isWide) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Left: grouped bar chart
+              Expanded(
+                flex: 3,
+                child: NVGlassCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _sectionTitle('Per-Class Precision & Recall',
+                          Icons.bar_chart_rounded),
+                      const SizedBox(height: 4),
+                      Text(
+                        _selectedModel,
+                        style: const TextStyle(
+                            color: NVColors.textMuted, fontSize: 11),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        height: 220,
+                        child: _buildGroupedBarChart(),
+                      ),
+                      const SizedBox(height: 16),
+                      // Legend
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _legendDot(NVColors.researcherColor, 'Precision'),
+                          const SizedBox(width: 20),
+                          _legendDot(NVColors.doctorColor, 'Recall'),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 16),
+              const SizedBox(width: 16),
 
-            // Right: F1 per class
-            Expanded(
-              flex: 2,
-              child: NVGlassCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionTitle(
-                        'F1 Score per Class', Icons.stacked_bar_chart_rounded),
-                    const SizedBox(height: 4),
-                    Text(
-                      _selectedModel,
-                      style: const TextStyle(
-                          color: NVColors.textMuted, fontSize: 11),
-                    ),
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      height: 220,
-                      child: _buildF1BarChart(),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _legendDot(NVColors.success, '> 0.95'),
-                        const SizedBox(width: 12),
-                        _legendDot(NVColors.researcherColor, '> 0.92'),
-                        const SizedBox(width: 12),
-                        _legendDot(NVColors.warning, '≤ 0.92'),
-                      ],
-                    ),
-                  ],
+              // Right: F1 per class
+              Expanded(
+                flex: 2,
+                child: NVGlassCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _sectionTitle(
+                          'F1 Score per Class', Icons.stacked_bar_chart_rounded),
+                      const SizedBox(height: 4),
+                      Text(
+                        _selectedModel,
+                        style: const TextStyle(
+                            color: NVColors.textMuted, fontSize: 11),
+                      ),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        height: 220,
+                        child: _buildF1BarChart(),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _legendDot(NVColors.success, '> 0.95'),
+                          const SizedBox(width: 12),
+                          _legendDot(NVColors.researcherColor, '> 0.92'),
+                          const SizedBox(width: 12),
+                          _legendDot(NVColors.warning, '≤ 0.92'),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
+            ],
+          );
+        }
+        // Mobile: stacked
+        return Column(children: [
+          NVGlassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _sectionTitle('Per-Class Precision & Recall', Icons.bar_chart_rounded),
+                const SizedBox(height: 4),
+                Text(_selectedModel, style: const TextStyle(color: NVColors.textMuted, fontSize: 11)),
+                const SizedBox(height: 20),
+                SizedBox(height: 220, child: _buildGroupedBarChart()),
+                const SizedBox(height: 16),
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  _legendDot(NVColors.researcherColor, 'Precision'),
+                  const SizedBox(width: 20),
+                  _legendDot(NVColors.doctorColor, 'Recall'),
+                ]),
+              ],
             ),
-          ],
-        );
+          ),
+          const SizedBox(height: 16),
+          NVGlassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _sectionTitle('F1 Score per Class', Icons.stacked_bar_chart_rounded),
+                const SizedBox(height: 4),
+                Text(_selectedModel, style: const TextStyle(color: NVColors.textMuted, fontSize: 11)),
+                const SizedBox(height: 20),
+                SizedBox(height: 220, child: _buildF1BarChart()),
+                const SizedBox(height: 16),
+                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  _legendDot(NVColors.success, '> 0.95'),
+                  const SizedBox(width: 12),
+                  _legendDot(NVColors.researcherColor, '> 0.92'),
+                  const SizedBox(width: 12),
+                  _legendDot(NVColors.warning, '≤ 0.92'),
+                ]),
+              ],
+            ),
+          ),
+        ]);
       },
     );
   }
@@ -779,125 +806,60 @@ class _MetricsScreenState extends State<MetricsScreen>
   // 5 ─ ROC + PR curves
   // ---------------------------------------------------------------------------
   Widget _buildCurveRow() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ROC curves
-        Expanded(
-          child: NVGlassCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _sectionTitle('ROC Curves (per class)', Icons.timeline_rounded),
-                const SizedBox(height: 4),
-                Text(
-                  '$_selectedModel  ·  $_selectedDataset',
-                  style: const TextStyle(
-                      color: NVColors.textMuted, fontSize: 11),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  height: 260,
-                  child: _buildRocChart(),
-                ),
-                const SizedBox(height: 14),
-                // AUC legend
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 6,
-                  children: List.generate(_classes.length, (i) {
-                    return Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 16,
-                          height: 3,
-                          decoration: BoxDecoration(
-                            color: _rocColors[i],
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          '${_classes[i]} (AUC ${_aucValues[i].toStringAsFixed(3)})',
-                          style: const TextStyle(
-                              color: NVColors.textSecondary, fontSize: 11),
-                        ),
-                      ],
-                    );
-                  }),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-
-        // PR curve
-        Expanded(
-          child: NVGlassCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _sectionTitle(
-                    'Precision-Recall Curve', Icons.show_chart_rounded),
-                const SizedBox(height: 4),
-                Text(
-                  '$_selectedModel  ·  DERNet v2.1',
-                  style: const TextStyle(
-                      color: NVColors.textMuted, fontSize: 11),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  height: 260,
-                  child: _buildPrChart(),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Container(
-                      width: 16,
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: NVColors.researcherColor,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    const Text(
-                      'DERNet v2.1',
-                      style: TextStyle(
-                          color: NVColors.textSecondary, fontSize: 11),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: NVColors.researcherColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                            color: NVColors.researcherColor
-                                .withValues(alpha: 0.3)),
-                      ),
-                      child: const Text(
-                        'Avg Precision: 0.941',
-                        style: TextStyle(
-                          color: NVColors.researcherColor,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+    final rocCard = NVGlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionTitle('ROC Curves (per class)', Icons.timeline_rounded),
+          const SizedBox(height: 4),
+          Text('$_selectedModel  ·  $_selectedDataset', style: const TextStyle(color: NVColors.textMuted, fontSize: 11)),
+          const SizedBox(height: 20),
+          SizedBox(height: 260, child: _buildRocChart()),
+          const SizedBox(height: 14),
+          Wrap(spacing: 16, runSpacing: 6, children: List.generate(_classes.length, (i) => Row(mainAxisSize: MainAxisSize.min, children: [
+            Container(width: 16, height: 3, decoration: BoxDecoration(color: _rocColors[i], borderRadius: BorderRadius.circular(2))),
+            const SizedBox(width: 5),
+            Text('${_classes[i]} (AUC ${_aucValues[i].toStringAsFixed(3)})', style: const TextStyle(color: NVColors.textSecondary, fontSize: 11)),
+          ]))),
+        ],
+      ),
     );
+    final prCard = NVGlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _sectionTitle('Precision-Recall Curve', Icons.show_chart_rounded),
+          const SizedBox(height: 4),
+          Text('$_selectedModel  ·  DERNet v2.1', style: const TextStyle(color: NVColors.textMuted, fontSize: 11)),
+          const SizedBox(height: 20),
+          SizedBox(height: 260, child: _buildPrChart()),
+          const SizedBox(height: 14),
+          Row(children: [
+            Container(width: 16, height: 3, decoration: BoxDecoration(color: NVColors.researcherColor, borderRadius: BorderRadius.circular(2))),
+            const SizedBox(width: 6),
+            const Text('DERNet v2.1', style: TextStyle(color: NVColors.textSecondary, fontSize: 11)),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(color: NVColors.researcherColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: NVColors.researcherColor.withValues(alpha: 0.3))),
+              child: const Text('Avg Precision: 0.941', style: TextStyle(color: NVColors.researcherColor, fontSize: 11, fontWeight: FontWeight.w600)),
+            ),
+          ]),
+        ],
+      ),
+    );
+    return LayoutBuilder(builder: (context, constraints) {
+      if (constraints.maxWidth > 700) {
+        return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(child: rocCard),
+          const SizedBox(width: 16),
+          Expanded(child: prCard),
+        ]);
+      }
+      return Column(children: [rocCard, const SizedBox(height: 16), prCard]);
+    });
   }
+
 
   // ── ROC LineChart ──────────────────────────────────────────────────────────
   Widget _buildRocChart() {

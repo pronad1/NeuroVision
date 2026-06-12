@@ -10,6 +10,7 @@ import '../../../widgets/nv_top_bar.dart';
 import '../../../widgets/nv_glass_card.dart';
 import '../../../widgets/nv_stat_card.dart';
 
+
 // ─────────────────────────────────────────────────────────────
 // Window / Level preset model
 // ─────────────────────────────────────────────────────────────
@@ -95,58 +96,57 @@ class _DicomViewerScreenState extends State<DicomViewerScreen>
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<NVAuthProvider>(context).nvUser;
+    final isMobile = isMobileLayout(context);
 
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
+    return NVScaffold(
+      currentRoute: '/dashboard/radiologist/dicom',
+      role: AppConstants.roleRadiologist,
+      title: 'DICOM Viewer',
+      subtitle: 'Full-resolution medical image viewing with window/level controls',
+      userName: user?.name ?? 'Radiologist',
+      roleColor: NVColors.radiologistColor,
+      fadeAnimation: _fade,
+      body: Column(
         children: [
-          NVSidebar(
-            currentRoute: '/dashboard/radiologist/dicom',
-            role: AppConstants.roleRadiologist,
+          NVTopBar(
+            title: 'DICOM Viewer',
+            subtitle: 'Full-resolution medical image viewing with window/level controls',
+            user: user?.name ?? 'Radiologist',
+            roleColor: NVColors.radiologistColor,
           ),
           Expanded(
-            child: FadeTransition(
-              opacity: _fade,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: Column(
                 children: [
-                  NVTopBar(
-                    title: 'DICOM Viewer',
-                    subtitle:
-                        'Full-resolution medical image viewing with window/level controls',
-                    user: user?.name ?? 'Radiologist',
-                    roleColor: NVColors.radiologistColor,
-                  ),
+                  // ── Stats row ──────────────────────────────────
+                  _buildStatsRow(),
+                  const SizedBox(height: 12),
+                  // ── Main content ───────────────────────────────
                   Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                      child: Column(
-                        children: [
-                          // ── Stats row ──────────────────────────────────
-                          _buildStatsRow(),
-                          const SizedBox(height: 16),
-                          // ── Main content ───────────────────────────────
-                          Expanded(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                    child: isMobile
+                        ? SingleChildScrollView(
+                            child: Column(
                               children: [
-                                // Left: slice strip
-                                SizedBox(
-                                    width: 100,
-                                    child: _buildSliceStrip()),
-                                const SizedBox(width: 12),
-                                // Center: main viewer
-                                Expanded(child: _buildMainViewer()),
-                                const SizedBox(width: 12),
-                                // Right: panels
-                                SizedBox(
-                                    width: 220,
-                                    child: _buildRightPanels()),
+                                SizedBox(height: 400, child: _buildMainViewer()),
+                                const SizedBox(height: 12),
+                                _buildRightPanels(),
                               ],
                             ),
+                          )
+                        : Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Left: slice strip (hidden on small screens)
+                              SizedBox(width: 90, child: _buildSliceStrip()),
+                              const SizedBox(width: 10),
+                              // Center: main viewer
+                              Expanded(child: _buildMainViewer()),
+                              const SizedBox(width: 10),
+                              // Right: panels
+                              SizedBox(width: 210, child: _buildRightPanels()),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -161,45 +161,78 @@ class _DicomViewerScreenState extends State<DicomViewerScreen>
   // Stats row
   // ─────────────────────────────────────────────────────────
   Widget _buildStatsRow() {
-    return Row(
-      children: [
-        Expanded(
-          child: NVStatCard(
-            label: 'Images Loaded',
-            value: '86',
-            subtitle: 'Slices · CASE-2026-047',
-            icon: Icons.image_rounded,
-            color: NVColors.radiologistColor,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: NVStatCard(
-            label: 'Current Slice',
-            value: '$_currentSlice/$_totalSlices',
-            icon: Icons.layers_rounded,
-            color: NVColors.doctorColor,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: NVStatCard(
-            label: 'Window Width',
-            value: '$_windowWidth HU',
-            icon: Icons.tune_rounded,
-            color: NVColors.warning,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: NVStatCard(
-            label: 'Window Level',
-            value: '$_windowLevel HU',
-            icon: Icons.brightness_6_rounded,
-            color: NVColors.success,
-          ),
-        ),
-      ],
+    final card1 = NVStatCard(
+      label: 'Images Loaded',
+      value: '86',
+      subtitle: 'Slices · CASE-2026-047',
+      icon: Icons.image_rounded,
+      color: NVColors.radiologistColor,
+    );
+    final card2 = NVStatCard(
+      label: 'Current Slice',
+      value: '$_currentSlice/$_totalSlices',
+      icon: Icons.layers_rounded,
+      color: NVColors.doctorColor,
+    );
+    final card3 = NVStatCard(
+      label: 'Window Width',
+      value: '$_windowWidth HU',
+      icon: Icons.tune_rounded,
+      color: NVColors.warning,
+    );
+    final card4 = NVStatCard(
+      label: 'Window Level',
+      value: '$_windowLevel HU',
+      icon: Icons.brightness_6_rounded,
+      color: NVColors.success,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 600;
+        if (isWide) {
+          return IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: card1),
+                const SizedBox(width: 10),
+                Expanded(child: card2),
+                const SizedBox(width: 10),
+                Expanded(child: card3),
+                const SizedBox(width: 10),
+                Expanded(child: card4),
+              ],
+            ),
+          );
+        } else {
+          return Column(
+            children: [
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: card1),
+                    const SizedBox(width: 10),
+                    Expanded(child: card2),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: card3),
+                    const SizedBox(width: 10),
+                    Expanded(child: card4),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }
+      },
     );
   }
 
@@ -332,49 +365,108 @@ class _DicomViewerScreenState extends State<DicomViewerScreen>
   }
 
   Widget _buildToolbar() {
+    final isMobile = isMobileLayout(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      child: Row(
-        children: [
-          // Case label
-          const Icon(Icons.folder_open_rounded,
-              color: NVColors.radiologistColor, size: 14),
-          const SizedBox(width: 6),
-          const Text(
-            'CASE-2026-047 · Brain MRI · T2',
-            style: TextStyle(
-              color: NVColors.textPrimary,
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Window presets
-          ..._presets.map((p) => Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: _PresetChip(
-                  label: p.name,
-                  isActive: _activePreset == p.name,
-                  onTap: () => _applyPreset(p),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      child: isMobile
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Case label
+                Row(
+                  children: [
+                    const Icon(Icons.folder_open_rounded,
+                        color: NVColors.radiologistColor, size: 13),
+                    const SizedBox(width: 5),
+                    const Expanded(
+                      child: Text(
+                        'CASE-2026-047 · Brain MRI · T2',
+                        style: TextStyle(
+                          color: NVColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
-              )),
-          const Spacer(),
-          // Action buttons
-          ...[
-            (Icons.zoom_in_rounded, 'Zoom In', () {}),
-            (Icons.zoom_out_rounded, 'Zoom Out', () {}),
-            (Icons.fit_screen_rounded, 'Fit', () {}),
-            (Icons.rotate_right_rounded, 'Rotate', () {}),
-            (Icons.pan_tool_rounded, 'Pan', () {}),
-            (Icons.restart_alt_rounded, 'Reset', () {}),
-            (Icons.photo_camera_rounded, 'Screenshot', () {}),
-          ].map((t) => Padding(
-                padding: const EdgeInsets.only(left: 4),
-                child: _ToolBtn(
-                    icon: t.$1, tooltip: t.$2, onTap: t.$3),
-              )),
-        ],
-      ),
+                const SizedBox(height: 6),
+                // Presets as scrollable row
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: _presets.map((p) => Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: _PresetChip(
+                        label: p.name,
+                        isActive: _activePreset == p.name,
+                        onTap: () => _applyPreset(p),
+                      ),
+                    )).toList(),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                // Action buttons as scrollable row
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      (Icons.zoom_in_rounded, 'Zoom In', () {}),
+                      (Icons.zoom_out_rounded, 'Zoom Out', () {}),
+                      (Icons.fit_screen_rounded, 'Fit', () {}),
+                      (Icons.rotate_right_rounded, 'Rotate', () {}),
+                      (Icons.pan_tool_rounded, 'Pan', () {}),
+                      (Icons.restart_alt_rounded, 'Reset', () {}),
+                      (Icons.photo_camera_rounded, 'Screenshot', () {}),
+                    ].map((t) => Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: _ToolBtn(icon: t.$1, tooltip: t.$2, onTap: t.$3),
+                    )).toList(),
+                  ),
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                // Case label
+                const Icon(Icons.folder_open_rounded,
+                    color: NVColors.radiologistColor, size: 14),
+                const SizedBox(width: 6),
+                const Text(
+                  'CASE-2026-047 · Brain MRI · T2',
+                  style: TextStyle(
+                    color: NVColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Window presets
+                ..._presets.map((p) => Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: _PresetChip(
+                        label: p.name,
+                        isActive: _activePreset == p.name,
+                        onTap: () => _applyPreset(p),
+                      ),
+                    )),
+                const Spacer(),
+                // Action buttons
+                ...[
+                  (Icons.zoom_in_rounded, 'Zoom In', () {}),
+                  (Icons.zoom_out_rounded, 'Zoom Out', () {}),
+                  (Icons.fit_screen_rounded, 'Fit', () {}),
+                  (Icons.rotate_right_rounded, 'Rotate', () {}),
+                  (Icons.pan_tool_rounded, 'Pan', () {}),
+                  (Icons.restart_alt_rounded, 'Reset', () {}),
+                  (Icons.photo_camera_rounded, 'Screenshot', () {}),
+                ].map((t) => Padding(
+                      padding: const EdgeInsets.only(left: 4),
+                      child: _ToolBtn(icon: t.$1, tooltip: t.$2, onTap: t.$3),
+                    )),
+              ],
+            ),
     );
   }
 

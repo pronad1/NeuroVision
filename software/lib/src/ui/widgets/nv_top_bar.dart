@@ -2,6 +2,9 @@
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
 
+/// Desktop/tablet top bar – hidden automatically on mobile since [NVScaffold]
+/// handles the AppBar in that case. Safe to use unconditionally on screens that
+/// rely on [NVScaffold]; on mobile it returns an empty [SizedBox].
 class NVTopBar extends StatelessWidget {
   final String title;
   final String subtitle;

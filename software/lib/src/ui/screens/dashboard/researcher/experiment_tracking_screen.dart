@@ -48,35 +48,39 @@ class _ExperimentTrackingScreenState extends State<ExperimentTrackingScreen>
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<NVAuthProvider>(context).nvUser;
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
-        children: [
-          NVSidebar(currentRoute: '/dashboard/researcher/experiments', role: AppConstants.roleResearcher),
-          Expanded(
-            child: FadeTransition(
-              opacity: _fade,
-              child: Column(children: [
-                NVTopBar(title: 'Experiment Tracking', subtitle: 'Monitor training runs, compare architectures, track metrics', user: user?.name ?? 'Researcher', roleColor: NVColors.researcherColor),
-                Expanded(child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    _buildStats(),
-                    const SizedBox(height: 24),
-                    Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      // Experiment list
-                      SizedBox(width: 340, child: _buildExpList()),
-                      const SizedBox(width: 16),
-                      // Experiment detail
-                      Expanded(child: _buildExpDetail()),
-                    ]),
-                  ]),
-                )),
-              ]),
-            ),
-          ),
-        ],
-      ),
+    return NVScaffold(
+      currentRoute: '/dashboard/researcher/experiments',
+      role: AppConstants.roleResearcher,
+      title: 'Experiment Tracking',
+      subtitle: 'Monitor training runs, compare architectures, track metrics',
+      userName: user?.name ?? 'Researcher',
+      roleColor: NVColors.researcherColor,
+      fadeAnimation: _fade,
+      body: Column(children: [
+        NVTopBar(title: 'Experiment Tracking', subtitle: 'Monitor training runs, compare architectures, track metrics', user: user?.name ?? 'Researcher', roleColor: NVColors.researcherColor),
+        Expanded(child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            _buildStats(),
+            const SizedBox(height: 24),
+            LayoutBuilder(builder: (context, constraints) {
+              final isWide = constraints.maxWidth > 700;
+              if (isWide) {
+                return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  SizedBox(width: 300, child: _buildExpList()),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildExpDetail()),
+                ]);
+              }
+              return Column(children: [
+                _buildExpList(),
+                const SizedBox(height: 16),
+                _buildExpDetail(),
+              ]);
+            }),
+          ]),
+        )),
+      ]),
     );
   }
 

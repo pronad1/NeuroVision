@@ -125,42 +125,34 @@ class _ExplainabilityScreenState extends State<ExplainabilityScreen>
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<NVAuthProvider>(context).nvUser;
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
+    return NVScaffold(
+      currentRoute: '/dashboard/radiologist/explainability',
+      role: AppConstants.roleRadiologist,
+      title: 'Explainability Analysis',
+      subtitle: 'Grad-CAM, attention weights & XAI visualization for AI predictions',
+      userName: user?.name ?? 'Radiologist',
+      roleColor: NVColors.radiologistColor,
+      fadeAnimation: _fade,
+      body: Column(
         children: [
-          NVSidebar(
-            currentRoute: '/dashboard/radiologist/explainability',
-            role: AppConstants.roleRadiologist,
+          NVTopBar(
+            title: 'Explainability Analysis',
+            subtitle: 'Grad-CAM, attention weights & XAI visualization for AI predictions',
+            user: user?.name ?? 'Radiologist',
+            roleColor: NVColors.radiologistColor,
           ),
           Expanded(
-            child: FadeTransition(
-              opacity: _fade,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  NVTopBar(
-                    title: 'Explainability Analysis',
-                    subtitle:
-                        'Grad-CAM, attention weights & XAI visualization for AI predictions',
-                    user: user?.name ?? 'Radiologist',
-                    roleColor: NVColors.radiologistColor,
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        children: [
-                          _buildStatsRow(),
-                          const SizedBox(height: 20),
-                          _buildTopRow(),
-                          const SizedBox(height: 20),
-                          _buildFeatureAttributionTable(),
-                          const SizedBox(height: 20),
-                          _buildBottomRow(),
-                        ],
-                      ),
-                    ),
-                  ),
+                  _buildStatsRow(),
+                  const SizedBox(height: 20),
+                  _buildTopRow(),
+                  const SizedBox(height: 20),
+                  _buildFeatureAttributionTable(),
+                  const SizedBox(height: 20),
+                  _buildBottomRow(),
                 ],
               ),
             ),
@@ -172,47 +164,80 @@ class _ExplainabilityScreenState extends State<ExplainabilityScreen>
 
   // ── Stats row ─────────────────────────────────────────────────────────────
   Widget _buildStatsRow() {
-    return Row(
-      children: [
-        Expanded(
-          child: NVStatCard(
-            label: 'Cases Analyzed',
-            value: '156',
-            icon: Icons.visibility_rounded,
-            color: NVColors.radiologistColor,
-            trend: '+14',
-            trendPositive: true,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: NVStatCard(
-            label: 'Avg Grad-CAM Score',
-            value: '0.847',
-            icon: Icons.whatshot_rounded,
-            color: NVColors.warning,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: NVStatCard(
-            label: 'Attention Regions',
-            value: '3.2 avg',
-            icon: Icons.center_focus_strong_rounded,
-            color: NVColors.info,
-            subtitle: 'Per case',
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: NVStatCard(
-            label: 'XAI Validation Rate',
-            value: '91.2%',
-            icon: Icons.verified_rounded,
-            color: NVColors.success,
-          ),
-        ),
-      ],
+    const card1 = NVStatCard(
+      label: 'Cases Analyzed',
+      value: '156',
+      icon: Icons.visibility_rounded,
+      color: NVColors.radiologistColor,
+      trend: '+14',
+      trendPositive: true,
+    );
+    const card2 = NVStatCard(
+      label: 'Avg Grad-CAM Score',
+      value: '0.847',
+      icon: Icons.whatshot_rounded,
+      color: NVColors.warning,
+    );
+    const card3 = NVStatCard(
+      label: 'Attention Regions',
+      value: '3.2 avg',
+      icon: Icons.center_focus_strong_rounded,
+      color: NVColors.info,
+      subtitle: 'Per case',
+    );
+    const card4 = NVStatCard(
+      label: 'XAI Validation Rate',
+      value: '91.2%',
+      icon: Icons.verified_rounded,
+      color: NVColors.success,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 600;
+        if (isWide) {
+          return IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: card1),
+                const SizedBox(width: 12),
+                Expanded(child: card2),
+                const SizedBox(width: 12),
+                Expanded(child: card3),
+                const SizedBox(width: 12),
+                Expanded(child: card4),
+              ],
+            ),
+          );
+        } else {
+          return Column(
+            children: [
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: card1),
+                    const SizedBox(width: 12),
+                    Expanded(child: card2),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: card3),
+                    const SizedBox(width: 12),
+                    Expanded(child: card4),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }
+      },
     );
   }
 
@@ -220,12 +245,22 @@ class _ExplainabilityScreenState extends State<ExplainabilityScreen>
   Widget _buildTopRow() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        final isWide = constraints.maxWidth > 700;
+        if (isWide) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 3, child: _buildGradCamCard()),
+              const SizedBox(width: 20),
+              Expanded(flex: 2, child: _buildAttentionWeightsCard()),
+            ],
+          );
+        }
+        return Column(
           children: [
-            Expanded(flex: 3, child: _buildGradCamCard()),
-            const SizedBox(width: 20),
-            Expanded(flex: 2, child: _buildAttentionWeightsCard()),
+            _buildGradCamCard(),
+            const SizedBox(height: 20),
+            _buildAttentionWeightsCard(),
           ],
         );
       },
@@ -317,37 +352,36 @@ class _ExplainabilityScreenState extends State<ExplainabilityScreen>
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.5)),
           const SizedBox(height: 8),
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: List.generate(_methods.length, (i) {
               final isSelected = i == _selectedMethod;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: GestureDetector(
-                  onTap: () => setState(() => _selectedMethod = i),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 7),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? NVColors.radiologistColor.withValues(alpha: 0.18)
-                          : NVColors.bgDeep,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          color: isSelected
-                              ? NVColors.radiologistColor
-                              : NVColors.border),
-                    ),
-                    child: Text(
-                      _methods[i],
-                      style: TextStyle(
+              return GestureDetector(
+                onTap: () => setState(() => _selectedMethod = i),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? NVColors.radiologistColor.withValues(alpha: 0.18)
+                        : NVColors.bgDeep,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
                         color: isSelected
                             ? NVColors.radiologistColor
-                            : NVColors.textSecondary,
-                        fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.normal,
-                      ),
+                            : NVColors.border),
+                  ),
+                  child: Text(
+                    _methods[i],
+                    style: TextStyle(
+                      color: isSelected
+                          ? NVColors.radiologistColor
+                          : NVColors.textSecondary,
+                      fontSize: 12,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.normal,
                     ),
                   ),
                 ),
@@ -594,65 +628,77 @@ class _ExplainabilityScreenState extends State<ExplainabilityScreen>
           ),
           const SizedBox(height: 16),
 
-          // Table header
-          Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: NVColors.bgDeep,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: NVColors.border),
-            ),
-            child: const Row(
-              children: [
-                Expanded(
-                    flex: 3,
-                    child: Text('Feature',
-                        style: TextStyle(
-                            color: NVColors.textMuted,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5))),
-                Expanded(
-                    flex: 2,
-                    child: Text('Attribution Score',
-                        style: TextStyle(
-                            color: NVColors.textMuted,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5))),
-                Expanded(
-                    flex: 2,
-                    child: Text('Contribution %',
-                        style: TextStyle(
-                            color: NVColors.textMuted,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5))),
-                Expanded(
-                    flex: 2,
-                    child: Text('Direction',
-                        style: TextStyle(
-                            color: NVColors.textMuted,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5))),
-                Expanded(
-                    flex: 2,
-                    child: Text('Significance',
-                        style: TextStyle(
-                            color: NVColors.textMuted,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5))),
-              ],
+          // Horizontal scroll wrapper for mobile views
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: 650,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Table header
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: NVColors.bgDeep,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: NVColors.border),
+                    ),
+                    child: const Row(
+                      children: [
+                        Expanded(
+                            flex: 3,
+                            child: Text('Feature',
+                                style: TextStyle(
+                                    color: NVColors.textMuted,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5))),
+                        Expanded(
+                            flex: 2,
+                            child: Text('Attribution Score',
+                                style: TextStyle(
+                                    color: NVColors.textMuted,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5))),
+                        Expanded(
+                            flex: 2,
+                            child: Text('Contribution %',
+                                style: TextStyle(
+                                    color: NVColors.textMuted,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5))),
+                        Expanded(
+                            flex: 2,
+                            child: Text('Direction',
+                                style: TextStyle(
+                                    color: NVColors.textMuted,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5))),
+                        Expanded(
+                            flex: 2,
+                            child: Text('Significance',
+                                style: TextStyle(
+                                    color: NVColors.textMuted,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5))),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
+                  // Table rows
+                  ..._features.asMap().entries.map((entry) =>
+                      _buildFeatureRow(entry.value, entry.key.isEven)),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 4),
-
-          // Table rows
-          ..._features.asMap().entries.map((entry) =>
-              _buildFeatureRow(entry.value, entry.key.isEven)),
         ],
       ),
     );
@@ -776,13 +822,27 @@ class _ExplainabilityScreenState extends State<ExplainabilityScreen>
 
   // ── Bottom row: Confidence Distribution + XAI Timeline ───────────────────
   Widget _buildBottomRow() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(flex: 2, child: _buildConfidenceDistributionCard()),
-        const SizedBox(width: 20),
-        Expanded(flex: 3, child: _buildXAITimelineCard()),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 700;
+        if (isWide) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 2, child: _buildConfidenceDistributionCard()),
+              const SizedBox(width: 20),
+              Expanded(flex: 3, child: _buildXAITimelineCard()),
+            ],
+          );
+        }
+        return Column(
+          children: [
+            _buildConfidenceDistributionCard(),
+            const SizedBox(height: 20),
+            _buildXAITimelineCard(),
+          ],
+        );
+      },
     );
   }
 

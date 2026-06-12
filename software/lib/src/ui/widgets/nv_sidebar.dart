@@ -19,6 +19,121 @@ class NVSidebarItem {
   });
 }
 
+/// Returns true when the screen is narrow (mobile-like).
+bool isMobileLayout(BuildContext context) =>
+    MediaQuery.of(context).size.width < 768;
+
+/// A convenience scaffold that handles the sidebar/drawer pattern automatically.
+/// On desktop it places [NVSidebar] in a [Row]; on mobile it uses a [Drawer].
+class NVScaffold extends StatelessWidget {
+  final String currentRoute;
+  final String role;
+  final String title;
+  final String subtitle;
+  final String userName;
+  final Color roleColor;
+  final Widget body;
+  final Animation<double>? fadeAnimation;
+
+  const NVScaffold({
+    super.key,
+    required this.currentRoute,
+    required this.role,
+    required this.title,
+    required this.subtitle,
+    required this.userName,
+    required this.roleColor,
+    required this.body,
+    this.fadeAnimation,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final mobile = isMobileLayout(context);
+
+    final sidebar = NVSidebar(currentRoute: currentRoute, role: role);
+
+    final content = fadeAnimation != null
+        ? FadeTransition(opacity: fadeAnimation!, child: body)
+        : body;
+
+    if (mobile) {
+      return Scaffold(
+        backgroundColor: NVColors.bgDeep,
+        appBar: AppBar(
+          backgroundColor: NVColors.bgSurface,
+          elevation: 0,
+          centerTitle: false,
+          leading: Builder(
+            builder: (ctx) => IconButton(
+              icon: const Icon(Icons.menu_rounded, color: NVColors.textSecondary),
+              onPressed: () => Scaffold.of(ctx).openDrawer(),
+            ),
+          ),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  color: NVColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: const TextStyle(color: NVColors.textMuted, fontSize: 10),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.notifications_outlined,
+                  color: NVColors.textSecondary),
+              onPressed: () {},
+            ),
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: roleColor.withValues(alpha: 0.2),
+              child: Text(
+                userName.isNotEmpty ? userName[0].toUpperCase() : 'U',
+                style: TextStyle(
+                  color: roleColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Container(height: 1, color: NVColors.border),
+          ),
+        ),
+        drawer: Drawer(
+          backgroundColor: NVColors.bgSurface,
+          child: sidebar,
+        ),
+        body: content,
+      );
+    }
+
+    // Desktop / tablet: classic side-by-side layout
+    return Scaffold(
+      backgroundColor: NVColors.bgDeep,
+      body: Row(
+        children: [
+          sidebar,
+          Expanded(child: content),
+        ],
+      ),
+    );
+  }
+}
+
 class NVSidebar extends StatefulWidget {
   final String currentRoute;
   final String role;
@@ -87,7 +202,165 @@ class _NVSidebarState extends State<NVSidebar> {
   Widget build(BuildContext context) {
     final auth = Provider.of<NVAuthProvider>(context);
     final user = auth.nvUser;
-    final width = _collapsed ? 72.0 : 240.0;
+    final isMobile = isMobileLayout(context);
+    // On mobile inside a Drawer we always show expanded; no collapse button needed
+    final collapsed = isMobile ? false : _collapsed;
+    final width = collapsed ? 72.0 : 240.0;
+
+    final sidebarContent = Column(
+      children: [
+        // Header
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: NVColors.border)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [NVColors.primary, Color(0xFF0090B8)],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.biotech_rounded, color: Colors.black, size: 20),
+              ),
+              if (!collapsed) ...[
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'NeuroVision',
+                        style: TextStyle(
+                          color: NVColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        'AI Platform',
+                        style: TextStyle(
+                          color: NVColors.textMuted,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+
+        // Navigation Items
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            children: _items.map((item) => _buildNavItem(item, collapsed)).toList(),
+          ),
+        ),
+
+        // Bottom: User profile + collapse toggle
+        Container(
+          decoration: const BoxDecoration(
+            border: Border(top: BorderSide(color: NVColors.border)),
+          ),
+          child: Column(
+            children: [
+              if (!collapsed && user != null)
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: _roleColor.withValues(alpha: 0.2),
+                        child: Text(
+                          user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+                          style: TextStyle(color: _roleColor, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              user.name,
+                              style: const TextStyle(
+                                color: NVColors.textPrimary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: _roleColor.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                user.roleDisplayName,
+                                style: TextStyle(color: _roleColor, fontSize: 10, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              // Sign out + collapse button row
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Row(
+                  children: [
+                    if (!collapsed)
+                      Expanded(
+                        child: TextButton.icon(
+                          onPressed: () async {
+                            await auth.signOut();
+                            if (context.mounted) {
+                              Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+                            }
+                          },
+                          icon: const Icon(Icons.logout_rounded, size: 16, color: NVColors.error),
+                          label: const Text('Sign Out', style: TextStyle(color: NVColors.error, fontSize: 13)),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            alignment: Alignment.centerLeft,
+                          ),
+                        ),
+                      ),
+                    // Only show collapse toggle on desktop
+                    if (!isMobile)
+                      IconButton(
+                        icon: Icon(
+                          collapsed ? Icons.chevron_right_rounded : Icons.chevron_left_rounded,
+                          color: NVColors.textMuted,
+                        ),
+                        onPressed: () => setState(() => _collapsed = !_collapsed),
+                        tooltip: collapsed ? 'Expand' : 'Collapse',
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    if (isMobile) {
+      // Inside a Drawer, fill full height
+      return SafeArea(child: sidebarContent);
+    }
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
@@ -99,157 +372,11 @@ class _NVSidebarState extends State<NVSidebar> {
           right: BorderSide(color: NVColors.border),
         ),
       ),
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: NVColors.border)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [NVColors.primary, Color(0xFF0090B8)],
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.biotech_rounded, color: Colors.black, size: 20),
-                ),
-                if (!_collapsed) ...[
-                  const SizedBox(width: 10),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'NeuroVision',
-                          style: TextStyle(
-                            color: NVColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                        Text(
-                          'AI Platform',
-                          style: TextStyle(
-                            color: NVColors.textMuted,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-
-          // Navigation Items
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              children: _items.map((item) => _buildNavItem(item)).toList(),
-            ),
-          ),
-
-          // Bottom: User profile + collapse toggle
-          Container(
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: NVColors.border)),
-            ),
-            child: Column(
-              children: [
-                if (!_collapsed && user != null)
-                  Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 18,
-                          backgroundColor: _roleColor.withValues(alpha: 0.2),
-                          child: Text(
-                            user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                            style: TextStyle(color: _roleColor, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                user.name,
-                                style: const TextStyle(
-                                  color: NVColors.textPrimary,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: _roleColor.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  user.roleDisplayName,
-                                  style: TextStyle(color: _roleColor, fontSize: 10, fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                // Sign out + collapse button row
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  child: Row(
-                    children: [
-                      if (!_collapsed)
-                        Expanded(
-                          child: TextButton.icon(
-                            onPressed: () async {
-                              await auth.signOut();
-                              if (context.mounted) {
-                                Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
-                              }
-                            },
-                            icon: const Icon(Icons.logout_rounded, size: 16, color: NVColors.error),
-                            label: const Text('Sign Out', style: TextStyle(color: NVColors.error, fontSize: 13)),
-                            style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                              alignment: Alignment.centerLeft,
-                            ),
-                          ),
-                        ),
-                      IconButton(
-                        icon: Icon(
-                          _collapsed ? Icons.chevron_right_rounded : Icons.chevron_left_rounded,
-                          color: NVColors.textMuted,
-                        ),
-                        onPressed: () => setState(() => _collapsed = !_collapsed),
-                        tooltip: _collapsed ? 'Expand' : 'Collapse',
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      child: sidebarContent,
     );
   }
 
-  Widget _buildNavItem(NVSidebarItem item) {
+  Widget _buildNavItem(NVSidebarItem item, bool collapsed) {
     final isActive = widget.currentRoute == item.route;
     final roleColor = _roleColor;
 
@@ -264,13 +391,13 @@ class _NVSidebarState extends State<NVSidebar> {
         ),
         child: ListTile(
           dense: true,
-          contentPadding: EdgeInsets.symmetric(horizontal: _collapsed ? 12 : 12, vertical: 2),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
           leading: Icon(
             item.icon,
             color: isActive ? roleColor : NVColors.textMuted,
             size: 20,
           ),
-          title: _collapsed
+          title: collapsed
               ? null
               : Row(
                   children: [
@@ -307,6 +434,8 @@ class _NVSidebarState extends State<NVSidebar> {
                   );
                 }
               : () {
+                  // Close drawer on mobile before navigating
+                  if (isMobileLayout(context)) Navigator.pop(context);
                   if (widget.currentRoute != item.route) {
                     Navigator.pushReplacementNamed(context, item.route);
                   }

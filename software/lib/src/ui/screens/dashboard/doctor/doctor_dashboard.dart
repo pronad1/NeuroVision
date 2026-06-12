@@ -55,48 +55,33 @@ class _DoctorDashboardState extends State<DoctorDashboard>
     final auth = Provider.of<NVAuthProvider>(context);
     final user = auth.nvUser;
 
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
+    return NVScaffold(
+      currentRoute: '/dashboard/doctor',
+      role: AppConstants.roleDoctor,
+      title: 'Doctor Dashboard',
+      subtitle: 'AI Diagnosis Review & Case Management',
+      userName: user?.name ?? 'Doctor',
+      roleColor: NVColors.doctorColor,
+      fadeAnimation: _fadeAnim,
+      body: Column(
         children: [
-          NVSidebar(
-            currentRoute: '/dashboard/doctor',
-            role: AppConstants.roleDoctor,
+          NVTopBar(
+            title: 'Doctor Dashboard',
+            subtitle: 'AI Diagnosis Review & Case Management',
+            user: user?.name ?? 'Doctor',
+            roleColor: NVColors.doctorColor,
           ),
           Expanded(
-            child: FadeTransition(
-              opacity: _fadeAnim,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Top bar
-                  NVTopBar(
-                    title: 'Doctor Dashboard',
-                    subtitle: 'AI Diagnosis Review & Case Management',
-                    user: user?.name ?? 'Doctor',
-                    roleColor: NVColors.doctorColor,
-                  ),
-
-                  // Content
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Stats row
-                          _buildStatsRow(),
-                          const SizedBox(height: 24),
-
-                          // Main content grid
-                          _buildMainGrid(),
-                          const SizedBox(height: 24),
-
-                          // Recent Cases
-                          _buildRecentCases(),
-                        ],
-                      ),
-                    ),
-                  ),
+                  _buildStatsRow(),
+                  const SizedBox(height: 20),
+                  _buildMainGrid(),
+                  const SizedBox(height: 20),
+                  _buildRecentCases(),
                 ],
               ),
             ),
@@ -109,12 +94,21 @@ class _DoctorDashboardState extends State<DoctorDashboard>
   Widget _buildStatsRow() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 900 ? 4 : (constraints.maxWidth > 600 ? 2 : 1);
+        final crossAxisCount = constraints.maxWidth > 700
+            ? 4
+            : constraints.maxWidth > 400
+                ? 2
+                : 1;
+        final aspectRatio = constraints.maxWidth > 700
+            ? 1.7
+            : constraints.maxWidth > 400
+                ? 1.8
+                : 2.5;
         return GridView.count(
           crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: constraints.maxWidth > 900 ? 1.7 : 1.8,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: aspectRatio,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           children: const [
@@ -161,7 +155,7 @@ class _DoctorDashboardState extends State<DoctorDashboard>
   Widget _buildMainGrid() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWide = constraints.maxWidth > 750;
+        final isWide = constraints.maxWidth > 700;
         if (isWide) {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,7 +180,7 @@ class _DoctorDashboardState extends State<DoctorDashboard>
 
   Widget _buildDiagnosisChart() {
     return NVGlassCard(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -194,8 +188,13 @@ class _DoctorDashboardState extends State<DoctorDashboard>
             children: [
               const Icon(Icons.show_chart_rounded, color: NVColors.doctorColor, size: 18),
               const SizedBox(width: 8),
-              const Text('Monthly Case Review Trend', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
-              const Spacer(),
+              const Expanded(
+                child: Text(
+                  'Monthly Case Review Trend',
+                  style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
@@ -207,7 +206,7 @@ class _DoctorDashboardState extends State<DoctorDashboard>
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           SizedBox(
             height: 200,
             child: LineChart(
@@ -305,7 +304,7 @@ class _DoctorDashboardState extends State<DoctorDashboard>
 
   Widget _buildModalityBreakdown() {
     return NVGlassCard(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -316,7 +315,7 @@ class _DoctorDashboardState extends State<DoctorDashboard>
               Text('Imaging Modality', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           SizedBox(
             height: 160,
             child: PieChart(
@@ -343,8 +342,10 @@ class _DoctorDashboardState extends State<DoctorDashboard>
   }
 
   Widget _buildRecentCases() {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
     return NVGlassCard(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -361,25 +362,32 @@ class _DoctorDashboardState extends State<DoctorDashboard>
             ],
           ),
           const SizedBox(height: 12),
-          // Table header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: NVColors.bgDeep,
-              borderRadius: BorderRadius.circular(8),
+          if (isMobile)
+            // Mobile: card-list layout
+            Column(
+              children: _recentCases.map((c) => _MobileCaseCard(item: c)).toList(),
+            )
+          else ...[
+            // Desktop: table layout
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: NVColors.bgDeep,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Row(
+                children: [
+                  Expanded(flex: 2, child: Text('Case ID', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                  Expanded(flex: 2, child: Text('Modality', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                  Expanded(flex: 3, child: Text('AI Prediction', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                  Expanded(flex: 2, child: Text('Confidence', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                  Expanded(flex: 2, child: Text('Status', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                ],
+              ),
             ),
-            child: const Row(
-              children: [
-                Expanded(flex: 2, child: Text('Case ID', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                Expanded(flex: 2, child: Text('Modality', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                Expanded(flex: 3, child: Text('AI Prediction', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                Expanded(flex: 2, child: Text('Confidence', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                Expanded(flex: 2, child: Text('Status', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-              ],
-            ),
-          ),
-          const SizedBox(height: 4),
-          ..._recentCases.map((c) => _CaseRow(item: c)),
+            const SizedBox(height: 4),
+            ..._recentCases.map((c) => _CaseRow(item: c)),
+          ],
         ],
       ),
     );
@@ -395,6 +403,65 @@ class _CaseItem {
   final Color statusColor;
 
   _CaseItem(this.caseId, this.modality, this.prediction, this.confidence, this.status, this.statusColor);
+}
+
+// Mobile card version
+class _MobileCaseCard extends StatelessWidget {
+  final _CaseItem item;
+  const _MobileCaseCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: NVColors.bgDeep,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: NVColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(item.caseId, style: const TextStyle(color: NVColors.primary, fontSize: 12, fontWeight: FontWeight.w600)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: item.statusColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: item.statusColor.withValues(alpha: 0.3)),
+                ),
+                child: Text(item.status, style: TextStyle(color: item.statusColor, fontSize: 11, fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(item.modality, style: const TextStyle(color: NVColors.textMuted, fontSize: 11)),
+          const SizedBox(height: 2),
+          Text(item.prediction, style: const TextStyle(color: NVColors.textPrimary, fontSize: 12)),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Text('${item.confidence}%', style: const TextStyle(color: NVColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: LinearProgressIndicator(
+                  value: item.confidence / 100,
+                  backgroundColor: NVColors.border,
+                  valueColor: AlwaysStoppedAnimation<Color>(item.statusColor),
+                  minHeight: 4,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _CaseRow extends StatelessWidget {
@@ -504,6 +571,3 @@ class _ModalityLegend extends StatelessWidget {
     );
   }
 }
-
-
-

@@ -219,71 +219,64 @@ class _SegmentationReviewScreenState extends State<SegmentationReviewScreen>
     final isMobile = MediaQuery.of(context).size.width < 768;
     final isTablet = MediaQuery.of(context).size.width < 1200;
 
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
+    return NVScaffold(
+      currentRoute: '/dashboard/radiologist/segmentation',
+      role: AppConstants.roleRadiologist,
+      title: 'Segmentation Review',
+      subtitle: 'Validate and approve AI-generated segmentation masks',
+      userName: user?.name ?? 'Radiologist',
+      roleColor: NVColors.radiologistColor,
+      fadeAnimation: _fade,
+      body: Column(
         children: [
-          NVSidebar(
-            currentRoute: '/dashboard/radiologist/segmentation',
-            role: AppConstants.roleRadiologist,
+          NVTopBar(
+            title: 'Segmentation Review',
+            subtitle: 'Validate and approve AI-generated segmentation masks',
+            user: user?.name ?? 'Radiologist',
+            roleColor: NVColors.radiologistColor,
           ),
           Expanded(
-            child: FadeTransition(
-              opacity: _fade,
-              child: Column(
-                children: [
-                  NVTopBar(
-                    title: 'Segmentation Review',
-                    subtitle: 'Validate and approve AI-generated segmentation masks',
-                    user: user?.name ?? 'Radiologist',
-                    roleColor: NVColors.radiologistColor,
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                        child: isMobile
-                            ? Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  LimitedBox(
-                                    maxHeight: 150,
-                                    child: _buildStatsRow(),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  LimitedBox(
-                                    maxHeight: 300,
-                                    child: _buildQueuePanel(),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  LimitedBox(
-                                    maxHeight: 350,
-                                    child: _buildCenterPanel(),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  LimitedBox(
-                                    maxHeight: 500,
-                                    child: _buildRightPanel(),
-                                  ),
-                                ],
-                              )
-                            : Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  _buildStatsRow(),
-                                  const SizedBox(height: 20),
-                                  SizedBox(
-                                    height: 500,
-                                    child: _buildMainContent(),
-                                  ),
-                                ],
-                              ),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                child: isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          LimitedBox(
+                            maxHeight: 150,
+                            child: _buildStatsRow(),
+                          ),
+                          const SizedBox(height: 16),
+                          LimitedBox(
+                            maxHeight: 300,
+                            child: _buildQueuePanel(),
+                          ),
+                          const SizedBox(height: 16),
+                          LimitedBox(
+                            maxHeight: 350,
+                            child: _buildCenterPanel(),
+                          ),
+                          const SizedBox(height: 16),
+                          LimitedBox(
+                            maxHeight: 500,
+                            child: _buildRightPanel(),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildStatsRow(),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            height: 500,
+                            child: _buildMainContent(),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                ],
               ),
             ),
           ),

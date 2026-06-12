@@ -51,37 +51,33 @@ class _RadiologistDashboardState extends State<RadiologistDashboard>
     final auth = Provider.of<NVAuthProvider>(context);
     final user = auth.nvUser;
 
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
+    return NVScaffold(
+      currentRoute: '/dashboard/radiologist',
+      role: AppConstants.roleRadiologist,
+      title: 'Radiologist Dashboard',
+      subtitle: 'DICOM Viewer, Annotations & Lesion Analysis',
+      userName: user?.name ?? 'Radiologist',
+      roleColor: NVColors.radiologistColor,
+      fadeAnimation: _fadeAnim,
+      body: Column(
         children: [
-          NVSidebar(currentRoute: '/dashboard/radiologist', role: AppConstants.roleRadiologist),
+          NVTopBar(
+            title: 'Radiologist Dashboard',
+            subtitle: 'DICOM Viewer, Annotations & Lesion Analysis',
+            user: user?.name ?? 'Radiologist',
+            roleColor: NVColors.radiologistColor,
+          ),
           Expanded(
-            child: FadeTransition(
-              opacity: _fadeAnim,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  NVTopBar(
-                    title: 'Radiologist Dashboard',
-                    subtitle: 'DICOM Viewer, Annotations & Lesion Analysis',
-                    user: user?.name ?? 'Radiologist',
-                    roleColor: NVColors.radiologistColor,
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildStatsRow(),
-                          const SizedBox(height: 24),
-                          _buildMainGrid(),
-                          const SizedBox(height: 24),
-                          _buildAnnotationQueue(),
-                        ],
-                      ),
-                    ),
-                  ),
+                  _buildStatsRow(),
+                  const SizedBox(height: 20),
+                  _buildMainGrid(),
+                  const SizedBox(height: 20),
+                  _buildAnnotationQueue(),
                 ],
               ),
             ),
@@ -94,12 +90,21 @@ class _RadiologistDashboardState extends State<RadiologistDashboard>
   Widget _buildStatsRow() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final count = constraints.maxWidth > 900 ? 4 : 2;
+        final crossAxisCount = constraints.maxWidth > 700
+            ? 4
+            : constraints.maxWidth > 400
+                ? 2
+                : 1;
+        final aspectRatio = constraints.maxWidth > 700
+            ? 1.7
+            : constraints.maxWidth > 400
+                ? 1.8
+                : 2.5;
         return GridView.count(
-          crossAxisCount: count,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: constraints.maxWidth > 900 ? 1.7 : 1.8,
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: aspectRatio,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           children: const [
@@ -145,7 +150,7 @@ class _RadiologistDashboardState extends State<RadiologistDashboard>
 
   Widget _buildMainGrid() {
     return LayoutBuilder(builder: (context, constraints) {
-      final isWide = constraints.maxWidth > 750;
+      final isWide = constraints.maxWidth > 700;
       if (isWide) {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,7 +167,7 @@ class _RadiologistDashboardState extends State<RadiologistDashboard>
 
   Widget _buildLesionHeatmapCard() {
     return NVGlassCard(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -170,10 +175,16 @@ class _RadiologistDashboardState extends State<RadiologistDashboard>
             children: [
               Icon(Icons.thermostat_rounded, color: NVColors.radiologistColor, size: 18),
               SizedBox(width: 8),
-              Text('Weekly Lesion Detection Accuracy', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
+              Expanded(
+                child: Text(
+                  'Weekly Lesion Detection Accuracy',
+                  style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           SizedBox(
             height: 200,
             child: BarChart(
@@ -251,7 +262,7 @@ class _RadiologistDashboardState extends State<RadiologistDashboard>
     ];
 
     return NVGlassCard(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -308,7 +319,7 @@ class _RadiologistDashboardState extends State<RadiologistDashboard>
 
   Widget _buildAnnotationQueue() {
     return NVGlassCard(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -352,51 +363,93 @@ class _AnnotationRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: NVColors.bgDeep,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: NVColors.border),
       ),
-      child: Row(
-        children: [
-          Icon(Icons.medical_information_rounded, color: NVColors.radiologistColor.withValues(alpha: 0.7), size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
+      child: isMobile
+          ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.caseId, style: const TextStyle(color: NVColors.primary, fontWeight: FontWeight.w600, fontSize: 13)),
+                Row(
+                  children: [
+                    Icon(Icons.medical_information_rounded, color: NVColors.radiologistColor.withValues(alpha: 0.7), size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(item.caseId, style: const TextStyle(color: NVColors.primary, fontWeight: FontWeight.w600, fontSize: 13)),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: item.priorityColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: item.priorityColor.withValues(alpha: 0.3)),
+                      ),
+                      child: Text(item.priority, style: TextStyle(color: item.priorityColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
                 Text('${item.modality} · ${item.task}', style: const TextStyle(color: NVColors.textMuted, fontSize: 12)),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: NVColors.radiologistColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                    child: const Text('Annotate'),
+                  ),
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                Icon(Icons.medical_information_rounded, color: NVColors.radiologistColor.withValues(alpha: 0.7), size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(item.caseId, style: const TextStyle(color: NVColors.primary, fontWeight: FontWeight.w600, fontSize: 13)),
+                      Text('${item.modality} · ${item.task}', style: const TextStyle(color: NVColors.textMuted, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: item.priorityColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: item.priorityColor.withValues(alpha: 0.3)),
+                  ),
+                  child: Text(item.priority, style: TextStyle(color: item.priorityColor, fontSize: 11, fontWeight: FontWeight.w600)),
+                ),
+                const SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: NVColors.radiologistColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    minimumSize: const Size(0, 0),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                  child: const Text('Annotate'),
+                ),
               ],
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: item.priorityColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: item.priorityColor.withValues(alpha: 0.3)),
-            ),
-            child: Text(item.priority, style: TextStyle(color: item.priorityColor, fontSize: 11, fontWeight: FontWeight.w600)),
-          ),
-          const SizedBox(width: 10),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: NVColors.radiologistColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              minimumSize: const Size(0, 0),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-            child: const Text('Annotate'),
-          ),
-        ],
-      ),
     );
   }
 }

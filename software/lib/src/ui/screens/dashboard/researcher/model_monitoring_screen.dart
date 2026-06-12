@@ -43,35 +43,41 @@ class _ModelMonitoringScreenState extends State<ModelMonitoringScreen>
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<NVAuthProvider>(context).nvUser;
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
-        children: [
-          NVSidebar(currentRoute: '/dashboard/researcher/models', role: AppConstants.roleResearcher),
-          Expanded(
-            child: FadeTransition(
-              opacity: _fade,
-              child: Column(children: [
-                NVTopBar(title: 'Model Monitoring', subtitle: 'Real-time performance tracking and architecture comparison', user: user?.name ?? 'Researcher', roleColor: NVColors.researcherColor),
-                Expanded(child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    _buildStats(),
-                    const SizedBox(height: 24),
-                    _buildLeaderboard(),
-                    const SizedBox(height: 16),
-                    Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Expanded(flex: 3, child: _buildRadarChart()),
-                      const SizedBox(width: 16),
-                      Expanded(flex: 2, child: _buildRocCurve()),
-                    ]),
-                  ]),
-                )),
-              ]),
-            ),
-          ),
-        ],
-      ),
+    return NVScaffold(
+      currentRoute: '/dashboard/researcher/models',
+      role: AppConstants.roleResearcher,
+      title: 'Model Monitoring',
+      subtitle: 'Real-time performance tracking and architecture comparison',
+      userName: user?.name ?? 'Researcher',
+      roleColor: NVColors.researcherColor,
+      fadeAnimation: _fade,
+      body: Column(children: [
+        NVTopBar(title: 'Model Monitoring', subtitle: 'Real-time performance tracking and architecture comparison', user: user?.name ?? 'Researcher', roleColor: NVColors.researcherColor),
+        Expanded(child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            _buildStats(),
+            const SizedBox(height: 24),
+            _buildLeaderboard(),
+            const SizedBox(height: 16),
+            LayoutBuilder(builder: (context, constraints) {
+              final isWide = constraints.maxWidth > 700;
+              if (isWide) {
+                return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Expanded(flex: 3, child: _buildRadarChart()),
+                  const SizedBox(width: 16),
+                  Expanded(flex: 2, child: _buildRocCurve()),
+                ]);
+              }
+              return Column(children: [
+                _buildRadarChart(),
+                const SizedBox(height: 16),
+                _buildRocCurve(),
+              ]);
+            }),
+          ]),
+        )),
+      ]),
     );
   }
 

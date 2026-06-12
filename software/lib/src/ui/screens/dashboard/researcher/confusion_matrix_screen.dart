@@ -119,67 +119,77 @@ class _ConfusionMatrixScreenState extends State<ConfusionMatrixScreen>
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<NVAuthProvider>(context).nvUser;
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
+    return NVScaffold(
+      currentRoute: '/dashboard/researcher/confusion',
+      role: AppConstants.roleResearcher,
+      title: 'Confusion Matrix',
+      subtitle: 'Interactive classification error analysis & per-class performance breakdown',
+      userName: user?.name ?? 'Researcher',
+      roleColor: NVColors.researcherColor,
+      fadeAnimation: _fade,
+      body: Column(
         children: [
-          NVSidebar(
-            currentRoute: '/dashboard/researcher/confusion',
-            role: AppConstants.roleResearcher,
+          NVTopBar(
+            title: 'Confusion Matrix',
+            subtitle: 'Interactive classification error analysis & per-class performance breakdown',
+            user: user?.name ?? 'Researcher',
+            roleColor: NVColors.researcherColor,
           ),
           Expanded(
-            child: FadeTransition(
-              opacity: _fade,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  NVTopBar(
-                    title: 'Confusion Matrix',
-                    subtitle:
-                        'Interactive classification error analysis & per-class performance breakdown',
-                    user: user?.name ?? 'Researcher',
-                    roleColor: NVColors.researcherColor,
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
+                  // ── Stats row ─────────────────────────────────────
+                  _buildStatsRow(),
+                  const SizedBox(height: 24),
+
+                  // ── Model + mode selectors ─────────────────────────
+                  _buildSelectors(),
+                  const SizedBox(height: 24),
+
+                  // ── Matrix + Per-class side by side ────────────────
+                  LayoutBuilder(builder: (context, constraints) {
+                    final isWide = constraints.maxWidth > 700;
+                    if (isWide) {
+                      return Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // ── Stats row ─────────────────────────────────────
-                          _buildStatsRow(),
-                          const SizedBox(height: 24),
-
-                          // ── Model + mode selectors ─────────────────────────
-                          _buildSelectors(),
-                          const SizedBox(height: 24),
-
-                          // ── Matrix + Per-class side by side ────────────────
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Flexible(flex: 3, child: _buildMatrixCard()),
-                              const SizedBox(width: 16),
-                              Flexible(flex: 2, child: _buildPerClassCard()),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-
-                          // ── Error analysis + Report ────────────────────────
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Flexible(
-                                  flex: 3,
-                                  child: _buildMisclassificationCard()),
-                              const SizedBox(width: 16),
-                              Flexible(flex: 2, child: _buildReportCard()),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
+                          Flexible(flex: 3, child: _buildMatrixCard()),
+                          const SizedBox(width: 16),
+                          Flexible(flex: 2, child: _buildPerClassCard()),
                         ],
-                      ),
-                    ),
-                  ),
+                      );
+                    }
+                    return Column(children: [
+                      _buildMatrixCard(),
+                      const SizedBox(height: 16),
+                      _buildPerClassCard(),
+                    ]);
+                  }),
+                  const SizedBox(height: 24),
+
+                  // ── Error analysis + Report ────────────────────────
+                  LayoutBuilder(builder: (context, constraints) {
+                    final isWide = constraints.maxWidth > 700;
+                    if (isWide) {
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Flexible(flex: 3, child: _buildMisclassificationCard()),
+                          const SizedBox(width: 16),
+                          Flexible(flex: 2, child: _buildReportCard()),
+                        ],
+                      );
+                    }
+                    return Column(children: [
+                      _buildMisclassificationCard(),
+                      const SizedBox(height: 16),
+                      _buildReportCard(),
+                    ]);
+                  }),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),

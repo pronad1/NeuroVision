@@ -55,64 +55,60 @@ class _AnnotationScreenState extends State<AnnotationScreen>
     final isMobile = MediaQuery.of(context).size.width < 768;
     final isTablet = MediaQuery.of(context).size.width < 1200;
 
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
-        children: [
-          NVSidebar(currentRoute: '/dashboard/radiologist/annotations', role: AppConstants.roleRadiologist),
-          Expanded(
-            child: FadeTransition(
-              opacity: _fade,
-              child: Column(children: [
-                NVTopBar(title: 'Image Annotation', subtitle: 'Professional lesion annotation and marking tools', user: user?.name ?? 'Radiologist', roleColor: NVColors.radiologistColor),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: isMobile
-                          ? Column(children: [
-                              _buildToolbox(),
-                              const SizedBox(height: 12),
-                              LimitedBox(
-                                maxHeight: 300,
-                                child: _buildCanvas(),
-                              ),
-                              const SizedBox(height: 12),
-                              LimitedBox(
-                                maxHeight: 400,
-                                child: SingleChildScrollView(child: _buildProperties()),
-                              ),
-                            ])
-                          : isTablet
-                              ? Column(
-                                  children: [
-                                    SizedBox(
-                                      height: 400,
-                                      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                        SizedBox(width: 72, child: _buildToolbox()),
-                                        const SizedBox(width: 12),
-                                        Expanded(child: _buildCanvas()),
-                                      ]),
-                                    ),
-                                    const SizedBox(height: 16),
-                                    SingleChildScrollView(child: _buildProperties()),
-                                  ],
-                                )
-                              : Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                  SizedBox(width: 72, child: _buildToolbox()),
-                                  const SizedBox(width: 12),
-                                  Expanded(child: _buildCanvas()),
-                                  const SizedBox(width: 12),
-                                  SizedBox(width: 280, child: SingleChildScrollView(child: _buildProperties())),
-                                ]),
-                    ),
-                  ),
-                ),
-              ]),
+    return NVScaffold(
+      currentRoute: '/dashboard/radiologist/annotations',
+      role: AppConstants.roleRadiologist,
+      title: 'Image Annotation',
+      subtitle: 'Professional lesion annotation and marking tools',
+      userName: user?.name ?? 'Radiologist',
+      roleColor: NVColors.radiologistColor,
+      fadeAnimation: _fade,
+      body: Column(children: [
+        NVTopBar(title: 'Image Annotation', subtitle: 'Professional lesion annotation and marking tools', user: user?.name ?? 'Radiologist', roleColor: NVColors.radiologistColor),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: isMobile
+                  ? Column(children: [
+                      _buildToolbox(),
+                      const SizedBox(height: 12),
+                      LimitedBox(
+                        maxHeight: 300,
+                        child: _buildCanvas(),
+                      ),
+                      const SizedBox(height: 12),
+                      LimitedBox(
+                        maxHeight: 400,
+                        child: SingleChildScrollView(child: _buildProperties()),
+                      ),
+                    ])
+                  : isTablet
+                      ? Column(
+                          children: [
+                            SizedBox(
+                              height: 400,
+                              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                SizedBox(width: 72, child: _buildToolbox()),
+                                const SizedBox(width: 12),
+                                Expanded(child: _buildCanvas()),
+                              ]),
+                            ),
+                            const SizedBox(height: 16),
+                            SingleChildScrollView(child: _buildProperties()),
+                          ],
+                        )
+                      : Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          SizedBox(width: 72, child: _buildToolbox()),
+                          const SizedBox(width: 12),
+                          Expanded(child: SizedBox(height: 600, child: _buildCanvas())),
+                          const SizedBox(width: 12),
+                          SizedBox(width: 280, child: SingleChildScrollView(child: _buildProperties())),
+                        ]),
             ),
           ),
-        ],
-      ),
+        ),
+      ]),
     );
   }
 

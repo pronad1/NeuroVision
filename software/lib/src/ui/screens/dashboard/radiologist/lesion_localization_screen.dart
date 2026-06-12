@@ -130,44 +130,36 @@ class _LesionLocalizationScreenState extends State<LesionLocalizationScreen>
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<NVAuthProvider>(context).nvUser;
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
+    return NVScaffold(
+      currentRoute: '/dashboard/radiologist/lesions',
+      role: AppConstants.roleRadiologist,
+      title: 'Lesion Localization',
+      subtitle: 'AI vs Radiologist spatial comparison & overlap analysis',
+      userName: user?.name ?? 'Radiologist',
+      roleColor: NVColors.radiologistColor,
+      fadeAnimation: _fade,
+      body: Column(
         children: [
-          NVSidebar(
-            currentRoute: '/dashboard/radiologist/lesions',
-            role: AppConstants.roleRadiologist,
+          NVTopBar(
+            title: 'Lesion Localization',
+            subtitle: 'AI vs Radiologist spatial comparison & overlap analysis',
+            user: user?.name ?? 'Radiologist',
+            roleColor: NVColors.radiologistColor,
           ),
           Expanded(
-            child: FadeTransition(
-              opacity: _fade,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  NVTopBar(
-                    title: 'Lesion Localization',
-                    subtitle:
-                        'AI vs Radiologist spatial comparison & overlap analysis',
-                    user: user?.name ?? 'Radiologist',
-                    roleColor: NVColors.radiologistColor,
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // ── Stat cards ───────────────────────────────
-                          _buildStatRow(),
-                          const SizedBox(height: 20),
-                          // ── Top row: scan viewer + lesion registry ───
-                          _buildTopRow(),
-                          const SizedBox(height: 20),
-                          // ── Bottom: bar chart ────────────────────────
-                          _buildBarChartCard(),
-                        ],
-                      ),
-                    ),
-                  ),
+                  // ── Stat cards ───────────────────────────────
+                  _buildStatRow(),
+                  const SizedBox(height: 20),
+                  // ── Top row: scan viewer + lesion registry ───
+                  _buildTopRow(),
+                  const SizedBox(height: 20),
+                  // ── Bottom: bar chart ────────────────────────
+                  _buildBarChartCard(),
                 ],
               ),
             ),
@@ -180,50 +172,83 @@ class _LesionLocalizationScreenState extends State<LesionLocalizationScreen>
   // ── Stat row ─────────────────────────────────────────────────────────────
 
   Widget _buildStatRow() {
-    return Row(
-      children: [
-        Expanded(
-          child: NVStatCard(
-            label: 'Lesions Detected',
-            value: '47',
-            icon: Icons.location_on_rounded,
-            color: NVColors.radiologistColor,
-            trend: '+5',
-            trendPositive: true,
-            subtitle: 'This week',
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: NVStatCard(
-            label: 'AI Agreement',
-            value: '89.4%',
-            icon: Icons.handshake_rounded,
-            color: NVColors.success,
-            trend: '+2.1%',
-            trendPositive: true,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: NVStatCard(
-            label: 'False Positives',
-            value: '4',
-            icon: Icons.cancel_rounded,
-            color: NVColors.error,
-            subtitle: 'AI overcalls',
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: NVStatCard(
-            label: 'Avg Dice Score',
-            value: '0.873',
-            icon: Icons.calculate_rounded,
-            color: NVColors.warning,
-          ),
-        ),
-      ],
+    const card1 = NVStatCard(
+      label: 'Lesions Detected',
+      value: '47',
+      icon: Icons.location_on_rounded,
+      color: NVColors.radiologistColor,
+      trend: '+5',
+      trendPositive: true,
+      subtitle: 'This week',
+    );
+    const card2 = NVStatCard(
+      label: 'AI Agreement',
+      value: '89.4%',
+      icon: Icons.handshake_rounded,
+      color: NVColors.success,
+      trend: '+2.1%',
+      trendPositive: true,
+    );
+    const card3 = NVStatCard(
+      label: 'False Positives',
+      value: '4',
+      icon: Icons.cancel_rounded,
+      color: NVColors.error,
+      subtitle: 'AI overcalls',
+    );
+    const card4 = NVStatCard(
+      label: 'Avg Dice Score',
+      value: '0.873',
+      icon: Icons.calculate_rounded,
+      color: NVColors.warning,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth > 600;
+        if (isWide) {
+          return IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: card1),
+                const SizedBox(width: 12),
+                Expanded(child: card2),
+                const SizedBox(width: 12),
+                Expanded(child: card3),
+                const SizedBox(width: 12),
+                Expanded(child: card4),
+              ],
+            ),
+          );
+        } else {
+          return Column(
+            children: [
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: card1),
+                    const SizedBox(width: 12),
+                    Expanded(child: card2),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: card3),
+                    const SizedBox(width: 12),
+                    Expanded(child: card4),
+                  ],
+                ),
+              ),
+            ],
+          );
+        }
+      },
     );
   }
 
@@ -266,12 +291,15 @@ class _LesionLocalizationScreenState extends State<LesionLocalizationScreen>
               const Icon(Icons.center_focus_strong_rounded,
                   color: NVColors.radiologistColor, size: 16),
               const SizedBox(width: 8),
-              const Text('Spatial Localization Comparison',
-                  style: TextStyle(
-                      color: NVColors.textPrimary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14)),
-              const Spacer(),
+              const Expanded(
+                child: Text('Spatial Localization Comparison',
+                    style: TextStyle(
+                        color: NVColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14),
+                    overflow: TextOverflow.ellipsis),
+              ),
+              const SizedBox(width: 8),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
