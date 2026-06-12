@@ -218,7 +218,9 @@ class _AnnotationScreenState extends State<AnnotationScreen>
   Widget _buildCanvas() {
     return NVGlassCard(
       padding: const EdgeInsets.all(0),
-      child: Column(children: [
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
         // Canvas header
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -243,50 +245,48 @@ class _AnnotationScreenState extends State<AnnotationScreen>
             ]),
           ),
         ),
-        // Annotation canvas
-        Expanded(
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 300),
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: NVColors.border),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Stack(children: [
-                // Background scan
-                Container(decoration: BoxDecoration(gradient: RadialGradient(center: const Alignment(0, -0.1), radius: 0.8, colors: [const Color(0xFF1a1a2e).withValues(alpha: 0.95), Colors.black]))),
-                CustomPaint(painter: _AnnotationCanvasPainter(annotations: _annotations, activeColor: _activeColor, activeTool: _activeTool), size: Size.infinite),
-                // Cross cursor indicator
-                Positioned(top: 12, right: 12, child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.7), borderRadius: BorderRadius.circular(6)),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Container(width: 8, height: 8, decoration: BoxDecoration(color: _activeColor, shape: BoxShape.circle)),
-                    const SizedBox(width: 6),
-                    Text(_activeLabel, style: const TextStyle(color: Colors.white70, fontSize: 10)),
-                  ]),
-                )),
-                // Slice nav
-                Positioned(bottom: 12, left: 0, right: 0, child: Center(child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.7), borderRadius: BorderRadius.circular(20)),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    const Icon(Icons.skip_previous_rounded, color: Colors.white54, size: 16),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.chevron_left_rounded, color: Colors.white70, size: 18),
-                    const SizedBox(width: 8),
-                    const Text('Slice 42 / 86', style: TextStyle(color: Colors.white70, fontSize: 11)),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.chevron_right_rounded, color: Colors.white70, size: 18),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.skip_next_rounded, color: Colors.white54, size: 16),
-                  ]),
-                ))),
-              ]),
-            ),
+        // Annotation canvas — fixed height to avoid Expanded-in-scroll issues
+        Container(
+          height: 420,
+          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          decoration: BoxDecoration(
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: NVColors.border),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Stack(children: [
+              // Background scan
+              Container(decoration: BoxDecoration(gradient: RadialGradient(center: const Alignment(0, -0.1), radius: 0.8, colors: [const Color(0xFF1a1a2e).withValues(alpha: 0.95), Colors.black]))),
+              Positioned.fill(child: CustomPaint(painter: _AnnotationCanvasPainter(annotations: _annotations, activeColor: _activeColor, activeTool: _activeTool))),
+              // Cross cursor indicator
+              Positioned(top: 12, right: 12, child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.7), borderRadius: BorderRadius.circular(6)),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Container(width: 8, height: 8, decoration: BoxDecoration(color: _activeColor, shape: BoxShape.circle)),
+                  const SizedBox(width: 6),
+                  Text(_activeLabel, style: const TextStyle(color: Colors.white70, fontSize: 10)),
+                ]),
+              )),
+              // Slice nav
+              Positioned(bottom: 12, left: 0, right: 0, child: Center(child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.7), borderRadius: BorderRadius.circular(20)),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  const Icon(Icons.skip_previous_rounded, color: Colors.white54, size: 16),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.chevron_left_rounded, color: Colors.white70, size: 18),
+                  const SizedBox(width: 8),
+                  const Text('Slice 42 / 86', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.chevron_right_rounded, color: Colors.white70, size: 18),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.skip_next_rounded, color: Colors.white54, size: 16),
+                ]),
+              ))),
+            ]),
           ),
         ),
       ]),

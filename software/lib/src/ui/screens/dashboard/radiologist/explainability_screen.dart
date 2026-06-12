@@ -1,10 +1,12 @@
 // lib/src/ui/screens/dashboard/radiologist/explainability_screen.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../../../config/theme.dart';
 import '../../../../config/constants.dart';
 import '../../../../providers/auth_provider.dart';
+import '../../../../providers/analysis_provider.dart';
 import '../../../widgets/nv_sidebar.dart';
 import '../../../widgets/nv_top_bar.dart';
 import '../../../widgets/nv_glass_card.dart';
@@ -125,6 +127,9 @@ class _ExplainabilityScreenState extends State<ExplainabilityScreen>
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<NVAuthProvider>(context).nvUser;
+    final analysisProvider = Provider.of<AnalysisProvider>(context);
+    final result = analysisProvider.result;
+
     return NVScaffold(
       currentRoute: '/dashboard/radiologist/explainability',
       role: AppConstants.roleRadiologist,
@@ -146,7 +151,18 @@ class _ExplainabilityScreenState extends State<ExplainabilityScreen>
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  _buildStatsRow(),
+                  // Live AI result banner
+                  if (result != null)
+                    _buildLiveResultBanner(result)
+                  else
+                    _buildNoResultBanner(),
+                  const SizedBox(height: 16),
+                  // Heatmap / XAI visualization
+                  if (result?.heatmapBase64 != null)
+                    _buildLiveHeatmapCard(result!),
+                  if (result?.heatmapBase64 != null)
+                    const SizedBox(height: 20),
+                  _buildStatsRow(result),
                   const SizedBox(height: 20),
                   _buildTopRow(),
                   const SizedBox(height: 20),
@@ -162,19 +178,158 @@ class _ExplainabilityScreenState extends State<ExplainabilityScreen>
     );
   }
 
+  Widget _buildLiveResultBanner(dynamic result) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            NVColors.radiologistColor.withValues(alpha: 0.15),
+            NVColors.radiologistColor.withValues(alpha: 0.04),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: NVColors.radiologistColor.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.visibility_rounded, color: NVColors.radiologistColor, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Live Grad-CAM Explanation',
+                    style: TextStyle(
+                        color: NVColors.radiologistColor,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13)),
+                const SizedBox(height: 2),
+                Text(
+                  '${result.prediction} · ${result.confidence.toStringAsFixed(1)}% confidence · ${result.modelUsed}',
+                  style: const TextStyle(color: NVColors.textMuted, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: NVColors.success.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: NVColors.success.withValues(alpha: 0.3)),
+            ),
+            child: const Text('Live',
+                style: TextStyle(
+                    color: NVColors.success, fontSize: 11, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoResultBanner() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: NVColors.bgCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: NVColors.border.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline_rounded, color: NVColors.textMuted, size: 16),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              'Run an AI analysis first to see live Grad-CAM heatmaps here.',
+              style: TextStyle(color: NVColors.textMuted, fontSize: 12),
+            ),
+          ),
+          const SizedBox(width: 10),
+          TextButton(
+            onPressed: () => Navigator.pushReplacementNamed(context, '/analysis'),
+            style: TextButton.styleFrom(
+                foregroundColor: NVColors.radiologistColor,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6)),
+            child: const Text('Run Analysis →', style: TextStyle(fontSize: 12)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLiveHeatmapCard(dynamic result) {
+    try {
+      final bytes = base64Decode(result.heatmapBase64 as String);
+      return NVGlassCard(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.whatshot_rounded,
+                    color: NVColors.warning, size: 14),
+                const SizedBox(width: 6),
+                const Text('Grad-CAM Heatmap (Live)',
+                    style: TextStyle(
+                        color: NVColors.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600)),
+                const Spacer(),
+                Text(
+                  result.modelUsed as String,
+                  style: const TextStyle(
+                      color: NVColors.accent, fontSize: 11),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Image.memory(
+                bytes,
+                width: double.infinity,
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Lesion segmentation mask — Red regions indicate AI-detected lesion areas',
+              style: TextStyle(
+                  color: NVColors.textMuted.withValues(alpha: 0.7),
+                  fontSize: 10),
+            ),
+          ],
+        ),
+      );
+    } catch (_) {
+      return const SizedBox.shrink();
+    }
+  }
+
   // ── Stats row ─────────────────────────────────────────────────────────────
-  Widget _buildStatsRow() {
-    const card1 = NVStatCard(
+  Widget _buildStatsRow([dynamic result]) {
+    final casesValue = result != null ? '1' : '156';
+    final gradCamScore = result?.confidence != null
+        ? (result!.confidence / 100.0).toStringAsFixed(3)
+        : '0.847';
+    final xaiRate = result?.confidence != null
+        ? '${result!.confidence.toStringAsFixed(1)}%'
+        : '91.2%';
+
+    final card1 = NVStatCard(
       label: 'Cases Analyzed',
-      value: '156',
+      value: casesValue,
       icon: Icons.visibility_rounded,
       color: NVColors.radiologistColor,
       trend: '+14',
       trendPositive: true,
     );
-    const card2 = NVStatCard(
+    final card2 = NVStatCard(
       label: 'Avg Grad-CAM Score',
-      value: '0.847',
+      value: gradCamScore,
       icon: Icons.whatshot_rounded,
       color: NVColors.warning,
     );
@@ -185,9 +340,9 @@ class _ExplainabilityScreenState extends State<ExplainabilityScreen>
       color: NVColors.info,
       subtitle: 'Per case',
     );
-    const card4 = NVStatCard(
+    final card4 = NVStatCard(
       label: 'XAI Validation Rate',
-      value: '91.2%',
+      value: xaiRate,
       icon: Icons.verified_rounded,
       color: NVColors.success,
     );

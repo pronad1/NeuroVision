@@ -274,6 +274,119 @@ class _NVSidebarState extends State<NVSidebar> {
           ),
         ),
 
+        // ── New Analysis CTA ────────────────────────────────────────
+        if (!collapsed)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+            child: GestureDetector(
+              onTap: () {
+                if (isMobileLayout(context)) Navigator.pop(context);
+                if (widget.currentRoute != '/analysis') {
+                  Navigator.pushReplacementNamed(context, '/analysis');
+                }
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 14),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      NVColors.primary.withValues(alpha: widget.currentRoute == '/analysis' ? 0.4 : 0.22),
+                      NVColors.accent.withValues(alpha: widget.currentRoute == '/analysis' ? 0.3 : 0.14),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: NVColors.primary.withValues(alpha: widget.currentRoute == '/analysis' ? 0.7 : 0.45),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: NVColors.primary.withValues(alpha: 0.25),
+                      blurRadius: 10,
+                      spreadRadius: 1,
+                    )
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [NVColors.primary, NVColors.accent],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.add_rounded, color: Colors.white, size: 16),
+                    ),
+                    const SizedBox(width: 10),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'New Analysis',
+                            style: TextStyle(
+                              color: NVColors.textPrimary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            'Upload & analyze image',
+                            style: TextStyle(
+                              color: NVColors.textMuted,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios_rounded,
+                        color: NVColors.primary, size: 11),
+                  ],
+                ),
+              ),
+            ),
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Tooltip(
+              message: 'New Analysis',
+              child: GestureDetector(
+                onTap: () {
+                  if (widget.currentRoute != '/analysis') {
+                    Navigator.pushReplacementNamed(context, '/analysis');
+                  }
+                },
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [NVColors.primary, NVColors.accent],
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: NVColors.primary.withValues(alpha: 0.4),
+                        blurRadius: 8,
+                      )
+                    ],
+                  ),
+                  child: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
+                ),
+              ),
+            ),
+          ),
+        const SizedBox(height: 4),
+
         // Navigation Items
         Expanded(
           child: ListView(

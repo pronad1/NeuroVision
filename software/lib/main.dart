@@ -9,6 +9,7 @@ import 'firebase_options.dart';
 import 'src/config/routes.dart';
 import 'src/config/theme.dart';
 import 'src/providers/auth_provider.dart';
+import 'src/providers/analysis_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +39,7 @@ class NeuroVisionApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => NVAuthProvider()),
+        ChangeNotifierProvider(create: (_) => AnalysisProvider()),
       ],
       child: MaterialApp(
         title: 'NeuroVision AI',

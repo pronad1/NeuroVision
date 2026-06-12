@@ -9,6 +9,7 @@ import '../ui/screens/auth/forgot_password_screen.dart';
 
 // Shared
 import '../ui/screens/shared/profile_screen.dart';
+import '../ui/screens/shared/image_analysis_hub.dart';
 
 // Doctor Dashboards
 import '../ui/screens/dashboard/doctor/doctor_dashboard.dart';
@@ -36,7 +37,6 @@ import '../ui/screens/dashboard/researcher/confusion_matrix_screen.dart';
 import '../ui/screens/dashboard/researcher/dataset_management_screen.dart';
 import '../ui/screens/dashboard/researcher/gpu_monitor_screen.dart';
 
-import 'constants.dart';
 
 
 class Routes {
@@ -48,6 +48,7 @@ class Routes {
 
   // ── Shared ──
   static const String profile = '/profile';
+  static const String analysis = '/analysis';
 
   // ── Doctor ──
   static const String doctorDashboard = '/dashboard/doctor';
@@ -91,6 +92,8 @@ class Routes {
       // ── Shared ──
       case profile:
         return _fade(const ProfileScreen());
+      case analysis:
+        return _fade(const ImageAnalysisHub());
 
       // ── Doctor Routes ──
       case doctorDashboard:

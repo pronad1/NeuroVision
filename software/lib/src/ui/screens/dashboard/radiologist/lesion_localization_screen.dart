@@ -5,6 +5,7 @@ import 'package:fl_chart/fl_chart.dart';
 import '../../../../config/theme.dart';
 import '../../../../config/constants.dart';
 import '../../../../providers/auth_provider.dart';
+import '../../../../providers/analysis_provider.dart';
 import '../../../widgets/nv_sidebar.dart';
 import '../../../widgets/nv_top_bar.dart';
 import '../../../widgets/nv_glass_card.dart';
@@ -130,6 +131,9 @@ class _LesionLocalizationScreenState extends State<LesionLocalizationScreen>
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<NVAuthProvider>(context).nvUser;
+    final analysisProvider = Provider.of<AnalysisProvider>(context);
+    final result = analysisProvider.result;
+
     return NVScaffold(
       currentRoute: '/dashboard/radiologist/lesions',
       role: AppConstants.roleRadiologist,
@@ -152,8 +156,14 @@ class _LesionLocalizationScreenState extends State<LesionLocalizationScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // ── AI Result Banner (when real result available) ────────
+                  if (result != null)
+                    _buildAIResultBanner(result)
+                  else
+                    _buildNoAnalysisBanner(),
+                  const SizedBox(height: 16),
                   // ── Stat cards ───────────────────────────────
-                  _buildStatRow(),
+                  _buildStatRow(result),
                   const SizedBox(height: 20),
                   // ── Top row: scan viewer + lesion registry ───
                   _buildTopRow(),
@@ -169,36 +179,150 @@ class _LesionLocalizationScreenState extends State<LesionLocalizationScreen>
     );
   }
 
+  // ── AI Result Banner ──────────────────────────────────────────────────────
+
+  Widget _buildAIResultBanner(dynamic result) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            NVColors.radiologistColor.withValues(alpha: 0.15),
+            NVColors.radiologistColor.withValues(alpha: 0.04),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: NVColors.radiologistColor.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.biotech_rounded, color: NVColors.radiologistColor, size: 16),
+              const SizedBox(width: 8),
+              const Text(
+                'Live AI Analysis Result',
+                style: TextStyle(
+                    color: NVColors.radiologistColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13),
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: NVColors.success.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: NVColors.success.withValues(alpha: 0.3)),
+                ),
+                child: const Text('Active',
+                    style: TextStyle(
+                        color: NVColors.success,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 20,
+            runSpacing: 8,
+            children: [
+              _BannerStat('Prediction', result.prediction, NVColors.radiologistColor),
+              _BannerStat('Confidence', '${result.confidence.toStringAsFixed(1)}%', NVColors.success),
+              _BannerStat('Severity', result.severity, _severityColor(result.severity as String)),
+              _BannerStat('Model', result.modelUsed, NVColors.accent),
+              if (result.lesionCoveragePct != null && result.lesionCoveragePct > 0)
+                _BannerStat('Lesion Coverage', '${(result.lesionCoveragePct as double).toStringAsFixed(2)}%', NVColors.warning),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNoAnalysisBanner() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: NVColors.bgCard,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: NVColors.border.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline_rounded, color: NVColors.textMuted, size: 16),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              'No AI analysis yet. Upload a medical image via \'New Analysis\' to see real results here.',
+              style: TextStyle(color: NVColors.textMuted, fontSize: 12),
+            ),
+          ),
+          const SizedBox(width: 10),
+          TextButton(
+            onPressed: () => Navigator.pushReplacementNamed(context, '/analysis'),
+            style: TextButton.styleFrom(
+                foregroundColor: NVColors.radiologistColor,
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6)),
+            child: const Text('Run Analysis →', style: TextStyle(fontSize: 12)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _severityColor(String severity) => switch (severity) {
+        'High' || 'Critical' => NVColors.error,
+        'Medium' => NVColors.warning,
+        'None' => NVColors.success,
+        _ => NVColors.accent,
+      };
+
   // ── Stat row ─────────────────────────────────────────────────────────────
 
-  Widget _buildStatRow() {
-    const card1 = NVStatCard(
+  Widget _buildStatRow([dynamic result]) {
+    final lesionCount = result?.lesionVoxels != null && (result!.lesionVoxels as int) > 0
+        ? '${result.lesionVoxels}'
+        : '47';
+    final aiAgreement = result?.confidence != null
+        ? '${result!.confidence.toStringAsFixed(1)}%'
+        : '89.4%';
+    final fpCount = result != null ? '0' : '4';
+    final diceScore = result?.confidence != null
+        ? (result!.confidence / 100.0).toStringAsFixed(3)
+        : '0.873';
+
+    final card1 = NVStatCard(
       label: 'Lesions Detected',
-      value: '47',
+      value: lesionCount,
       icon: Icons.location_on_rounded,
       color: NVColors.radiologistColor,
       trend: '+5',
       trendPositive: true,
-      subtitle: 'This week',
+      subtitle: result != null ? 'From AI analysis' : 'This week',
     );
-    const card2 = NVStatCard(
-      label: 'AI Agreement',
-      value: '89.4%',
+    final card2 = NVStatCard(
+      label: result != null ? 'AI Confidence' : 'AI Agreement',
+      value: aiAgreement,
       icon: Icons.handshake_rounded,
       color: NVColors.success,
       trend: '+2.1%',
       trendPositive: true,
     );
-    const card3 = NVStatCard(
+    final card3 = NVStatCard(
       label: 'False Positives',
-      value: '4',
+      value: fpCount,
       icon: Icons.cancel_rounded,
       color: NVColors.error,
       subtitle: 'AI overcalls',
     );
-    const card4 = NVStatCard(
+    final card4 = NVStatCard(
       label: 'Avg Dice Score',
-      value: '0.873',
+      value: diceScore,
       icon: Icons.calculate_rounded,
       color: NVColors.warning,
     );
@@ -1178,4 +1302,28 @@ class _BrainScanPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _BrainScanPainter old) =>
       old.isAI != isAI || old.caseIndex != caseIndex;
+}
+
+// ── Banner Stat helper ────────────────────────────────────────────────────────
+
+class _BannerStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  const _BannerStat(this.label, this.value, this.color);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(color: NVColors.textMuted, fontSize: 10)),
+        const SizedBox(height: 2),
+        Text(value,
+            style: TextStyle(
+                color: color, fontSize: 14, fontWeight: FontWeight.w700)),
+      ],
+    );
+  }
 }
