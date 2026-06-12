@@ -129,6 +129,52 @@ class NVAuthProvider extends ChangeNotifier {
     return await _authService.resetPassword(email);
   }
 
+  Future<String?> updateProfile({
+    required String name,
+    required String institution,
+    required String specialization,
+    String? photoUrl,
+  }) async {
+    if (_nvUser == null) return 'Not authenticated';
+
+    _status = AuthStatus.loading;
+    _errorMessage = null;
+    notifyListeners();
+
+    final error = await _authService.updateProfile(
+      uid: _nvUser!.uid,
+      name: name,
+      institution: institution,
+      specialization: specialization,
+      photoUrl: photoUrl,
+    );
+
+    if (error == null) {
+      await _loadUserProfile(_nvUser!.uid);
+    } else {
+      _status = AuthStatus.authenticated;
+      _errorMessage = error;
+      notifyListeners();
+    }
+
+    return error;
+  }
+
+  Future<String?> changePassword(String newPassword) async {
+    _status = AuthStatus.loading;
+    _errorMessage = null;
+    notifyListeners();
+
+    final error = await _authService.changePassword(newPassword);
+
+    _status = AuthStatus.authenticated;
+    if (error != null) {
+      _errorMessage = error;
+    }
+    notifyListeners();
+    return error;
+  }
+
   void clearError() {
     _errorMessage = null;
     notifyListeners();

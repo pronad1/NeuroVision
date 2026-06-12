@@ -279,6 +279,39 @@ class AuthService {
     }
   }
 
+  Future<String?> updateProfile({
+    required String uid,
+    required String name,
+    required String institution,
+    required String specialization,
+    String? photoUrl,
+  }) async {
+    try {
+      await _firestore.collection(AppConstants.usersCollection).doc(uid).update({
+        'name': name,
+        'institution': institution,
+        'specialization': specialization,
+        if (photoUrl != null) 'photoUrl': photoUrl,
+      });
+      return null;
+    } catch (e) {
+      return 'Update failed: $e';
+    }
+  }
+
+  Future<String?> changePassword(String newPassword) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return 'No user logged in';
+      await user.updatePassword(newPassword);
+      return null;
+    } on FirebaseAuthException catch (e) {
+      return _firebaseErrorMessage(e);
+    } catch (e) {
+      return 'Password update failed: $e';
+    }
+  }
+
   String _firebaseErrorMessage(FirebaseAuthException e) {
     switch (e.code) {
       case 'invalid-email': return 'Invalid email address.';

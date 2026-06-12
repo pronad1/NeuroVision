@@ -50,6 +50,8 @@ class NVScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mobile = isMobileLayout(context);
+    final auth = context.watch<NVAuthProvider>();
+    final nvUser = auth.nvUser;
 
     final sidebar = NVSidebar(currentRoute: currentRoute, role: role);
 
@@ -94,15 +96,30 @@ class NVScaffold extends StatelessWidget {
                   color: NVColors.textSecondary),
               onPressed: () {},
             ),
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: roleColor.withValues(alpha: 0.2),
-              child: Text(
-                userName.isNotEmpty ? userName[0].toUpperCase() : 'U',
-                style: TextStyle(
-                  color: roleColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
+            GestureDetector(
+              onTap: () {
+                if (currentRoute != '/profile') {
+                  Navigator.pushReplacementNamed(context, '/profile');
+                }
+              },
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: CircleAvatar(
+                  radius: 16,
+                  backgroundColor: roleColor.withValues(alpha: 0.2),
+                  backgroundImage: (nvUser?.photoUrl != null && nvUser!.photoUrl!.isNotEmpty)
+                      ? NetworkImage(nvUser.photoUrl!)
+                      : null,
+                  child: (nvUser?.photoUrl == null || nvUser!.photoUrl!.isEmpty)
+                      ? Text(
+                          userName.isNotEmpty ? userName[0].toUpperCase() : 'U',
+                          style: TextStyle(
+                            color: roleColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        )
+                      : null,
                 ),
               ),
             ),
@@ -273,47 +290,61 @@ class _NVSidebarState extends State<NVSidebar> {
           child: Column(
             children: [
               if (!collapsed && user != null)
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundColor: _roleColor.withValues(alpha: 0.2),
-                        child: Text(
-                          user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                          style: TextStyle(color: _roleColor, fontWeight: FontWeight.bold),
+                InkWell(
+                  onTap: () {
+                    if (isMobile) Navigator.pop(context);
+                    if (widget.currentRoute != '/profile') {
+                      Navigator.pushReplacementNamed(context, '/profile');
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor: _roleColor.withValues(alpha: 0.2),
+                          backgroundImage: (user.photoUrl != null && user.photoUrl!.isNotEmpty)
+                              ? NetworkImage(user.photoUrl!)
+                              : null,
+                          child: (user.photoUrl == null || user.photoUrl!.isEmpty)
+                              ? Text(
+                                  user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+                                  style: TextStyle(color: _roleColor, fontWeight: FontWeight.bold),
+                                )
+                              : null,
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              user.name,
-                              style: const TextStyle(
-                                color: NVColors.textPrimary,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user.name,
+                                style: const TextStyle(
+                                  color: NVColors.textPrimary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: _roleColor.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: _roleColor.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  user.roleDisplayName,
+                                  style: TextStyle(color: _roleColor, fontSize: 10, fontWeight: FontWeight.w600),
+                                ),
                               ),
-                              child: Text(
-                                user.roleDisplayName,
-                                style: TextStyle(color: _roleColor, fontSize: 10, fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               // Sign out + collapse button row
