@@ -97,44 +97,53 @@ def mask_to_base64(mask: np.ndarray) -> str:
 
 # ── Brain Inference ───────────────────────────────────────────────────────────
 
-def classify_brain(image_bytes: bytes, model_name: str = "DERNet") -> dict:
+def classify_brain(image_bytes: bytes, model_name: Optional[str] = None) -> dict:
     """
-    Run brain MRI segmentation on a 2D image slice.
-    Internally promotes to pseudo-3D, runs sliding-window inference,
-    returns mask + coverage + heatmap.
+    Run brain MRI segmentation on a 2D image slice using an ensemble of all
+    loaded brain models (DERNet, SegResNet, AttentionUNet) via majority voting.
+    """
+    brain_model_names = ["DERNet", "SegResNet", "AttentionUNet"]
+    loaded_models = []
+    for name in brain_model_names:
+        m = ModelRegistry.get(name)
+        if m is not None:
+            loaded_models.append((name, m))
 
-    Args:
-        image_bytes: raw PNG/JPEG bytes
-        model_name: "DERNet" | "SegResNet" | "AttentionUNet"
-    """
-    model = ModelRegistry.get(model_name)
-    if model is None:
-        raise ValueError(f"Model '{model_name}' not loaded. Available: {ModelRegistry.list_loaded()}")
+    if not loaded_models:
+        raise ValueError(f"No brain models loaded. Available: {ModelRegistry.list_loaded()}")
 
     device = ModelRegistry.device
+    tensor_2d = preprocess_brain_3d(image_bytes).to(device)
 
-    # Preprocess: (1, 3, H, W) → promote to (1, 3, 64, H_r, W_r)
-    tensor_2d = preprocess_brain_3d(image_bytes)  # (1, 3, 224, 224)
-    tensor_2d = tensor_2d.to(device)
+    masks = []
+    for name, model in loaded_models:
+        mask = model.segment_2d_slice(tensor_2d)
+        masks.append(mask)
 
-    # Run 2D-slice segmentation
-    mask = model.segment_2d_slice(tensor_2d)   # (H, W) binary np array
-    cls_result = model.classify_from_mask(mask)
+    # Majority voting on the binary segmentation masks
+    stacked = np.stack(masks, axis=0)  # (N, H, W)
+    majority_threshold = (len(loaded_models) + 1) // 2
+    ensemble_mask = (stacked.sum(axis=0) >= majority_threshold).astype(np.uint8)
 
-    # Build heatmap from mask
-    mask_b64 = mask_to_base64(mask)
+    # Calculate lesion stats from the ensemble mask
+    lesion_pixels = int(ensemble_mask.sum())
+    total_pixels = int(ensemble_mask.size)
+    coverage = round(lesion_pixels / total_pixels * 100, 2) if total_pixels > 0 else 0.0
+    prediction = "Stroke Lesion Detected" if lesion_pixels > 0 else "No Lesion"
 
     # Confidence proxy: coverage percentage normalised
-    coverage = cls_result["lesion_coverage_pct"]
     confidence = min(round(coverage * 5, 1), 99.9) if coverage > 0 else round(
         (1 - coverage / 100) * 95, 1
     )
 
+    mask_b64 = mask_to_base64(ensemble_mask)
+    model_used = "Ensemble (" + " + ".join([name for name, _ in loaded_models]) + ")"
+
     return {
-        "prediction": cls_result["prediction"],
+        "prediction": prediction,
         "confidence": confidence,
         "modality": "Brain MRI",
-        "model_used": model_name,
+        "model_used": model_used,
         "all_probabilities": {
             "No Lesion": round(100 - confidence, 1),
             "Stroke Lesion": round(confidence, 1),
@@ -142,41 +151,51 @@ def classify_brain(image_bytes: bytes, model_name: str = "DERNet") -> dict:
         "heatmap_base64": mask_b64,           # lesion mask overlay
         "segmentation_mask_base64": mask_b64,
         "lesion_coverage_pct": coverage,
-        "lesion_voxels": cls_result["lesion_voxels"],
+        "lesion_voxels": lesion_pixels,
     }
 
 
 # ── Spine Inference ───────────────────────────────────────────────────────────
 
-def classify_spine(image_bytes: bytes, model_name: str = "EfficientNet") -> dict:
+def classify_spine(image_bytes: bytes, model_name: Optional[str] = None) -> dict:
     """
-    Run spine X-ray binary classification.
-    Returns Normal / Abnormal with confidence.
+    Run spine X-ray binary classification using an ensemble (average probability)
+    of all loaded spine models (DenseNet, EfficientNet, ResNet50).
     """
-    model = ModelRegistry.get(model_name)
-    if model is None:
-        raise ValueError(f"Model '{model_name}' not loaded.")
+    spine_model_names = ["DenseNet", "EfficientNet", "ResNet50"]
+    loaded_models = []
+    for name in spine_model_names:
+        m = ModelRegistry.get(name)
+        if m is not None:
+            loaded_models.append((name, m))
+
+    if not loaded_models:
+        raise ValueError(f"No spine models loaded. Available: {ModelRegistry.list_loaded()}")
 
     device = ModelRegistry.device
 
-    # Use model-specific image size
-    img_size = getattr(model, "IMAGE_SIZE", 384)
-    tensor = preprocess_spine(image_bytes, img_size=img_size).to(device)
+    probs = []
+    for name, model in loaded_models:
+        img_size = getattr(model, "IMAGE_SIZE", 384)
+        tensor = preprocess_spine(image_bytes, img_size=img_size).to(device)
+        with torch.no_grad():
+            prob_abnormal = float(model.predict_proba(tensor).cpu().item())
+        probs.append(prob_abnormal)
 
-    with torch.no_grad():
-        prob_abnormal = float(model.predict_proba(tensor).cpu().item())
+    # Average the abnormality probabilities across all loaded models
+    avg_prob_abnormal = sum(probs) / len(probs)
+    prob_normal = round((1 - avg_prob_abnormal) * 100, 2)
+    prob_abnormal_pct = round(avg_prob_abnormal * 100, 2)
 
-    prob_normal = round((1 - prob_abnormal) * 100, 2)
-    prob_abnormal_pct = round(prob_abnormal * 100, 2)
-
-    prediction = "Abnormal" if prob_abnormal > 0.5 else "Normal"
+    prediction = "Abnormal" if avg_prob_abnormal > 0.5 else "Normal"
     confidence = prob_abnormal_pct if prediction == "Abnormal" else prob_normal
+    model_used = "Ensemble (" + " + ".join([name for name, _ in loaded_models]) + ")"
 
     return {
         "prediction": prediction,
         "confidence": round(confidence, 2),
         "modality": "Spine MRI",
-        "model_used": model_name,
+        "model_used": model_used,
         "all_probabilities": {
             "Normal": prob_normal,
             "Abnormal": prob_abnormal_pct,

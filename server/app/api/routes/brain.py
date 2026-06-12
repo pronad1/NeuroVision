@@ -47,19 +47,16 @@ def _severity(prediction: str, coverage: float) -> str:
 @router.post("/analyze", response_model=BrainResult)
 async def analyze_brain_mri(
     file: UploadFile = File(..., description="Brain MRI image (PNG or JPEG). Single 2D slice."),
-    model: str = Query(
-        default="DERNet",
-        enum=["DERNet", "SegResNet", "AttentionUNet"],
-        description="Brain segmentation model to use"
+    model: Optional[str] = Query(
+        default=None,
+        description="Brain segmentation model to use (ignored, ensemble is always used)"
     ),
 ):
     """
     Analyze a brain MRI image for stroke lesion segmentation.
 
     **Models:**
-    - **DERNet** — Custom 3D architecture (LSCBlock+BiMambaSim+BAGF). Best val Dice: 0.817
-    - **SegResNet** — MONAI SegResNet with gradient accumulation + TTA. Test Dice: 0.782
-    - **AttentionUNet** — MONAI AttentionUnet with attention gates. Test Dice: 0.727
+    - **Ensemble** — Integrates DERNet, SegResNet, and AttentionUNet via majority voting.
 
     **Dataset:** ISLES-2022 (Ischemic Stroke Lesion Segmentation)
 
@@ -73,7 +70,7 @@ async def analyze_brain_mri(
         raise HTTPException(status_code=400, detail="Empty file uploaded")
 
     try:
-        result = classify_brain(image_bytes, model_name=model)
+        result = classify_brain(image_bytes)
     except ValueError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
@@ -83,7 +80,7 @@ async def analyze_brain_mri(
     sev = _severity(result["prediction"], coverage)
     result["severity"] = sev
     result["message"] = (
-        f"Brain MRI analysis complete using {model}. "
+        f"Brain MRI analysis complete. "
         f"{result['prediction']} — lesion coverage: {coverage:.2f}%. "
         "Clinical validation required before any diagnostic use."
     )

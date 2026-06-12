@@ -51,12 +51,16 @@ class _Registry:
             else:
                 state_dict = ckpt
 
-            # Strip 'module.' prefix from DataParallel-wrapped models
+            # Strip 'module.' prefix ONLY if it starts with 'module.'
             cleaned = {}
             for k, v in state_dict.items():
-                cleaned[k.replace("module.", "")] = v
+                k_clean = k[7:] if k.startswith("module.") else k
+                cleaned[k_clean] = v
 
-            model.load_state_dict(cleaned, strict=True)
+            # Load into model.model if this is a wrapper
+            target = model.model if hasattr(model, "model") else model
+
+            target.load_state_dict(cleaned, strict=True)
             model.to(self._device)
             model.eval()
             self._models[name] = model

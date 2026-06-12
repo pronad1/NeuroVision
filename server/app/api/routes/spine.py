@@ -32,28 +32,23 @@ class SpineResult(BaseModel):
 @router.post("/analyze", response_model=SpineResult)
 async def analyze_spine_xray(
     file: UploadFile = File(..., description="Spine X-ray image (PNG or JPEG)"),
-    model: str = Query(
-        default="EfficientNet",
-        enum=["DenseNet", "EfficientNet", "ResNet50"],
-        description="Spine classification model"
+    model: Optional[str] = Query(
+        default=None,
+        description="Spine classification model (ignored, ensemble is always used)"
     ),
 ):
     """
     Classify a spine X-ray as Normal or Abnormal.
 
     **Models (VinDr-SpineXR, MICCAI 2026):**
-    - **EfficientNet** — tf_efficientnetv2_s, AUROC 89.44%, Specificity 91.12%
-    - **DenseNet** — densenet121, AUROC 86.93%, Sensitivity 80.39%
-    - **ResNet50** — resnet50, AUROC 88.88%, Sensitivity 82.72%
-
-    **Image size:** EfficientNet/DenseNet use 384×384, ResNet50 uses 224×224.
+    - **Ensemble** — Averages predictions from EfficientNet, DenseNet, and ResNet50.
     """
     image_bytes = await file.read()
     if len(image_bytes) == 0:
         raise HTTPException(status_code=400, detail="Empty file")
 
     try:
-        result = classify_spine(image_bytes, model_name=model)
+        result = classify_spine(image_bytes)
     except ValueError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
@@ -63,7 +58,7 @@ async def analyze_spine_xray(
     result["severity"] = "None" if prediction == "Normal" else "Medium"
     result["message"] = (
         f"Spine X-ray classified as {prediction} "
-        f"({result['confidence']:.1f}% confidence) using {model}. "
+        f"({result['confidence']:.1f}% confidence). "
         "Radiologist review recommended for clinical decisions."
     )
     return result
