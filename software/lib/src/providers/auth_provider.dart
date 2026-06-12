@@ -41,7 +41,7 @@ class NVAuthProvider extends ChangeNotifier {
 
     try {
       final nvUser = await _authService.getCurrentNVUser();
-      if (nvUser != null && nvUser.approved) {
+      if (nvUser != null) {
         _nvUser = nvUser;
         _status = AuthStatus.authenticated;
       } else {

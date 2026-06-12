@@ -52,6 +52,9 @@ class _AnnotationScreenState extends State<AnnotationScreen>
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<NVAuthProvider>(context).nvUser;
+    final isMobile = MediaQuery.of(context).size.width < 768;
+    final isTablet = MediaQuery.of(context).size.width < 1200;
+
     return Scaffold(
       backgroundColor: NVColors.bgDeep,
       body: Row(
@@ -62,19 +65,49 @@ class _AnnotationScreenState extends State<AnnotationScreen>
               opacity: _fade,
               child: Column(children: [
                 NVTopBar(title: 'Image Annotation', subtitle: 'Professional lesion annotation and marking tools', user: user?.name ?? 'Radiologist', roleColor: NVColors.radiologistColor),
-                Expanded(child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    // Toolbox
-                    SizedBox(width: 72, child: _buildToolbox()),
-                    const SizedBox(width: 12),
-                    // Main canvas
-                    Expanded(child: _buildCanvas()),
-                    const SizedBox(width: 12),
-                    // Properties panel
-                    SizedBox(width: 280, child: _buildProperties()),
-                  ]),
-                )),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: isMobile
+                          ? Column(children: [
+                              _buildToolbox(),
+                              const SizedBox(height: 12),
+                              LimitedBox(
+                                maxHeight: 300,
+                                child: _buildCanvas(),
+                              ),
+                              const SizedBox(height: 12),
+                              LimitedBox(
+                                maxHeight: 400,
+                                child: SingleChildScrollView(child: _buildProperties()),
+                              ),
+                            ])
+                          : isTablet
+                              ? Column(
+                                  children: [
+                                    SizedBox(
+                                      height: 400,
+                                      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                        SizedBox(width: 72, child: _buildToolbox()),
+                                        const SizedBox(width: 12),
+                                        Expanded(child: _buildCanvas()),
+                                      ]),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    SingleChildScrollView(child: _buildProperties()),
+                                  ],
+                                )
+                              : Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  SizedBox(width: 72, child: _buildToolbox()),
+                                  const SizedBox(width: 12),
+                                  Expanded(child: _buildCanvas()),
+                                  const SizedBox(width: 12),
+                                  SizedBox(width: 280, child: SingleChildScrollView(child: _buildProperties())),
+                                ]),
+                    ),
+                  ),
+                ),
               ]),
             ),
           ),
@@ -84,52 +117,105 @@ class _AnnotationScreenState extends State<AnnotationScreen>
   }
 
   Widget _buildToolbox() {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return NVGlassCard(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      child: Column(children: [
-        ..._tools.map((t) {
-          final isActive = _activeTool == t.$1;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Tooltip(
-              message: t.$3,
-              child: GestureDetector(
-                onTap: () => setState(() => _activeTool = t.$1),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  width: 48, height: 48,
-                  decoration: BoxDecoration(
-                    color: isActive ? NVColors.radiologistColor.withValues(alpha: 0.2) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: isActive ? NVColors.radiologistColor : Colors.transparent),
+      child: isMobile
+          ? SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  ..._tools.map((t) {
+                    final isActive = _activeTool == t.$1;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: Tooltip(
+                        message: t.$3,
+                        child: GestureDetector(
+                          onTap: () => setState(() => _activeTool = t.$1),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: isActive ? NVColors.radiologistColor.withValues(alpha: 0.2) : Colors.transparent,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: isActive ? NVColors.radiologistColor : Colors.transparent),
+                            ),
+                            child: Icon(t.$2, color: isActive ? NVColors.radiologistColor : NVColors.textMuted, size: 20),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                  const SizedBox(width: 6),
+                  const VerticalDivider(color: NVColors.border, width: 1),
+                  const SizedBox(width: 6),
+                  ...[NVColors.error, NVColors.warning, NVColors.success, NVColors.info, NVColors.secondary].map((c) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: GestureDetector(
+                        onTap: () => setState(() => _activeColor = c),
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: c,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: _activeColor == c ? Colors.white : Colors.transparent, width: 2),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
+            )
+          : Column(children: [
+              ..._tools.map((t) {
+                final isActive = _activeTool == t.$1;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: Tooltip(
+                    message: t.$3,
+                    child: GestureDetector(
+                      onTap: () => setState(() => _activeTool = t.$1),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: isActive ? NVColors.radiologistColor.withValues(alpha: 0.2) : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: isActive ? NVColors.radiologistColor : Colors.transparent),
+                        ),
+                        child: Icon(t.$2, color: isActive ? NVColors.radiologistColor : NVColors.textMuted, size: 20),
+                      ),
+                    ),
                   ),
-                  child: Icon(t.$2, color: isActive ? NVColors.radiologistColor : NVColors.textMuted, size: 20),
-                ),
-              ),
-            ),
-          );
-        }),
-        const SizedBox(height: 8),
-        const Divider(color: NVColors.border),
-        const SizedBox(height: 8),
-        // Color palette
-        ...[NVColors.error, NVColors.warning, NVColors.success, NVColors.info, NVColors.secondary].map((c) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: GestureDetector(
-              onTap: () => setState(() => _activeColor = c),
-              child: Container(
-                width: 28, height: 28,
-                decoration: BoxDecoration(
-                  color: c,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: _activeColor == c ? Colors.white : Colors.transparent, width: 2),
-                ),
-              ),
-            ),
-          );
-        }),
-      ]),
+                );
+              }),
+              const SizedBox(height: 8),
+              const Divider(color: NVColors.border),
+              const SizedBox(height: 8),
+              ...[NVColors.error, NVColors.warning, NVColors.success, NVColors.info, NVColors.secondary].map((c) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 6),
+                  child: GestureDetector(
+                    onTap: () => setState(() => _activeColor = c),
+                    child: Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: c,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: _activeColor == c ? Colors.white : Colors.transparent, width: 2),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ]),
     );
   }
 
@@ -140,27 +226,31 @@ class _AnnotationScreenState extends State<AnnotationScreen>
         // Canvas header
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(children: [
-            const Icon(Icons.draw_rounded, color: NVColors.radiologistColor, size: 16),
-            const SizedBox(width: 8),
-            const Text('CASE-2026-047 · Brain MRI', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
-            const Spacer(),
-            Text('Tool: ${_tools.firstWhere((t) => t.$1 == _activeTool).$3}', style: const TextStyle(color: NVColors.radiologistColor, fontSize: 12)),
-            const SizedBox(width: 16),
-            _CanvasBtn(icon: Icons.undo_rounded, onTap: () {}),
-            const SizedBox(width: 4),
-            _CanvasBtn(icon: Icons.redo_rounded, onTap: () {}),
-            const SizedBox(width: 4),
-            _CanvasBtn(icon: Icons.zoom_in_rounded, onTap: () {}),
-            const SizedBox(width: 4),
-            _CanvasBtn(icon: Icons.zoom_out_rounded, onTap: () {}),
-            const SizedBox(width: 4),
-            _CanvasBtn(icon: Icons.fullscreen_rounded, onTap: () {}),
-          ]),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(children: [
+              const Icon(Icons.draw_rounded, color: NVColors.radiologistColor, size: 16),
+              const SizedBox(width: 8),
+              const Text('CASE-2026-047 · Brain MRI', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
+              const SizedBox(width: 16),
+              Text('Tool: ${_tools.firstWhere((t) => t.$1 == _activeTool).$3}', style: const TextStyle(color: NVColors.radiologistColor, fontSize: 12)),
+              const SizedBox(width: 16),
+              _CanvasBtn(icon: Icons.undo_rounded, onTap: () {}),
+              const SizedBox(width: 4),
+              _CanvasBtn(icon: Icons.redo_rounded, onTap: () {}),
+              const SizedBox(width: 4),
+              _CanvasBtn(icon: Icons.zoom_in_rounded, onTap: () {}),
+              const SizedBox(width: 4),
+              _CanvasBtn(icon: Icons.zoom_out_rounded, onTap: () {}),
+              const SizedBox(width: 4),
+              _CanvasBtn(icon: Icons.fullscreen_rounded, onTap: () {}),
+            ]),
+          ),
         ),
         // Annotation canvas
         Expanded(
           child: Container(
+            constraints: const BoxConstraints(minHeight: 300),
             margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             decoration: BoxDecoration(
               color: Colors.black,
@@ -208,81 +298,84 @@ class _AnnotationScreenState extends State<AnnotationScreen>
   }
 
   Widget _buildProperties() {
-    return Column(children: [
-      // Label selector
-      NVGlassCard(
-        padding: const EdgeInsets.all(14),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Annotation Label', style: TextStyle(color: NVColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 10),
-          ..._labels.map((l) {
-            final isActive = _activeLabel == l;
-            return GestureDetector(
-              onTap: () => setState(() => _activeLabel = l),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                margin: const EdgeInsets.only(bottom: 6),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isActive ? NVColors.radiologistColor.withValues(alpha: 0.12) : NVColors.bgDeep,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: isActive ? NVColors.radiologistColor : NVColors.border),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 0),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        // Label selector
+        NVGlassCard(
+          padding: const EdgeInsets.all(14),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Annotation Label', style: TextStyle(color: NVColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 10),
+            ..._labels.map((l) {
+              final isActive = _activeLabel == l;
+              return GestureDetector(
+                onTap: () => setState(() => _activeLabel = l),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isActive ? NVColors.radiologistColor.withValues(alpha: 0.12) : NVColors.bgDeep,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: isActive ? NVColors.radiologistColor : NVColors.border),
+                  ),
+                  child: Row(children: [
+                    Expanded(child: Text(l, style: TextStyle(color: isActive ? NVColors.radiologistColor : NVColors.textSecondary, fontSize: 12, fontWeight: isActive ? FontWeight.w600 : FontWeight.normal))),
+                    if (isActive) Icon(Icons.check_rounded, color: NVColors.radiologistColor, size: 14),
+                  ]),
                 ),
-                child: Row(children: [
-                  Text(l, style: TextStyle(color: isActive ? NVColors.radiologistColor : NVColors.textSecondary, fontSize: 12, fontWeight: isActive ? FontWeight.w600 : FontWeight.normal)),
-                  if (isActive) ...[const Spacer(), Icon(Icons.check_rounded, color: NVColors.radiologistColor, size: 14)],
-                ]),
-              ),
-            );
-          }),
-          const SizedBox(height: 8),
-          const Text('Brush Size', style: TextStyle(color: NVColors.textMuted, fontSize: 11)),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(activeTrackColor: NVColors.radiologistColor, inactiveTrackColor: NVColors.border, thumbColor: NVColors.radiologistColor, thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5), trackHeight: 2),
-            child: Slider(value: _brushSize, min: 2, max: 20, onChanged: (v) => setState(() => _brushSize = v)),
-          ),
-        ]),
-      ),
-      const SizedBox(height: 12),
-      // Annotations list
-      NVGlassCard(
-        padding: const EdgeInsets.all(14),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            const Text('Annotations', style: TextStyle(color: NVColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
-            const Spacer(),
-            Text('${_annotations.length}', style: const TextStyle(color: NVColors.radiologistColor, fontWeight: FontWeight.bold, fontSize: 13)),
-          ]),
-          const SizedBox(height: 10),
-          ..._annotations.map((a) => Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(color: NVColors.bgDeep, borderRadius: BorderRadius.circular(8), border: Border.all(color: NVColors.border)),
-            child: Row(children: [
-              Container(width: 8, height: 8, decoration: BoxDecoration(color: a.color, shape: BoxShape.circle)),
-              const SizedBox(width: 8),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(a.label, style: const TextStyle(color: NVColors.textPrimary, fontSize: 11, fontWeight: FontWeight.w500)),
-                Text(a.type, style: const TextStyle(color: NVColors.textMuted, fontSize: 10)),
-              ])),
-              Icon(Icons.visibility_rounded, color: NVColors.textMuted, size: 14),
-            ]),
-          )),
-          const SizedBox(height: 8),
-          SizedBox(width: double.infinity, child: ElevatedButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.save_rounded, size: 14),
-            label: const Text('Save Annotations'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: NVColors.radiologistColor, foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              );
+            }),
+            const SizedBox(height: 8),
+            const Text('Brush Size', style: TextStyle(color: NVColors.textMuted, fontSize: 11)),
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(activeTrackColor: NVColors.radiologistColor, inactiveTrackColor: NVColors.border, thumbColor: NVColors.radiologistColor, thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5), trackHeight: 2),
+              child: Slider(value: _brushSize, min: 2, max: 20, onChanged: (v) => setState(() => _brushSize = v)),
             ),
-          )),
-        ]),
-      ),
-    ]);
+          ]),
+        ),
+        const SizedBox(height: 12),
+        // Annotations list
+        NVGlassCard(
+          padding: const EdgeInsets.all(14),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              const Text('Annotations', style: TextStyle(color: NVColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
+              const Spacer(),
+              Text('${_annotations.length}', style: const TextStyle(color: NVColors.radiologistColor, fontWeight: FontWeight.bold, fontSize: 13)),
+            ]),
+            const SizedBox(height: 10),
+            ..._annotations.map((a) => Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(color: NVColors.bgDeep, borderRadius: BorderRadius.circular(8), border: Border.all(color: NVColors.border)),
+              child: Row(children: [
+                Container(width: 8, height: 8, decoration: BoxDecoration(color: a.color, shape: BoxShape.circle)),
+                const SizedBox(width: 8),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(a.label, style: const TextStyle(color: NVColors.textPrimary, fontSize: 11, fontWeight: FontWeight.w500)),
+                  Text(a.type, style: const TextStyle(color: NVColors.textMuted, fontSize: 10)),
+                ])),
+                Icon(Icons.visibility_rounded, color: NVColors.textMuted, size: 14),
+              ]),
+            )),
+            const SizedBox(height: 8),
+            SizedBox(width: double.infinity, child: ElevatedButton.icon(
+              onPressed: () {},
+              icon: const Icon(Icons.save_rounded, size: 14),
+              label: const Text('Save Annotations'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: NVColors.radiologistColor, foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              ),
+            )),
+          ]),
+        ),
+      ]),
+    );
   }
 }
 

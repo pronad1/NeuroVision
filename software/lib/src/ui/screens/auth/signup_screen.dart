@@ -106,7 +106,7 @@ class _SignUpScreenState extends State<SignUpScreen>
           ],
         ),
         content: const Text(
-          'Your account has been created. Please:\n\n1. Check your email and click the verification link.\n2. Wait for administrator approval.\n\nYou will be able to sign in once both steps are complete.',
+          'Your account has been created. Please check your email and click the verification link.\n\nYou will be able to sign in once your email is verified.',
           style: TextStyle(color: NVColors.textSecondary, fontSize: 14, height: 1.6),
         ),
         actions: [
@@ -191,12 +191,12 @@ class _SignUpScreenState extends State<SignUpScreen>
                 children: [
                   // Header
                   const Text(
-                    'Request Access',
+                    'Create Your Account',
                     style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: NVColors.textPrimary),
                   ),
                   const SizedBox(height: 6),
                   const Text(
-                    'Create your clinical account — admin approval required',
+                    'After signing up, verify your email to sign in.',
                     style: TextStyle(fontSize: 14, color: NVColors.textMuted),
                   ),
                   const SizedBox(height: 32),
@@ -312,7 +312,7 @@ class _SignUpScreenState extends State<SignUpScreen>
                         const SizedBox(width: 10),
                         const Expanded(
                           child: Text(
-                            'After registration, verify your email and await administrator approval before you can sign in.',
+                            'After registration, verify your email before signing in.',
                             style: TextStyle(color: NVColors.info, fontSize: 13, height: 1.4),
                           ),
                         ),

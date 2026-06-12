@@ -36,7 +36,7 @@ class AuthService {
       final user = cred.user;
       if (user == null) return 'Unexpected error: user is null';
 
-      // Create user profile in Firestore - approved = false until admin approves
+      // Create user profile in Firestore - email verification is the only requirement
       await _firestore.collection(AppConstants.usersCollection).doc(user.uid).set({
         'email': email,
         'role': role,
@@ -44,11 +44,11 @@ class AuthService {
         'institution': institution ?? '',
         'specialization': specialization ?? '',
         'photoUrl': '',
-        'approved': false,
+        'approved': true,
         'isAdmin': false,
         'createdAt': FieldValue.serverTimestamp(),
-        'approvedAt': null,
-        'approvedBy': null,
+        'approvedAt': FieldValue.serverTimestamp(),
+        'approvedBy': 'system',
       });
 
       // Send verification email
@@ -65,8 +65,8 @@ class AuthService {
     }
   }
 
-  /// Login — checks email verification AND admin approval.
-  /// Admin account (prosenjit@gmail.com) bypasses both checks.
+  /// Login — checks email verification only.
+  /// Admin account (prosenjit@gmail.com) bypasses verification.
   Future<String?> login(String email, String password) async {
     final isAdmin = email.trim().toLowerCase() == _adminEmail.toLowerCase() &&
         password == _adminPassword;
@@ -128,13 +128,7 @@ class AuthService {
 
       if (!doc.exists) {
         await _auth.signOut();
-        return 'Profile not found. Contact your system administrator.';
-      }
-
-      final approved = (doc.data()?['approved'] as bool?) ?? false;
-      if (!approved) {
-        await _auth.signOut();
-        return 'Your account is pending administrator approval.';
+        return 'Profile not found. Contact support.';
       }
 
       return null; // success
@@ -218,22 +212,13 @@ class AuthService {
           'institution': '',
           'specialization': '',
           'photoUrl': user.photoURL ?? '',
-          'approved': false, // Requires admin approval even for Google users
+          'approved': true,
           'isAdmin': false,
           'createdAt': FieldValue.serverTimestamp(),
-          'approvedAt': null,
-          'approvedBy': null,
+          'approvedAt': FieldValue.serverTimestamp(),
+          'approvedBy': 'system',
         });
-        await _auth.signOut();
-        await _googleSignIn.signOut();
-        return 'Account created with Google. Please wait for administrator approval.';
-      } else {
-        final approved = (userDoc.data()?['approved'] as bool?) ?? false;
-        if (!approved) {
-          await _auth.signOut();
-          await _googleSignIn.signOut();
-          return 'Your account is pending administrator approval.';
-        }
+        return null;
       }
 
       return null; // success

@@ -216,6 +216,8 @@ class _SegmentationReviewScreenState extends State<SegmentationReviewScreen>
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<NVAuthProvider>(context).nvUser;
+    final isMobile = MediaQuery.of(context).size.width < 768;
+    final isTablet = MediaQuery.of(context).size.width < 1200;
 
     return Scaffold(
       backgroundColor: NVColors.bgDeep,
@@ -232,23 +234,52 @@ class _SegmentationReviewScreenState extends State<SegmentationReviewScreen>
                 children: [
                   NVTopBar(
                     title: 'Segmentation Review',
-                    subtitle:
-                        'Validate and approve AI-generated segmentation masks',
+                    subtitle: 'Validate and approve AI-generated segmentation masks',
                     user: user?.name ?? 'Radiologist',
                     roleColor: NVColors.radiologistColor,
                   ),
                   Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // ── Stats Row ──────────────────────────────────────
-                          _buildStatsRow(),
-                          const SizedBox(height: 20),
-                          // ── Main Content ───────────────────────────────────
-                          Expanded(child: _buildMainContent()),
-                        ],
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                        child: isMobile
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  LimitedBox(
+                                    maxHeight: 150,
+                                    child: _buildStatsRow(),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  LimitedBox(
+                                    maxHeight: 300,
+                                    child: _buildQueuePanel(),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  LimitedBox(
+                                    maxHeight: 350,
+                                    child: _buildCenterPanel(),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  LimitedBox(
+                                    maxHeight: 500,
+                                    child: _buildRightPanel(),
+                                  ),
+                                ],
+                              )
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildStatsRow(),
+                                  const SizedBox(height: 20),
+                                  SizedBox(
+                                    height: 500,
+                                    child: _buildMainContent(),
+                                  ),
+                                ],
+                              ),
                       ),
                     ),
                   ),
@@ -264,75 +295,198 @@ class _SegmentationReviewScreenState extends State<SegmentationReviewScreen>
   // ─── Stats Row ─────────────────────────────────────────────────────────────
 
   Widget _buildStatsRow() {
-    return Row(
-      children: [
-        Expanded(
-          child: NVStatCard(
-            label: 'Masks Generated',
-            value: '312',
-            icon: Icons.layers_rounded,
-            color: NVColors.radiologistColor,
-            subtitle: 'Total AI masks',
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: NVStatCard(
-            label: 'Approved',
-            value: '287',
-            icon: Icons.check_circle_rounded,
-            color: NVColors.success,
-            trend: '91.9%',
-            trendPositive: true,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: NVStatCard(
-            label: 'Rejected',
-            value: '18',
-            icon: Icons.cancel_rounded,
-            color: NVColors.error,
-            subtitle: 'Needed correction',
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: NVStatCard(
-            label: 'Pending Review',
-            value: '7',
-            icon: Icons.pending_rounded,
-            color: NVColors.warning,
-          ),
-        ),
-      ],
-    );
+    final isMobile = MediaQuery.of(context).size.width < 768;
+    final isTablet = MediaQuery.of(context).size.width < 1200;
+    
+    return isMobile
+        ? SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 160,
+                  child: NVStatCard(
+                    label: 'Masks Generated',
+                    value: '312',
+                    icon: Icons.layers_rounded,
+                    color: NVColors.radiologistColor,
+                    subtitle: 'Total AI masks',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 160,
+                  child: NVStatCard(
+                    label: 'Approved',
+                    value: '287',
+                    icon: Icons.check_circle_rounded,
+                    color: NVColors.success,
+                    trend: '91.9%',
+                    trendPositive: true,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 160,
+                  child: NVStatCard(
+                    label: 'Rejected',
+                    value: '18',
+                    icon: Icons.cancel_rounded,
+                    color: NVColors.error,
+                    subtitle: 'Needed correction',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 160,
+                  child: NVStatCard(
+                    label: 'Pending Review',
+                    value: '7',
+                    icon: Icons.pending_rounded,
+                    color: NVColors.warning,
+                  ),
+                ),
+              ],
+            ),
+          )
+        : isTablet
+            ? Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: NVStatCard(
+                          label: 'Masks Generated',
+                          value: '312',
+                          icon: Icons.layers_rounded,
+                          color: NVColors.radiologistColor,
+                          subtitle: 'Total AI masks',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: NVStatCard(
+                          label: 'Approved',
+                          value: '287',
+                          icon: Icons.check_circle_rounded,
+                          color: NVColors.success,
+                          trend: '91.9%',
+                          trendPositive: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: NVStatCard(
+                          label: 'Rejected',
+                          value: '18',
+                          icon: Icons.cancel_rounded,
+                          color: NVColors.error,
+                          subtitle: 'Needed correction',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: NVStatCard(
+                          label: 'Pending Review',
+                          value: '7',
+                          icon: Icons.pending_rounded,
+                          color: NVColors.warning,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              )
+            : Row(
+                children: [
+                  Expanded(
+                    child: NVStatCard(
+                      label: 'Masks Generated',
+                      value: '312',
+                      icon: Icons.layers_rounded,
+                      color: NVColors.radiologistColor,
+                      subtitle: 'Total AI masks',
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: NVStatCard(
+                      label: 'Approved',
+                      value: '287',
+                      icon: Icons.check_circle_rounded,
+                      color: NVColors.success,
+                      trend: '91.9%',
+                      trendPositive: true,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: NVStatCard(
+                      label: 'Rejected',
+                      value: '18',
+                      icon: Icons.cancel_rounded,
+                      color: NVColors.error,
+                      subtitle: 'Needed correction',
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: NVStatCard(
+                      label: 'Pending Review',
+                      value: '7',
+                      icon: Icons.pending_rounded,
+                      color: NVColors.warning,
+                    ),
+                  ),
+                ],
+              );
   }
 
   // ─── Main 3-column layout ──────────────────────────────────────────────────
 
   Widget _buildMainContent() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Left – Queue panel
-        SizedBox(width: 280, child: _buildQueuePanel()),
-        const SizedBox(width: 16),
-        // Center – Viewer + stats
-        Expanded(child: _buildCenterPanel()),
-        const SizedBox(width: 16),
-        // Right – Actions + history
-        SizedBox(width: 260, child: _buildRightPanel()),
-      ],
-    );
+    final isTablet = MediaQuery.of(context).size.width < 1200;
+    
+    return isTablet
+        ? SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildQueuePanel(),
+                const SizedBox(height: 16),
+                _buildCenterPanel(),
+                const SizedBox(height: 16),
+                _buildRightPanel(),
+              ],
+            ),
+          )
+        : Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Left – Queue panel
+              SizedBox(width: 280, child: _buildQueuePanel()),
+              const SizedBox(width: 16),
+              // Center – Viewer + stats
+              Expanded(child: _buildCenterPanel()),
+              const SizedBox(width: 16),
+              // Right – Actions + history
+              SizedBox(width: 260, child: _buildRightPanel()),
+            ],
+          );
   }
 
   // ─── Left: Pending Review Queue ────────────────────────────────────────────
 
   Widget _buildQueuePanel() {
+    final isMobile = MediaQuery.of(context).size.width < 768;
+    
     return NVGlassCard(
       padding: const EdgeInsets.all(16),
       child: Column(
+        mainAxisSize: isMobile ? MainAxisSize.min : MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -373,13 +527,26 @@ class _SegmentationReviewScreenState extends State<SegmentationReviewScreen>
           const SizedBox(height: 14),
           const Divider(color: NVColors.border, height: 1),
           const SizedBox(height: 10),
-          Expanded(
-            child: ListView.separated(
-              itemCount: _cases.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, i) => _buildQueueItem(i),
-            ),
-          ),
+          isMobile
+              ? SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: List.generate(
+                      _cases.length,
+                      (i) => Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: SizedBox(width: 200, child: _buildQueueItem(i)),
+                      ),
+                    ),
+                  ),
+                )
+              : Expanded(
+                  child: ListView.separated(
+                    itemCount: _cases.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, i) => _buildQueueItem(i),
+                  ),
+                ),
         ],
       ),
     );
@@ -482,115 +649,129 @@ class _SegmentationReviewScreenState extends State<SegmentationReviewScreen>
   // ─── Center panel ──────────────────────────────────────────────────────────
 
   Widget _buildCenterPanel() {
-    return Column(
-      children: [
-        // Segmentation Viewer
-        NVGlassCard(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Card header
-              Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: NVColors.radiologistColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                          color:
-                              NVColors.radiologistColor.withValues(alpha: 0.3)),
-                    ),
-                    child: const Icon(Icons.biotech_rounded,
-                        color: NVColors.radiologistColor, size: 16),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'Segmentation Viewer',
-                    style: TextStyle(
-                      color: NVColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const Spacer(),
-                  // View mode chips
-                  ...[
-                    'Original',
-                    'Overlay',
-                    'Contour Only',
-                  ].map((mode) => _ViewModeChip(
-                        label: mode,
-                        selected: _viewMode == mode,
-                        onTap: () => setState(() => _viewMode = mode),
-                      )),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Opacity toolbar row
-              Row(
-                children: [
-                  const Icon(Icons.opacity_rounded,
-                      color: NVColors.textMuted, size: 14),
-                  const SizedBox(width: 6),
-                  const Text(
-                    'Mask Opacity',
-                    style: TextStyle(
-                        color: NVColors.textMuted, fontSize: 11),
-                  ),
-                  Expanded(
-                    child: SliderTheme(
-                      data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: NVColors.radiologistColor,
-                        inactiveTrackColor: NVColors.border,
-                        thumbColor: NVColors.radiologistColor,
-                        overlayColor:
-                            NVColors.radiologistColor.withValues(alpha: 0.1),
-                        thumbShape: const RoundSliderThumbShape(
-                            enabledThumbRadius: 5),
-                        trackHeight: 2,
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Segmentation Viewer
+          NVGlassCard(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Card header
+                Row(
+                  children: [
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: NVColors.radiologistColor.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color:
+                                NVColors.radiologistColor.withValues(alpha: 0.3)),
                       ),
-                      child: Slider(
-                        value: _maskOpacity,
-                        min: 0.0,
-                        max: 1.0,
-                        onChanged: (v) =>
-                            setState(() => _maskOpacity = v),
+                      child: const Icon(Icons.biotech_rounded,
+                          color: NVColors.radiologistColor, size: 16),
+                    ),
+                    const SizedBox(width: 10),
+                    const Text(
+                      'Segmentation Viewer',
+                      style: TextStyle(
+                        color: NVColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
                       ),
                     ),
-                  ),
-                  Text(
-                    '${(_maskOpacity * 100).round()}%',
-                    style: const TextStyle(
-                        color: NVColors.radiologistColor, fontSize: 11),
-                  ),
-                ],
-              ),
+                    const Spacer(),
+                    // View mode chips
+                    ...[
+                      'Original',
+                      'Overlay',
+                      'Contour Only',
+                    ].map((mode) => _ViewModeChip(
+                          label: mode,
+                          selected: _viewMode == mode,
+                          onTap: () => setState(() => _viewMode = mode),
+                        )),
+                  ],
+                ),
+                const SizedBox(height: 12),
 
-              const SizedBox(height: 10),
+                // Opacity toolbar row
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      const Icon(Icons.opacity_rounded,
+                          color: NVColors.textMuted, size: 14),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'Mask Opacity',
+                        style: TextStyle(
+                            color: NVColors.textMuted, fontSize: 11),
+                      ),
+                      SizedBox(
+                        width: 150,
+                        child: SliderTheme(
+                          data: SliderTheme.of(context).copyWith(
+                            activeTrackColor: NVColors.radiologistColor,
+                            inactiveTrackColor: NVColors.border,
+                            thumbColor: NVColors.radiologistColor,
+                            overlayColor:
+                                NVColors.radiologistColor.withValues(alpha: 0.1),
+                            thumbShape: const RoundSliderThumbShape(
+                                enabledThumbRadius: 5),
+                            trackHeight: 2,
+                          ),
+                          child: Slider(
+                            value: _maskOpacity,
+                            min: 0.0,
+                            max: 1.0,
+                            onChanged: (v) =>
+                                setState(() => _maskOpacity = v),
+                          ),
+                        ),
+                      ),
+                      Text(
+                        '${(_maskOpacity * 100).round()}%',
+                        style: const TextStyle(
+                            color: NVColors.radiologistColor, fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
 
-              // Viewer canvas
-              _buildViewerCanvas(),
-            ],
+                const SizedBox(height: 10),
+
+                // Viewer canvas
+                _buildViewerCanvas(),
+              ],
+            ),
           ),
-        ),
 
-        const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-        // Mask Statistics
-        _buildMaskStatistics(),
-      ],
+          // Mask Statistics
+          _buildMaskStatistics(),
+        ],
+      ),
     );
   }
 
   Widget _buildViewerCanvas() {
     final activeCase = _cases[_selectedCaseIndex];
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isMobile = MediaQuery.of(context).size.width < 768;
+    // Mobile: use fixed 250px height, Tablet+: scale with screen height
+    final canvasHeight = isMobile 
+        ? 250.0 
+        : (screenHeight * 0.4).clamp(250.0, 400.0);
 
     return Container(
-      height: 300,
+      height: canvasHeight,
       decoration: BoxDecoration(
         color: Colors.black,
         borderRadius: BorderRadius.circular(12),
@@ -735,10 +916,13 @@ class _SegmentationReviewScreenState extends State<SegmentationReviewScreen>
   }
 
   Widget _buildMaskStatistics() {
+    final isMobile = MediaQuery.of(context).size.width < 768;
+    
     return NVGlassCard(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
@@ -766,37 +950,80 @@ class _SegmentationReviewScreenState extends State<SegmentationReviewScreen>
             ],
           ),
           const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                  child: _MetricBox(
-                label: 'Coverage Area',
-                value: '14.7%',
-                color: NVColors.radiologistColor,
-              )),
-              const SizedBox(width: 12),
-              Expanded(
-                  child: _MetricBox(
-                label: 'Boundary Accuracy',
-                value: '92.3%',
-                color: NVColors.success,
-              )),
-              const SizedBox(width: 12),
-              Expanded(
-                  child: _MetricBox(
-                label: 'Dice Score',
-                value: '0.891',
-                color: NVColors.info,
-              )),
-              const SizedBox(width: 12),
-              Expanded(
-                  child: _MetricBox(
-                label: 'IoU Score',
-                value: '0.847',
-                color: NVColors.warning,
-              )),
-            ],
-          ),
+          isMobile
+              ? SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 120,
+                        child: _MetricBox(
+                          label: 'Coverage Area',
+                          value: '14.7%',
+                          color: NVColors.radiologistColor,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 120,
+                        child: _MetricBox(
+                          label: 'Boundary Accuracy',
+                          value: '92.3%',
+                          color: NVColors.success,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 120,
+                        child: _MetricBox(
+                          label: 'Dice Score',
+                          value: '0.891',
+                          color: NVColors.info,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 120,
+                        child: _MetricBox(
+                          label: 'IoU Score',
+                          value: '0.847',
+                          color: NVColors.warning,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : Row(
+                  children: [
+                    Expanded(
+                        child: _MetricBox(
+                          label: 'Coverage Area',
+                          value: '14.7%',
+                          color: NVColors.radiologistColor,
+                        )),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: _MetricBox(
+                          label: 'Boundary Accuracy',
+                          value: '92.3%',
+                          color: NVColors.success,
+                        )),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: _MetricBox(
+                          label: 'Dice Score',
+                          value: '0.891',
+                          color: NVColors.info,
+                        )),
+                    const SizedBox(width: 12),
+                    Expanded(
+                        child: _MetricBox(
+                          label: 'IoU Score',
+                          value: '0.847',
+                          color: NVColors.warning,
+                        )),
+                  ],
+                ),
         ],
       ),
     );
@@ -805,166 +1032,279 @@ class _SegmentationReviewScreenState extends State<SegmentationReviewScreen>
   // ─── Right panel ───────────────────────────────────────────────────────────
 
   Widget _buildRightPanel() {
-    return Column(
-      children: [
-        // Review Actions card
-        NVGlassCard(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final isMobile = MediaQuery.of(context).size.width < 768;
+    
+    return isMobile
+        ? SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Review Actions card
+                NVGlassCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: NVColors.radiologistColor.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                  color: NVColors.radiologistColor
+                                      .withValues(alpha: 0.3)),
+                            ),
+                            child: const Icon(Icons.rate_review_rounded,
+                                color: NVColors.radiologistColor, size: 16),
+                          ),
+                          const SizedBox(width: 10),
+                          const Text(
+                            'Review Actions',
+                            style: TextStyle(
+                              color: NVColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _onApprove,
+                          icon: const Icon(Icons.check_circle_rounded, size: 16),
+                          label: const Text('Approve Mask'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: NVColors.success,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            textStyle: const TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w600),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () {},
+                          icon:
+                              const Icon(Icons.edit_rounded, size: 16),
+                          label: const Text('Request Correction'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: NVColors.warning,
+                            side: const BorderSide(color: NVColors.warning),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            textStyle: const TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _onReject,
+                          icon:
+                              const Icon(Icons.cancel_rounded, size: 16),
+                          label: const Text('Reject Mask'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: NVColors.error,
+                            side: const BorderSide(color: NVColors.error),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            textStyle: const TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      TextField(
+                        controller: _notesController,
+                        maxLines: 3,
+                        style: const TextStyle(
+                            color: NVColors.textPrimary, fontSize: 12),
+                        decoration: InputDecoration(
+                          hintText: 'Add review notes...',
+                          hintStyle: const TextStyle(
+                              color: NVColors.textMuted, fontSize: 12),
+                          filled: true,
+                          fillColor: NVColors.bgDeep,
+                          contentPadding: const EdgeInsets.all(12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide:
+                                const BorderSide(color: NVColors.border),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide:
+                                const BorderSide(color: NVColors.border),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                                color: NVColors.radiologistColor, width: 1.2),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )
+        : Column(
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: NVColors.radiologistColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                          color: NVColors.radiologistColor
-                              .withValues(alpha: 0.3)),
+              // Review Actions card
+              NVGlassCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            color: NVColors.radiologistColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                                color: NVColors.radiologistColor
+                                    .withValues(alpha: 0.3)),
+                          ),
+                          child: const Icon(Icons.rate_review_rounded,
+                              color: NVColors.radiologistColor, size: 16),
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'Review Actions',
+                          style: TextStyle(
+                            color: NVColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
                     ),
-                    child: const Icon(Icons.rate_review_rounded,
-                        color: NVColors.radiologistColor, size: 16),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'Review Actions',
-                    style: TextStyle(
-                      color: NVColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
+                    const SizedBox(height: 16),
+
+                    // Approve
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _onApprove,
+                        icon: const Icon(Icons.check_circle_rounded, size: 16),
+                        label: const Text('Approve Mask'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: NVColors.success,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          textStyle: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w600),
+                          elevation: 0,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+
+                    // Request Correction
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {},
+                        icon:
+                            const Icon(Icons.edit_rounded, size: 16),
+                        label: const Text('Request Correction'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: NVColors.warning,
+                          side: const BorderSide(color: NVColors.warning),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          textStyle: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Reject
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _onReject,
+                        icon:
+                            const Icon(Icons.cancel_rounded, size: 16),
+                        label: const Text('Reject Mask'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: NVColors.error,
+                          side: const BorderSide(color: NVColors.error),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          textStyle: const TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Notes field
+                    TextField(
+                      controller: _notesController,
+                      maxLines: 3,
+                      style: const TextStyle(
+                          color: NVColors.textPrimary, fontSize: 12),
+                      decoration: InputDecoration(
+                        hintText: 'Add review notes...',
+                        hintStyle: const TextStyle(
+                            color: NVColors.textMuted, fontSize: 12),
+                        filled: true,
+                        fillColor: NVColors.bgDeep,
+                        contentPadding: const EdgeInsets.all(12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide:
+                              const BorderSide(color: NVColors.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide:
+                              const BorderSide(color: NVColors.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                              color: NVColors.radiologistColor, width: 1.2),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+
               const SizedBox(height: 16),
 
-              // Approve
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _onApprove,
-                  icon: const Icon(Icons.check_circle_rounded, size: 16),
-                  label: const Text('Approve Mask'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: NVColors.success,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    textStyle: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w600),
-                    elevation: 0,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // Request Correction
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Row(
-                          children: [
-                            Icon(Icons.edit_rounded,
-                                color: NVColors.warning, size: 18),
-                            SizedBox(width: 10),
-                            Text('Correction request sent to AI pipeline',
-                                style:
-                                    TextStyle(color: NVColors.textPrimary)),
-                          ],
-                        ),
-                        backgroundColor: NVColors.bgCard,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
-                        margin: const EdgeInsets.all(16),
-                        duration: const Duration(seconds: 3),
-                      ),
-                    );
-                  },
-                  icon:
-                      const Icon(Icons.edit_rounded, size: 16),
-                  label: const Text('Request Correction'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: NVColors.warning,
-                    side: const BorderSide(color: NVColors.warning),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    textStyle: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              // Reject
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: _onReject,
-                  icon:
-                      const Icon(Icons.cancel_rounded, size: 16),
-                  label: const Text('Reject Mask'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: NVColors.error,
-                    side: const BorderSide(color: NVColors.error),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                    textStyle: const TextStyle(
-                        fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // Notes field
-              TextField(
-                controller: _notesController,
-                maxLines: 3,
-                style: const TextStyle(
-                    color: NVColors.textPrimary, fontSize: 12),
-                decoration: InputDecoration(
-                  hintText: 'Add review notes...',
-                  hintStyle: const TextStyle(
-                      color: NVColors.textMuted, fontSize: 12),
-                  filled: true,
-                  fillColor: NVColors.bgDeep,
-                  contentPadding: const EdgeInsets.all(12),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide:
-                        const BorderSide(color: NVColors.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide:
-                        const BorderSide(color: NVColors.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                        color: NVColors.radiologistColor, width: 1.2),
-                  ),
-                ),
-              ),
+              // Review History card
+              Expanded(child: _buildHistoryCard()),
             ],
-          ),
-        ),
-
-        const SizedBox(height: 16),
-
-        // Review History card
-        Expanded(child: _buildHistoryCard()),
-      ],
-    );
+          );
   }
 
   Widget _buildHistoryCard() {
