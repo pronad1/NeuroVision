@@ -46,6 +46,7 @@ dependencies:
   intl: ^0.20.2
   flutter_svg: ^2.2.0
   http: ^1.4.0
+  http_parser: ^4.1.0
   fluttertoast: ^9.0.0         # Keep latest
   pin_code_fields: ^9.4.0
   shared_preferences: ^2.5.3

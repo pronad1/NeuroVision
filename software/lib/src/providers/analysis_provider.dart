@@ -29,7 +29,7 @@ enum MedicalModality {
         heart => 'Heart',
       };
 
-  bool get isAvailable => this == MedicalModality.brain || this == MedicalModality.spine;
+  bool get isAvailable => true;
 
   String get unavailableReason => switch (this) {
         chest => 'Keras .h5 integration in progress',
@@ -98,7 +98,45 @@ enum MedicalModality {
               isRecommended: false,
             ),
           ],
-        _ => [],
+        chest => [
+            ModelOption(
+              id: 'CheXNet',
+              name: 'CheXNet',
+              description: 'DenseNet-121 trained on ChestX-ray14',
+              metric: 'AUC: 0.84',
+              isRecommended: true,
+            ),
+            ModelOption(
+              id: 'ResNet50',
+              name: 'ResNet50',
+              description: 'ResNet-50 baseline model',
+              metric: 'AUC: 0.80',
+              isRecommended: false,
+            ),
+            ModelOption(
+              id: 'CNN-Classifier',
+              name: 'CNN Classifier',
+              description: 'Custom CNN trained on chest scans',
+              metric: 'AUC: 0.78',
+              isRecommended: false,
+            ),
+          ],
+        heart => [
+            ModelOption(
+              id: 'CatBoost-Echo',
+              name: 'CatBoost-Echo',
+              description: 'CatBoost classifier on echocardiogram metrics',
+              metric: 'Accuracy: 92.4%',
+              isRecommended: true,
+            ),
+            ModelOption(
+              id: 'ResNet50-Echo',
+              name: 'ResNet50-Echo',
+              description: 'ResNet-50 echocardiogram classifier',
+              metric: 'Accuracy: 88.7%',
+              isRecommended: false,
+            ),
+          ],
       };
 }
 
@@ -221,7 +259,11 @@ class AnalysisProvider extends ChangeNotifier {
             filename: _imageFileName ?? 'chest_xray.png',
           );
         case MedicalModality.heart:
-          throw Exception('Heart model not yet available.');
+          result = await AIService.analyzeHeartEcho(
+            _imageBytes!,
+            model: modelId ?? 'CatBoost-Echo',
+            filename: _imageFileName ?? 'heart_echo.png',
+          );
       }
 
       _result = result;

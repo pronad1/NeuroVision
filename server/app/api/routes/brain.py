@@ -62,15 +62,12 @@ async def analyze_brain_mri(
 
     Returns segmentation mask, lesion coverage, and binary prediction.
     """
-    if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image (PNG or JPEG)")
-
     image_bytes = await file.read()
     if len(image_bytes) == 0:
         raise HTTPException(status_code=400, detail="Empty file uploaded")
 
     try:
-        result = classify_brain(image_bytes)
+        result = classify_brain(image_bytes, model_name=model)
     except ValueError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:

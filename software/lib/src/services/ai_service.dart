@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 class AIResult {
   final String prediction;
@@ -18,6 +19,7 @@ class AIResult {
   final String severity;
   final String message;
   final String? vertebralLevel;
+  final double? lesionCoveragePct;
 
   const AIResult({
     required this.prediction,
@@ -30,6 +32,7 @@ class AIResult {
     required this.severity,
     required this.message,
     this.vertebralLevel,
+    this.lesionCoveragePct,
   });
 
   factory AIResult.fromJson(Map<String, dynamic> json) {
@@ -50,6 +53,7 @@ class AIResult {
       severity: json['severity'] ?? 'Unknown',
       message: json['message'] ?? '',
       vertebralLevel: json['vertebral_level'],
+      lesionCoveragePct: (json['lesion_coverage_pct'] as num?)?.toDouble(),
     );
   }
 
@@ -129,6 +133,21 @@ class AIService {
     );
   }
 
+  // ── Heart Echo Analysis ──────────────────────────────────────────────────
+
+  /// Analyze a heart echo image.
+  static Future<AIResult> analyzeHeartEcho(
+    Uint8List imageBytes, {
+    String model = 'CatBoost-Echo',
+    String filename = 'heart_echo.png',
+  }) async {
+    return _uploadAndAnalyze(
+      endpoint: '$_baseUrl/heart/analyze?model=$model',
+      imageBytes: imageBytes,
+      filename: filename,
+    );
+  }
+
   // ── Auto-route by Modality ────────────────────────────────────────────────
 
   /// Automatically select the right pipeline based on modality string.
@@ -144,6 +163,9 @@ class AIService {
         return analyzeSpineMRI(imageBytes, model: preferredModel ?? 'EfficientNet');
       case 'Chest X-Ray':
         return analyzeChestXRay(imageBytes);
+      case 'Heart (Echo)':
+      case 'Heart':
+        return analyzeHeartEcho(imageBytes, model: preferredModel ?? 'CatBoost-Echo');
       case 'CT Scan':
         // CT routed to brain pipeline for now
         return analyzeBrainMRI(imageBytes, model: preferredModel ?? 'DERNet');
@@ -179,10 +201,13 @@ class AIService {
     try {
       final uri = Uri.parse(endpoint);
       final request = http.MultipartRequest('POST', uri);
+      final isPng = filename.toLowerCase().endsWith('.png');
+      final mediaType = isPng ? MediaType('image', 'png') : MediaType('image', 'jpeg');
       request.files.add(http.MultipartFile.fromBytes(
         'file',
         imageBytes,
         filename: filename,
+        contentType: mediaType,
       ));
       request.headers['Accept'] = 'application/json';
 

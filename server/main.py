@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 import uvicorn
 
 from app.core.config import settings
-from app.api.routes import brain, spine, chest, health
+from app.api.routes import brain, spine, chest, heart, health
 from app.core.model_registry import ModelRegistry
 
 app = FastAPI(
@@ -36,10 +36,14 @@ app.include_router(health.router, prefix="/api/v1", tags=["Health"])
 app.include_router(brain.router, prefix="/api/v1/brain", tags=["Brain MRI"])
 app.include_router(spine.router, prefix="/api/v1/spine", tags=["Spine MRI"])
 app.include_router(chest.router, prefix="/api/v1/chest", tags=["Chest X-Ray"])
+app.include_router(heart.router, prefix="/api/v1/heart", tags=["Heart (Echo)"])
 
 @app.on_event("startup")
 async def startup_event():
     """Pre-load all models on server startup for fast inference."""
+    import torch
+    # Limit CPU threads to prevent thread contention and high CPU load
+    torch.set_num_threads(2)
     print("NeuroVision AI - Loading models...")
     ModelRegistry.load_all()
     print("All models loaded and ready.")

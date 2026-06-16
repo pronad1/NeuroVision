@@ -48,7 +48,7 @@ async def analyze_spine_xray(
         raise HTTPException(status_code=400, detail="Empty file")
 
     try:
-        result = classify_spine(image_bytes)
+        result = classify_spine(image_bytes, model_name=model)
     except ValueError as e:
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:

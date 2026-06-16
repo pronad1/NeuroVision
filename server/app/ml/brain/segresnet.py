@@ -78,10 +78,16 @@ class SegResNetModel(nn.Module):
             (1, 1, D, H, W) probability map [0, 1]
         """
         self.eval()
+        is_cpu = volume.device.type == "cpu"
+        overlap = 0.2 if is_cpu else 0.6
+        if is_cpu:
+            use_tta = False
+        roi_size = (volume.shape[2], ROI_SIZE[1], ROI_SIZE[2])
+
         with torch.no_grad():
             # Prediction 1: original
             p1 = torch.sigmoid(
-                sliding_window_inference(volume, ROI_SIZE, 4, self.model, overlap=0.6)
+                sliding_window_inference(volume, roi_size, 4, self.model, overlap=overlap)
             )
             if not use_tta:
                 return p1
@@ -89,14 +95,14 @@ class SegResNetModel(nn.Module):
             # Prediction 2: flip depth axis
             v2 = torch.flip(volume, dims=[2])
             p2 = torch.flip(
-                torch.sigmoid(sliding_window_inference(v2, ROI_SIZE, 4, self.model, overlap=0.6)),
+                torch.sigmoid(sliding_window_inference(v2, roi_size, 4, self.model, overlap=overlap)),
                 dims=[2],
             )
 
             # Prediction 3: flip height axis
             v3 = torch.flip(volume, dims=[3])
             p3 = torch.flip(
-                torch.sigmoid(sliding_window_inference(v3, ROI_SIZE, 4, self.model, overlap=0.6)),
+                torch.sigmoid(sliding_window_inference(v3, roi_size, 4, self.model, overlap=overlap)),
                 dims=[3],
             )
 
@@ -111,9 +117,10 @@ class SegResNetModel(nn.Module):
         Returns:
             (H, W) binary mask
         """
-        vol = image_tensor.unsqueeze(2).repeat(1, 1, ROI_SIZE[0], 1, 1)
+        depth = 16 if image_tensor.device.type == "cpu" else ROI_SIZE[0]
+        vol = image_tensor.unsqueeze(2).repeat(1, 1, depth, 1, 1)
         probs = self.segment_3d(vol, use_tta=use_tta)
-        mid = ROI_SIZE[0] // 2
+        mid = depth // 2
         return (probs[0, 0, mid] > 0.5).cpu().numpy().astype(np.uint8)
 
     def classify_from_mask(self, mask: np.ndarray) -> dict:

@@ -146,9 +146,11 @@ class DERNet(nn.Module):
         """
         self.eval()
         with torch.no_grad():
+            overlap = 0.2 if volume.device.type == "cpu" else 0.6
+            roi_size = (volume.shape[2], ROI_SIZE[1], ROI_SIZE[2])
             logits = sliding_window_inference(
-                volume, ROI_SIZE, sw_batch_size=4,
-                predictor=self, overlap=0.6
+                volume, roi_size, sw_batch_size=4,
+                predictor=self, overlap=overlap
             )
             return torch.sigmoid(logits)
 
@@ -160,9 +162,10 @@ class DERNet(nn.Module):
         Returns:
             (H, W) binary lesion mask
         """
-        vol = image_tensor.unsqueeze(2).repeat(1, 1, ROI_SIZE[0], 1, 1)
+        depth = 16 if image_tensor.device.type == "cpu" else ROI_SIZE[0]
+        vol = image_tensor.unsqueeze(2).repeat(1, 1, depth, 1, 1)
         probs = self.segment_3d(vol)
-        mid = ROI_SIZE[0] // 2
+        mid = depth // 2
         return (probs[0, 0, mid] > 0.5).cpu().numpy().astype(np.uint8)
 
     def classify_from_mask(self, mask: np.ndarray) -> dict:
