@@ -73,15 +73,9 @@ class _AnnotationScreenState extends State<AnnotationScreen>
                   ? Column(children: [
                       _buildToolbox(),
                       const SizedBox(height: 12),
-                      LimitedBox(
-                        maxHeight: 300,
-                        child: _buildCanvas(),
-                      ),
+                      _buildCanvas(),
                       const SizedBox(height: 12),
-                      LimitedBox(
-                        maxHeight: 400,
-                        child: SingleChildScrollView(child: _buildProperties()),
-                      ),
+                      _buildProperties(),
                     ])
                   : isTablet
                       ? Column(
@@ -145,7 +139,11 @@ class _AnnotationScreenState extends State<AnnotationScreen>
                     );
                   }),
                   const SizedBox(width: 6),
-                  const VerticalDivider(color: NVColors.border, width: 1),
+                  Container(
+                    width: 1,
+                    height: 28,
+                    color: NVColors.border,
+                  ),
                   const SizedBox(width: 6),
                   ...[NVColors.error, NVColors.warning, NVColors.success, NVColors.info, NVColors.secondary].map((c) {
                     return Padding(
@@ -216,6 +214,8 @@ class _AnnotationScreenState extends State<AnnotationScreen>
   }
 
   Widget _buildCanvas() {
+    final isMobile = MediaQuery.of(context).size.width < 768;
+    final isTablet = MediaQuery.of(context).size.width < 1200;
     return NVGlassCard(
       padding: const EdgeInsets.all(0),
       child: Column(
@@ -247,7 +247,11 @@ class _AnnotationScreenState extends State<AnnotationScreen>
         ),
         // Annotation canvas — fixed height to avoid Expanded-in-scroll issues
         Container(
-          height: 420,
+          height: isMobile
+              ? 260.0
+              : isTablet
+                  ? 320.0
+                  : 420.0,
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           decoration: BoxDecoration(
             color: Colors.black,
