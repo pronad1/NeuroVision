@@ -127,9 +127,9 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                       ),
                       const Spacer(),
-                      _NavButton(label: 'Features', onTap: () {}),
+                      _NavButton(label: 'Features', onTap: () => _showComingSoonDialog(context, 'Features')),
                       const SizedBox(width: 8),
-                      _NavButton(label: 'About', onTap: () {}),
+                      _NavButton(label: 'About', onTap: () => _showComingSoonDialog(context, 'About')),
                       const SizedBox(width: 16),
                       OutlinedButton(
                         onPressed: _navigateBasedOnAuth,
@@ -266,7 +266,7 @@ class _HeroText extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 OutlinedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => _showVideoDemoDialog(context),
                   icon: const Icon(Icons.play_circle_outline_rounded, size: 18),
                   label: const Text('Watch Demo'),
                   style: OutlinedButton.styleFrom(
@@ -478,22 +478,124 @@ class _FeatureStrip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Row(
           children: features.map((f) {
-            return Padding(
-              padding: const EdgeInsets.only(right: 32),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(f.$1, color: f.$3, size: 16),
-                  const SizedBox(width: 8),
-                  Text(f.$2, style: const TextStyle(color: NVColors.textMuted, fontSize: 13)),
-                ],
-              ),
-            );
-          }).toList(),
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            Icon(f.$1, color: f.$2, size: 16),
+            const SizedBox(width: 8),
+            Text(f.$3, style: const TextStyle(color: NVColors.textSecondary, fontSize: 13)),
+          ],
+        ),
+      );
+    }).toList(),
         ),
       ),
     );
   }
+}
+
+void _showComingSoonDialog(BuildContext context, String feature) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: NVColors.bgCard,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: NVColors.borderBright),
+      ),
+      title: Row(
+        children: [
+          const Icon(Icons.auto_awesome_rounded, color: NVColors.primary),
+          const SizedBox(width: 10),
+          Text(feature, style: const TextStyle(color: NVColors.textPrimary)),
+        ],
+      ),
+      content: Text(
+        '$feature is currently in development and will be available in the next release of NeuroVision AI.',
+        style: const TextStyle(color: NVColors.textSecondary, height: 1.5),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('Got it', style: TextStyle(color: NVColors.primary)),
+        ),
+      ],
+    ),
+  );
+}
+
+void _showVideoDemoDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (ctx) => Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(20),
+      child: Container(
+        width: 800,
+        height: 450,
+        decoration: BoxDecoration(
+          color: NVColors.bgDeep,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: NVColors.primary.withValues(alpha: 0.3)),
+          boxShadow: [
+            BoxShadow(
+              color: NVColors.primary.withValues(alpha: 0.2),
+              blurRadius: 40,
+              spreadRadius: 10,
+            ),
+          ],
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [NVColors.bgCard, NVColors.bgDeep],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                    ),
+                  ),
+                  CustomPaint(
+                    size: const Size(800, 450),
+                    painter: _GridPainter(),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: NVColors.primary.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.play_arrow_rounded, color: NVColors.primary, size: 64),
+            ),
+            const Positioned(
+              bottom: 40,
+              child: Text(
+                'Demo Video Placeholder',
+                style: TextStyle(color: NVColors.textSecondary, fontSize: 16, letterSpacing: 1.2),
+              ),
+            ),
+            Positioned(
+              top: 20, right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close_rounded, color: NVColors.textSecondary),
+                onPressed: () => Navigator.pop(ctx),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class _NavButton extends StatelessWidget {
@@ -511,16 +613,49 @@ class _NavButton extends StatelessWidget {
   }
 }
 
-class _AnimatedBackground extends StatelessWidget {
+class _AnimatedBackground extends StatefulWidget {
   final Animation<double> rotateAnim;
   final Size size;
 
   const _AnimatedBackground({required this.rotateAnim, required this.size});
 
   @override
+  State<_AnimatedBackground> createState() => _AnimatedBackgroundState();
+}
+
+class _AnimatedBackgroundState extends State<_AnimatedBackground> {
+  late List<_Particle> _particles;
+
+  @override
+  void initState() {
+    super.initState();
+    _initParticles();
+  }
+
+  void _initParticles() {
+    final rand = math.Random();
+    _particles = List.generate(40, (i) {
+      return _Particle(
+        position: Offset(
+          rand.nextDouble() * 2000, // Safe estimate, will be clamped on first frame
+          rand.nextDouble() * 1000,
+        ),
+        velocity: Offset(
+          (rand.nextDouble() - 0.5) * 1.5,
+          (rand.nextDouble() - 0.5) * 1.5,
+        ),
+        radius: rand.nextDouble() * 2 + 1,
+      );
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // If the window is really small, limit particles
+    final particleCount = widget.size.width < 800 ? 20 : 40;
+    
     return AnimatedBuilder(
-      animation: rotateAnim,
+      animation: widget.rotateAnim,
       builder: (context, _) {
         return Stack(
           children: [
@@ -529,7 +664,7 @@ class _AnimatedBackground extends StatelessWidget {
               top: -100,
               right: -80,
               child: Transform.rotate(
-                angle: rotateAnim.value * 2 * math.pi * 0.3,
+                angle: widget.rotateAnim.value * 2 * math.pi * 0.3,
                 child: Container(
                   width: 400,
                   height: 400,
@@ -550,7 +685,7 @@ class _AnimatedBackground extends StatelessWidget {
               bottom: -80,
               left: -60,
               child: Transform.rotate(
-                angle: -rotateAnim.value * 2 * math.pi * 0.2,
+                angle: -widget.rotateAnim.value * 2 * math.pi * 0.2,
                 child: Container(
                   width: 350,
                   height: 350,
@@ -568,14 +703,80 @@ class _AnimatedBackground extends StatelessWidget {
             ),
             // Grid dots overlay
             CustomPaint(
-              size: size,
+              size: widget.size,
               painter: _GridPainter(),
+            ),
+            // Particle network
+            CustomPaint(
+              size: widget.size,
+              painter: _ParticleNetworkPainter(_particles.take(particleCount).toList()),
             ),
           ],
         );
       },
     );
   }
+}
+
+class _Particle {
+  Offset position;
+  Offset velocity;
+  final double radius;
+
+  _Particle({required this.position, required this.velocity, required this.radius});
+}
+
+class _ParticleNetworkPainter extends CustomPainter {
+  final List<_Particle> particles;
+  final double maxDistance = 160.0;
+
+  _ParticleNetworkPainter(this.particles);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width == 0 || size.height == 0) return;
+    
+    final paint = Paint()
+      ..color = NVColors.primary.withValues(alpha: 0.6)
+      ..style = PaintingStyle.fill;
+
+    final linePaint = Paint()
+      ..strokeWidth = 1.0;
+
+    for (var i = 0; i < particles.length; i++) {
+      final p1 = particles[i];
+
+      // Update position
+      p1.position += p1.velocity;
+      
+      // Bounce off walls
+      if (p1.position.dx < 0 || p1.position.dx > size.width) {
+        p1.velocity = Offset(-p1.velocity.dx, p1.velocity.dy);
+        p1.position = Offset(p1.position.dx.clamp(0.0, size.width), p1.position.dy);
+      }
+      if (p1.position.dy < 0 || p1.position.dy > size.height) {
+        p1.velocity = Offset(p1.velocity.dx, -p1.velocity.dy);
+        p1.position = Offset(p1.position.dx, p1.position.dy.clamp(0.0, size.height));
+      }
+
+      canvas.drawCircle(p1.position, p1.radius, paint);
+
+      // Draw connections
+      for (var j = i + 1; j < particles.length; j++) {
+        final p2 = particles[j];
+        final dist = (p1.position - p2.position).distance;
+        if (dist < maxDistance) {
+          linePaint.color = NVColors.primary.withValues(
+            alpha: (0.25 * (1 - dist / maxDistance)).clamp(0.0, 1.0)
+          );
+          canvas.drawLine(p1.position, p2.position, linePaint);
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
 class _GridPainter extends CustomPainter {

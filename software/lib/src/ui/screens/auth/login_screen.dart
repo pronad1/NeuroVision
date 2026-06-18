@@ -178,6 +178,21 @@ class _LoginScreenState extends State<LoginScreen>
               ),
             ),
           ),
+
+          // Back to Home Button
+          Positioned(
+            top: 24, left: 24,
+            child: Material(
+              color: Colors.transparent,
+              child: IconButton(
+                onPressed: () => Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false),
+                icon: const Icon(Icons.arrow_back_rounded, color: NVColors.textSecondary),
+                tooltip: 'Back to Home',
+                splashRadius: 24,
+                hoverColor: NVColors.bgSurface,
+              ),
+            ),
+          ),
         ],
       ),
     );

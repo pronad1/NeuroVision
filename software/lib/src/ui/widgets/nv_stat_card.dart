@@ -40,14 +40,21 @@ class NVStatCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 42,
+                height: 42,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: color.withValues(alpha: 0.3)),
+                  gradient: LinearGradient(
+                    colors: [color.withValues(alpha: 0.2), color.withValues(alpha: 0.05)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
+                  boxShadow: [
+                    BoxShadow(color: color.withValues(alpha: 0.15), blurRadius: 12, spreadRadius: 1),
+                  ],
                 ),
-                child: Icon(icon, color: color, size: 20),
+                child: Icon(icon, color: color, size: 22),
               ),
               if (trend != null)
                 Flexible(

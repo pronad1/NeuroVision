@@ -77,6 +77,8 @@ class _DoctorDashboardState extends State<DoctorDashboard>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _buildWelcomeBanner(user?.name ?? 'Doctor'),
+                  const SizedBox(height: 24),
                   _buildStatsRow(),
                   const SizedBox(height: 20),
                   _buildMainGrid(),
@@ -85,6 +87,40 @@ class _DoctorDashboardState extends State<DoctorDashboard>
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWelcomeBanner(String name) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0D9488), Color(0xFF0F766E)], // Deep Teal Gradients
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(color: const Color(0xFF0D9488).withValues(alpha: 0.3), blurRadius: 16, offset: const Offset(0, 8)),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -20, top: -20,
+            child: Icon(Icons.medical_information_rounded, size: 100, color: Colors.white.withValues(alpha: 0.1)),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Welcome back, Dr. $name', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+              const SizedBox(height: 8),
+              const Text('You have 12 pending AI diagnoses awaiting your clinical validation today.', style: TextStyle(color: Colors.white70, fontSize: 14)),
+            ],
           ),
         ],
       ),

@@ -405,8 +405,13 @@ class _HeatmapsScreenState extends State<HeatmapsScreen>
               ),
               const Spacer(),
               // Layer selector chips
-              Row(
-                children: _layers.map((layer) {
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  reverse: true, // Right-align chips
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: _layers.map((layer) {
                   final active = _selectedLayer == layer;
                   return GestureDetector(
                     onTap: () => setState(() => _selectedLayer = layer),
@@ -441,6 +446,8 @@ class _HeatmapsScreenState extends State<HeatmapsScreen>
                     ),
                   );
                 }).toList(),
+              ),
+                ),
               ),
             ],
           ),

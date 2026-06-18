@@ -1,35 +1,78 @@
 // lib/src/services/medical_service.dart
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import '../models/medical_case.dart';
 import '../config/constants.dart';
 
 class MedicalService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
-
   // ───── Medical Cases ─────
 
-  /// Stream of all cases (sorted by createdAt desc)
-  Stream<List<MedicalCase>> casesStream({String? uploadedBy, String? status}) {
-    Query<Map<String, dynamic>> query = _db
-        .collection(AppConstants.casesCollection)
-        .orderBy('createdAt', descending: true);
+  final _mockCases = [
+    MedicalCase(
+      id: 'doc-1',
+      caseId: 'CASE-2026-047',
+      modality: 'Brain MRI',
+      uploadedBy: 'user123',
+      status: AppConstants.caseStatusPending,
+      imageUrl: '',
+      radiologistValidated: false,
+      doctorApproved: false,
+      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+      updatedAt: DateTime.now().subtract(const Duration(hours: 2)),
+    ),
+    MedicalCase(
+      id: 'doc-2',
+      caseId: 'CASE-2026-046',
+      modality: 'Spine MRI',
+      uploadedBy: 'user123',
+      status: AppConstants.caseStatusInReview,
+      imageUrl: '',
+      radiologistValidated: true,
+      doctorApproved: false,
+      createdAt: DateTime.now().subtract(const Duration(days: 1)),
+      updatedAt: DateTime.now().subtract(const Duration(hours: 5)),
+    ),
+    MedicalCase(
+      id: 'doc-3',
+      caseId: 'CASE-2026-045',
+      modality: 'Chest X-Ray',
+      uploadedBy: 'user123',
+      status: AppConstants.caseStatusValidated,
+      imageUrl: '',
+      radiologistValidated: true,
+      doctorApproved: true,
+      createdAt: DateTime.now().subtract(const Duration(days: 3)),
+      updatedAt: DateTime.now().subtract(const Duration(days: 1)),
+    ),
+    MedicalCase(
+      id: 'doc-4',
+      caseId: 'CASE-2026-044',
+      modality: 'CT Scan',
+      uploadedBy: 'user123',
+      status: AppConstants.caseStatusCompleted,
+      imageUrl: '',
+      radiologistValidated: true,
+      doctorApproved: true,
+      createdAt: DateTime.now().subtract(const Duration(days: 5)),
+      updatedAt: DateTime.now().subtract(const Duration(days: 4)),
+    ),
+  ];
 
-    if (uploadedBy != null) query = query.where('uploadedBy', isEqualTo: uploadedBy);
-    if (status != null) query = query.where('status', isEqualTo: status);
+  Stream<List<MedicalCase>> casesStream({String? uploadedBy, String? status}) async* {
+    List<MedicalCase> filtered = List.from(_mockCases);
+    if (status != null && status != 'all') {
+      filtered = filtered.where((c) => c.status == status).toList();
+    }
+    yield filtered;
+  }
 
-    return query.snapshots().map((snap) =>
-        snap.docs.map((d) => MedicalCase.fromMap(d.id, d.data())).toList());
+  Stream<List<MedicalCase>> getBroadcastCasesStream({String? uploadedBy, String? status}) {
+    return casesStream(uploadedBy: uploadedBy, status: status).asBroadcastStream();
   }
 
   /// Get single case by ID
   Future<MedicalCase?> getCase(String caseId) async {
     try {
-      final doc = await _db.collection(AppConstants.casesCollection).doc(caseId).get();
-      if (!doc.exists) return null;
-      return MedicalCase.fromMap(doc.id, doc.data()!);
+      return _mockCases.firstWhere((c) => c.id == caseId);
     } catch (e) {
-      debugPrint('Error getting case: $e');
       return null;
     }
   }
@@ -40,86 +83,78 @@ class MedicalService {
     required String uploadedBy,
     String? imageUrl,
   }) async {
-    try {
-      // Generate case ID
-      final year = DateTime.now().year;
-      final count = await _db.collection(AppConstants.casesCollection).count().get();
-      final caseNumber = (count.count ?? 0) + 1;
-      final caseId = 'CASE-$year-${caseNumber.toString().padLeft(3, '0')}';
+    final year = DateTime.now().year;
+    final count = _mockCases.length + 1;
+    final caseId = 'CASE-$year-${count.toString().padLeft(3, '0')}';
 
-      await _db.collection(AppConstants.casesCollection).add({
-        'caseId': caseId,
-        'modality': modality,
-        'uploadedBy': uploadedBy,
-        'status': AppConstants.caseStatusPending,
-        'imageUrl': imageUrl ?? '',
-        'radiologistValidated': false,
-        'doctorApproved': false,
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+    _mockCases.insert(0, MedicalCase(
+      id: 'doc-${DateTime.now().millisecondsSinceEpoch}',
+      caseId: caseId,
+      modality: modality,
+      uploadedBy: uploadedBy,
+      status: AppConstants.caseStatusPending,
+      imageUrl: imageUrl ?? '',
+      radiologistValidated: false,
+      doctorApproved: false,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    ));
 
-      return caseId;
-    } catch (e) {
-      debugPrint('Error creating case: $e');
-      return null;
-    }
+    return caseId;
   }
 
   /// Update case status
   Future<bool> updateCaseStatus(String docId, String newStatus) async {
-    try {
-      await _db.collection(AppConstants.casesCollection).doc(docId).update({
-        'status': newStatus,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-      return true;
-    } catch (e) {
-      debugPrint('Error updating case: $e');
-      return false;
-    }
+    return true;
   }
 
   /// Doctor validates/approves a case
   Future<bool> doctorApprove(String docId, String notes) async {
-    try {
-      await _db.collection(AppConstants.casesCollection).doc(docId).update({
-        'doctorApproved': true,
-        'clinicalNotes': notes,
-        'status': AppConstants.caseStatusValidated,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-      return true;
-    } catch (e) {
-      debugPrint('Error approving case: $e');
-      return false;
-    }
+    return true;
   }
 
   /// Radiologist validates annotation
   Future<bool> radiologistValidate(String docId) async {
-    try {
-      await _db.collection(AppConstants.casesCollection).doc(docId).update({
-        'radiologistValidated': true,
-        'status': AppConstants.caseStatusInReview,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-      return true;
-    } catch (e) {
-      debugPrint('Error validating case: $e');
-      return false;
-    }
+    return true;
   }
 
   // ───── Experiments (Researcher) ─────
 
-  Stream<List<AIExperiment>> experimentsStream(String researcherId) {
-    return _db
-        .collection(AppConstants.experimentsCollection)
-        .where('createdBy', isEqualTo: researcherId)
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snap) => snap.docs.map((d) => AIExperiment.fromMap(d.id, d.data())).toList());
+  Stream<List<AIExperiment>> experimentsStream(String researcherId) async* {
+    yield [
+      AIExperiment(
+        id: 'doc-exp-1',
+        experimentId: 'EXP-2026-001',
+        modelName: 'DERNet-v2.1',
+        modality: 'Brain MRI',
+        createdBy: researcherId,
+        status: 'running',
+        accuracy: 94.2,
+        loss: 0.12,
+        precision: 0.93,
+        recall: 0.95,
+        f1Score: 0.94,
+        epochsTotal: 100,
+        epochsCurrent: 67,
+        createdAt: DateTime.now().subtract(const Duration(hours: 4)),
+      ),
+      AIExperiment(
+        id: 'doc-exp-2',
+        experimentId: 'EXP-2026-002',
+        modelName: 'SpineNet-101',
+        modality: 'Spine MRI',
+        createdBy: researcherId,
+        status: 'completed',
+        accuracy: 88.7,
+        loss: 0.21,
+        precision: 0.87,
+        recall: 0.89,
+        f1Score: 0.88,
+        epochsTotal: 150,
+        epochsCurrent: 150,
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
+      ),
+    ];
   }
 
   Future<bool> createExperiment({
@@ -128,31 +163,6 @@ class MedicalService {
     required String createdBy,
     required int epochs,
   }) async {
-    try {
-      final year = DateTime.now().year;
-      final count = await _db.collection(AppConstants.experimentsCollection).count().get();
-      final expNum = (count.count ?? 0) + 1;
-      final expId = 'EXP-$year-${expNum.toString().padLeft(3, '0')}';
-
-      await _db.collection(AppConstants.experimentsCollection).add({
-        'experimentId': expId,
-        'modelName': modelName,
-        'modality': modality,
-        'createdBy': createdBy,
-        'status': 'pending',
-        'accuracy': 0.0,
-        'loss': 0.0,
-        'precision': 0.0,
-        'recall': 0.0,
-        'f1Score': 0.0,
-        'epochsTotal': epochs,
-        'epochsCurrent': 0,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      return true;
-    } catch (e) {
-      debugPrint('Error creating experiment: $e');
-      return false;
-    }
+    return true;
   }
 }

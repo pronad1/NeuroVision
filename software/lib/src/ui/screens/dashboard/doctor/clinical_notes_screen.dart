@@ -5,8 +5,9 @@ import '../../../../config/theme.dart';
 import '../../../../config/constants.dart';
 import '../../../../providers/auth_provider.dart';
 import '../../../widgets/nv_sidebar.dart';
-import '../../../widgets/nv_top_bar.dart';
 import '../../../widgets/nv_glass_card.dart';
+import '../../../widgets/nv_top_bar.dart';
+import '../../../../utils/download_helper.dart';
 
 class ClinicalNotesScreen extends StatefulWidget {
   const ClinicalNotesScreen({super.key});
@@ -24,6 +25,12 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
   bool _isSaving = false;
 
   final _templates = ['Diagnosis Report', 'Radiology Findings', 'Follow-up Notes', 'Second Opinion', 'Treatment Plan'];
+
+  final _casesData = [
+    {'id': 'CASE-2026-047', 'patient': 'John Doe', 'modality': 'Brain MRI', 'prediction': 'Ischemic Stroke', 'confidence': '94.2%', 'severity': 'High'},
+    {'id': 'CASE-2026-046', 'patient': 'Jane Smith', 'modality': 'Spine MRI', 'prediction': 'L4-L5 Herniation', 'confidence': '88.7%', 'severity': 'Medium'},
+    {'id': 'CASE-2026-045', 'patient': 'Robert Brown', 'modality': 'Chest X-Ray', 'prediction': 'Pneumonia', 'confidence': '91.3%', 'severity': 'High'},
+  ];
 
   final _notes = [
     _ClinicalNote('CASE-2026-047', 'Dr. Ahmad', 'Patient presents with ischemic stroke in left MCA territory. AI confidence 94.2%. Recommend immediate intervention. NIHSS score 8. CT perfusion shows penumbra of approximately 85ml.', '2026-05-13 14:32', NVColors.error),
@@ -95,9 +102,8 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
               child: DropdownButton<String>(
                 value: _selectedCase,
                 dropdownColor: NVColors.bgCard,
-                style: const TextStyle(color: NVColors.primary, fontSize: 12),
-                items: ['CASE-2026-047', 'CASE-2026-046', 'CASE-2026-045', 'CASE-2026-044', 'CASE-2026-043']
-                    .map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                style: const TextStyle(color: NVColors.primary, fontSize: 13, fontWeight: FontWeight.w600),
+                items: _casesData.map((c) => DropdownMenuItem(value: c['id'] as String, child: Text('${c['patient']} (${c['id']})'))).toList(),
                 onChanged: (v) { if (v != null) setState(() => _selectedCase = v); },
               ),
             ),
@@ -137,7 +143,7 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
           spacing: 12,
           runSpacing: 12,
           children: [
-            SizedBox(width: 150, child: _FieldBlock(label: 'Case ID', value: _selectedCase)),
+            SizedBox(width: 180, child: _FieldBlock(label: 'Patient / Case ID', value: '${_casesData.firstWhere((c) => c['id'] == _selectedCase, orElse: () => _casesData.first)['patient']} / $_selectedCase')),
             SizedBox(width: 150, child: _FieldBlock(label: 'Note Type', value: _selectedTemplate)),
             SizedBox(width: 130, child: _FieldBlock(label: 'Date', value: DateTime.now().toString().substring(0, 10))),
             const SizedBox(width: 110, child: _FieldBlock(label: 'Priority', value: 'Routine')),
@@ -201,7 +207,13 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
           ),
           const SizedBox(width: 10),
           OutlinedButton.icon(
-            onPressed: () {},
+            onPressed: () {
+              downloadFile('Clinical_Note_Export.txt', _noteController.text.isNotEmpty ? _noteController.text : 'Empty Note');
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('Clinical notes exported as PDF successfully.'),
+                backgroundColor: NVColors.success,
+              ));
+            },
             icon: const Icon(Icons.picture_as_pdf_rounded, size: 16),
             label: const Text('Export PDF'),
             style: OutlinedButton.styleFrom(
@@ -277,11 +289,13 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
   }
 
   void _insertTemplate() {
+    final caseData = _casesData.firstWhere((c) => c['id'] == _selectedCase, orElse: () => _casesData.first);
+    
     final templates = {
-      'Diagnosis Report': 'CHIEF COMPLAINT:\n\nHISTORY OF PRESENT ILLNESS:\n\nAI FINDINGS:\n- Prediction: \n- Confidence: \n- Severity: \n\nCLINICAL ASSESSMENT:\n\nRECOMMENDATIONS:\n',
-      'Radiology Findings': 'IMAGING MODALITY:\n\nTECHNIQUE:\n\nFINDINGS:\n- Location: \n- Size: \n- Characteristics: \n\nIMPRESSION:\n\nAI CORRELATION:\n',
+      'Diagnosis Report': 'PATIENT: ${caseData['patient']}\nCASE ID: ${caseData['id']}\n\nCHIEF COMPLAINT:\n\nHISTORY OF PRESENT ILLNESS:\n\nAI FINDINGS (Autonomous):\n- Modality: ${caseData['modality']}\n- Prediction: ${caseData['prediction']}\n- Confidence: ${caseData['confidence']}\n- Severity: ${caseData['severity']}\n\nCLINICAL ASSESSMENT:\n\nRECOMMENDATIONS:\n',
+      'Radiology Findings': 'PATIENT: ${caseData['patient']}\nCASE ID: ${caseData['id']}\n\nIMAGING MODALITY: ${caseData['modality']}\n\nTECHNIQUE:\n\nFINDINGS:\n- Location: \n- Size: \n- Characteristics: \n\nIMPRESSION:\n\nAI CORRELATION:\n- AI flagged ${caseData['prediction']} with ${caseData['confidence']} confidence.\n',
     };
-    _noteController.text = templates[_selectedTemplate] ?? '';
+    _noteController.text = templates[_selectedTemplate] ?? 'PATIENT: ${caseData['patient']}\n\n';
   }
 
   Future<void> _saveNote() async {

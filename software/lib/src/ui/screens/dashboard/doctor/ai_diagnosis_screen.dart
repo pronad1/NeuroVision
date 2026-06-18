@@ -31,11 +31,32 @@ class _AIDiagnosisScreenState extends State<AIDiagnosisScreen>
   final List<_DiagnosisCase> _cases = [
     _DiagnosisCase(
       caseId: 'CASE-2026-047',
+      patientName: 'John Doe',
       modality: 'Brain MRI',
       prediction: 'Ischemic Stroke',
       confidence: 94.2,
       severity: 'High',
       modelUsed: 'DERNet v2.1',
+      severityColor: NVColors.error,
+    ),
+    _DiagnosisCase(
+      caseId: 'CASE-2026-046',
+      patientName: 'Jane Smith',
+      modality: 'Spine MRI',
+      prediction: 'L4-L5 Herniation',
+      confidence: 88.7,
+      severity: 'Medium',
+      modelUsed: 'SpineNet-101',
+      severityColor: NVColors.warning,
+    ),
+    _DiagnosisCase(
+      caseId: 'CASE-2026-045',
+      patientName: 'Robert Brown',
+      modality: 'Chest X-Ray',
+      prediction: 'Pneumonia',
+      confidence: 91.3,
+      severity: 'High',
+      modelUsed: 'ChestX-Net',
       severityColor: NVColors.error,
     ),
   ];
@@ -65,8 +86,12 @@ class _AIDiagnosisScreenState extends State<AIDiagnosisScreen>
       final newCaseId = 'CASE-2026-0${_cases.length + 48}';
       
       setState(() {
+        final mockNames = ['Alice Johnson', 'Michael Lee', 'Sarah Connor', 'David Kim'];
+        final randomName = mockNames[_cases.length % mockNames.length];
+        
         _cases.insert(0, _DiagnosisCase(
           caseId: newCaseId,
+          patientName: randomName,
           modality: aiResult.modality,
           prediction: aiResult.prediction,
           confidence: aiResult.confidence,
@@ -184,7 +209,7 @@ class _AIDiagnosisScreenState extends State<AIDiagnosisScreen>
                 Container(width: 8, height: 8, decoration: BoxDecoration(color: c.severityColor, shape: BoxShape.circle)),
                 const SizedBox(width: 8),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text(c.caseId, style: TextStyle(color: isSelected ? NVColors.primary : NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 12)),
+                  Text('${c.patientName} (${c.caseId})', style: TextStyle(color: isSelected ? NVColors.primary : NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 12)),
                   Text(c.modality, style: const TextStyle(color: NVColors.textMuted, fontSize: 11)),
                 ])),
                 Text('${c.confidence}%', style: TextStyle(color: c.severityColor, fontSize: 11, fontWeight: FontWeight.bold)),
@@ -211,7 +236,7 @@ class _AIDiagnosisScreenState extends State<AIDiagnosisScreen>
             ),
             const SizedBox(width: 12),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(c.caseId, style: const TextStyle(color: NVColors.primary, fontWeight: FontWeight.bold, fontSize: 16)),
+              Text('${c.patientName} · ${c.caseId}', style: const TextStyle(color: NVColors.primary, fontWeight: FontWeight.bold, fontSize: 16)),
               Text('${c.modality} · ${c.modelUsed}', style: const TextStyle(color: NVColors.textMuted, fontSize: 12)),
             ]),
             const Spacer(),
@@ -416,6 +441,7 @@ class _AIDiagnosisScreenState extends State<AIDiagnosisScreen>
         Text('Approve AI Diagnosis', style: TextStyle(color: NVColors.textPrimary, fontSize: 16)),
       ]),
       content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('Patient: ${c.patientName}', style: const TextStyle(color: NVColors.textPrimary, fontSize: 14, fontWeight: FontWeight.bold)),
         Text('Case: ${c.caseId} · ${c.prediction}', style: const TextStyle(color: NVColors.textSecondary, fontSize: 13)),
         const SizedBox(height: 16),
         const Text('Clinical Notes (optional)', style: TextStyle(color: NVColors.textMuted, fontSize: 12)),
@@ -439,7 +465,7 @@ class _AIDiagnosisScreenState extends State<AIDiagnosisScreen>
 }
 
 class _DiagnosisCase {
-  final String caseId, modality, prediction, severity, modelUsed;
+  final String caseId, patientName, modality, prediction, severity, modelUsed;
   final double confidence;
   final Color severityColor;
   final Uint8List? originalImage;
@@ -448,6 +474,7 @@ class _DiagnosisCase {
 
   _DiagnosisCase({
     required this.caseId,
+    required this.patientName,
     required this.modality,
     required this.prediction,
     required this.confidence,

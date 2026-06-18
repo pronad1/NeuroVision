@@ -8,6 +8,7 @@ import '../../../widgets/nv_sidebar.dart';
 import '../../../widgets/nv_top_bar.dart';
 import '../../../widgets/nv_glass_card.dart';
 import '../../../widgets/nv_stat_card.dart';
+import '../../../../utils/download_helper.dart';
 
 class SegmentationScreen extends StatefulWidget {
   const SegmentationScreen({super.key});
@@ -198,7 +199,13 @@ class _SegmentationScreenState extends State<SegmentationScreen>
         _ModelInfo(label: 'HD95', value: '4.12 mm'),
         const SizedBox(height: 16),
         SizedBox(width: double.infinity, child: ElevatedButton.icon(
-          onPressed: () {},
+          onPressed: () {
+            downloadFile('Lesion_Mask_Export.nii.gz', 'Dummy NIfTI Mask Content');
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Mask exported successfully as NIfTI file.'),
+              backgroundColor: NVColors.success,
+            ));
+          },
           icon: const Icon(Icons.download_rounded, size: 16),
           label: const Text('Export Mask'),
           style: ElevatedButton.styleFrom(
@@ -209,7 +216,13 @@ class _SegmentationScreenState extends State<SegmentationScreen>
         )),
         const SizedBox(height: 8),
         SizedBox(width: double.infinity, child: OutlinedButton.icon(
-          onPressed: () {},
+          onPressed: () {
+            downloadFile('Segmentation_Report.pdf', 'Dummy Segmentation Report PDF Content');
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Segmentation report generated successfully.'),
+              backgroundColor: NVColors.success,
+            ));
+          },
           icon: const Icon(Icons.picture_as_pdf_rounded, size: 16),
           label: const Text('Generate Report'),
           style: OutlinedButton.styleFrom(

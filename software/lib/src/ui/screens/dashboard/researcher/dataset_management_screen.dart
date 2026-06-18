@@ -444,9 +444,9 @@ class _DatasetManagementScreenState extends State<DatasetManagementScreen>
           ),
           const SizedBox(height: 16),
           // Bar chart — samples per class
-          Expanded(
-            child: SizedBox(
-              child: BarChart(
+          SizedBox(
+            height: 180,
+            child: BarChart(
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
                   maxY: 4500,
@@ -524,7 +524,6 @@ class _DatasetManagementScreenState extends State<DatasetManagementScreen>
                 ),
               ),
             ),
-          ),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,

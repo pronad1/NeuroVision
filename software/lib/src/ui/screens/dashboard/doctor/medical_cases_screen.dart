@@ -24,6 +24,28 @@ class _MedicalCasesScreenState extends State<MedicalCasesScreen> {
   final _statuses = ['all', 'pending', 'in_review', 'validated', 'completed'];
   final _modalities = ['all', 'Brain MRI', 'Spine MRI', 'Chest X-Ray', 'CT Scan'];
 
+  late Stream<List<MedicalCase>> _casesStream;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = Provider.of<NVAuthProvider>(context, listen: false).nvUser;
+    _casesStream = _medService.getBroadcastCasesStream(
+      uploadedBy: user?.uid,
+      status: _filterStatus == 'all' ? null : _filterStatus,
+    );
+  }
+
+  void _refreshStream() {
+    final user = Provider.of<NVAuthProvider>(context, listen: false).nvUser;
+    setState(() {
+      _casesStream = _medService.getBroadcastCasesStream(
+        uploadedBy: user?.uid,
+        status: _filterStatus == 'all' ? null : _filterStatus,
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<NVAuthProvider>(context);
@@ -62,7 +84,10 @@ class _MedicalCasesScreenState extends State<MedicalCasesScreen> {
                       _FilterChips(
                         items: _statuses,
                         selected: _filterStatus,
-                        onSelected: (v) => setState(() => _filterStatus = v),
+                        onSelected: (v) {
+                          setState(() => _filterStatus = v);
+                          _refreshStream();
+                        },
                         colorMap: {
                           'all': NVColors.textMuted,
                           'pending': NVColors.info,
@@ -123,10 +148,7 @@ class _MedicalCasesScreenState extends State<MedicalCasesScreen> {
                   // Cases list
                   Expanded(
                     child: StreamBuilder<List<MedicalCase>>(
-                      stream: _medService.casesStream(
-                        uploadedBy: user?.uid,
-                        status: _filterStatus == 'all' ? null : _filterStatus,
-                      ),
+                      stream: _casesStream,
                       builder: (context, snap) {
                         if (snap.hasError) {
                           return Center(child: Text('Error: ${snap.error}', style: const TextStyle(color: NVColors.error)));

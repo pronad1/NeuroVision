@@ -10,6 +10,7 @@ import '../../../../config/constants.dart';
 import '../../../widgets/nv_sidebar.dart';
 import '../../../widgets/nv_glass_card.dart';
 import '../../../widgets/nv_top_bar.dart';
+import '../../../../utils/download_helper.dart';
 
 // ─── Mock data models ────────────────────────────────────────────────────────
 
@@ -529,6 +530,16 @@ class _AIReportScreenState extends State<AIReportScreen>
                 behavior: SnackBarBehavior.floating,
               ));
             })),
+            const SizedBox(width: 8),
+            Expanded(child: _actionBtn(Icons.picture_as_pdf_rounded, 'Export PDF', () {
+              final text = report.sections.map((s) => '${s.title}\n${s.content}').join('\n\n');
+              downloadFile('${report.reportId}_Export.txt', text);
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('AI clinical report exported as PDF successfully.'),
+                backgroundColor: NVColors.success,
+                behavior: SnackBarBehavior.floating,
+              ));
+            }, color: NVColors.secondary)),
             const SizedBox(width: 8),
             Expanded(child: _actionBtn(Icons.verified_rounded, 'Approve', () {
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
