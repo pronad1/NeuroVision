@@ -24,22 +24,18 @@ class _MedicalCasesScreenState extends State<MedicalCasesScreen> {
   final _statuses = ['all', 'pending', 'in_review', 'validated', 'completed'];
   final _modalities = ['all', 'Brain MRI', 'Spine MRI', 'Chest X-Ray', 'CT Scan'];
 
-  late Stream<List<MedicalCase>> _casesStream;
+  late Future<List<MedicalCase>> _casesFuture;
 
   @override
   void initState() {
     super.initState();
-    final user = Provider.of<NVAuthProvider>(context, listen: false).nvUser;
-    _casesStream = _medService.casesStream(
-      uploadedBy: user?.uid,
-      status: _filterStatus == 'all' ? null : _filterStatus,
-    );
+    _refreshFuture();
   }
 
-  void _refreshStream() {
+  void _refreshFuture() {
     final user = Provider.of<NVAuthProvider>(context, listen: false).nvUser;
     setState(() {
-      _casesStream = _medService.casesStream(
+      _casesFuture = _medService.getCases(
         uploadedBy: user?.uid,
         status: _filterStatus == 'all' ? null : _filterStatus,
       );
@@ -86,7 +82,7 @@ class _MedicalCasesScreenState extends State<MedicalCasesScreen> {
                         selected: _filterStatus,
                         onSelected: (v) {
                           setState(() => _filterStatus = v);
-                          _refreshStream();
+                          _refreshFuture();
                         },
                         colorMap: {
                           'all': NVColors.textMuted,
@@ -147,8 +143,8 @@ class _MedicalCasesScreenState extends State<MedicalCasesScreen> {
 
                   // Cases list
                   Expanded(
-                    child: StreamBuilder<List<MedicalCase>>(
-                      stream: _casesStream,
+                    child: FutureBuilder<List<MedicalCase>>(
+                      future: _casesFuture,
                       builder: (context, snap) {
                         if (snap.hasError) {
                           return Center(child: Text('Error: ${snap.error}', style: const TextStyle(color: NVColors.error)));

@@ -64,6 +64,14 @@ class MedicalService {
     return Stream.fromFuture(Future.microtask(() => filtered));
   }
 
+  Future<List<MedicalCase>> getCases({String? uploadedBy, String? status}) async {
+    List<MedicalCase> filtered = List.from(_mockCases);
+    if (status != null && status != 'all') {
+      filtered = filtered.where((c) => c.status == status).toList();
+    }
+    return filtered;
+  }
+
   /// Get single case by ID
   Future<MedicalCase?> getCase(String caseId) async {
     try {
