@@ -48,6 +48,12 @@ async def startup_event():
     ModelRegistry.load_all()
     print("All models loaded and ready.")
 
+    # Pre-warm the YOLO spine model so the first user request is fast
+    from app.ml.inference import _get_yolo_model
+    print("[INFO] Pre-warming YOLO11 spine model...")
+    _get_yolo_model()
+    print("[INFO] YOLO11 warm-up complete.")
+
 @app.get("/")
 async def root():
     return {

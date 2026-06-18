@@ -20,6 +20,7 @@ class AIResult {
   final String message;
   final String? vertebralLevel;
   final double? lesionCoveragePct;
+  final int? lesionVoxels;
 
   const AIResult({
     required this.prediction,
@@ -33,6 +34,7 @@ class AIResult {
     required this.message,
     this.vertebralLevel,
     this.lesionCoveragePct,
+    this.lesionVoxels,
   });
 
   factory AIResult.fromJson(Map<String, dynamic> json) {
@@ -54,6 +56,7 @@ class AIResult {
       message: json['message'] ?? '',
       vertebralLevel: json['vertebral_level'],
       lesionCoveragePct: (json['lesion_coverage_pct'] as num?)?.toDouble(),
+      lesionVoxels: (json['lesion_voxels'] as num?)?.toInt(),
     );
   }
 
@@ -73,7 +76,7 @@ class AIService {
   // ──────────────────────────────────────────────────────────────────────────
   static const String _baseUrl = 'http://localhost:8000/api/v1';
 
-  static const Duration _timeout = Duration(seconds: 60);
+  static const Duration _timeout = Duration(seconds: 120);
 
   // ── Brain MRI Analysis ────────────────────────────────────────────────────
 

@@ -25,6 +25,7 @@ class SpineResult(BaseModel):
     model_used: str
     all_probabilities: dict
     heatmap_base64: Optional[str] = None
+    segmentation_mask_base64: Optional[str] = None
     severity: str
     message: str
 

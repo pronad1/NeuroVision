@@ -1630,12 +1630,19 @@ class _ResultActions extends StatelessWidget {
         OutlinedButton.icon(
           onPressed: () {
             // Navigate to detailed screens based on modality
-            if (modality == MedicalModality.brain) {
-              Navigator.pushNamed(
-                  context, '/dashboard/radiologist/lesions');
-            } else if (modality == MedicalModality.spine) {
-              Navigator.pushNamed(
-                  context, '/dashboard/radiologist/segmentation');
+            switch (modality) {
+              case MedicalModality.brain:
+                Navigator.pushNamed(
+                    context, '/dashboard/radiologist/lesions');
+              case MedicalModality.spine:
+                Navigator.pushNamed(
+                    context, '/dashboard/radiologist/segmentation');
+              case MedicalModality.chest:
+                Navigator.pushNamed(
+                    context, '/dashboard/radiologist/segmentation');
+              case MedicalModality.heart:
+                Navigator.pushNamed(
+                    context, '/dashboard/radiologist/explainability');
             }
           },
           icon: const Icon(Icons.open_in_new_rounded, size: 16),

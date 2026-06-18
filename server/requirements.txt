@@ -17,3 +17,4 @@ pydantic
 python-dotenv
 aiofiles
 einops
+ultralytics
