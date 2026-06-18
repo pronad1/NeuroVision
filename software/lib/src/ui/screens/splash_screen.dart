@@ -127,9 +127,19 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                       ),
                       const Spacer(),
-                      _NavButton(label: 'Features', onTap: () => _showComingSoonDialog(context, 'Features')),
+                      _NavButton(label: 'Features', onTap: () => _showInfoDialog(
+                        context, 
+                        'Platform Features', 
+                        '• AI Diagnosis Review: Automated multi-modal pathology detection using state-of-the-art vision models.\n\n• DICOM & Annotation: Medical-grade WebGL DICOM viewer with 3D mask annotation tools.\n\n• Federated Learning: Distributed model training for AI researchers with robust privacy controls.\n\n• Enterprise Security: Granular Role-Based Access Control (RBAC) ensuring HIPAA compliance.',
+                        Icons.auto_awesome_mosaic_rounded,
+                      )),
                       const SizedBox(width: 8),
-                      _NavButton(label: 'About', onTap: () => _showComingSoonDialog(context, 'About')),
+                      _NavButton(label: 'About', onTap: () => _showInfoDialog(
+                        context, 
+                        'About NeuroVision AI', 
+                        'NeuroVision AI is an enterprise-grade medical imaging ecosystem designed to bridge the gap between clinical radiologists and AI researchers.\n\nBy integrating Explainable AI (XAI) such as Grad-CAM visualizations directly into the clinical workflow, we empower doctors to make faster, more accurate diagnoses while allowing researchers to continuously track and improve model performance.',
+                        Icons.info_outline_rounded,
+                      )),
                       const SizedBox(width: 16),
                       OutlinedButton(
                         onPressed: _navigateBasedOnAuth,
@@ -495,7 +505,7 @@ class _FeatureStrip extends StatelessWidget {
   }
 }
 
-void _showComingSoonDialog(BuildContext context, String feature) {
+void _showInfoDialog(BuildContext context, String title, String content, IconData icon) {
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
@@ -506,19 +516,22 @@ void _showComingSoonDialog(BuildContext context, String feature) {
       ),
       title: Row(
         children: [
-          const Icon(Icons.auto_awesome_rounded, color: NVColors.primary),
+          Icon(icon, color: NVColors.primary),
           const SizedBox(width: 10),
-          Text(feature, style: const TextStyle(color: NVColors.textPrimary)),
+          Text(title, style: const TextStyle(color: NVColors.textPrimary)),
         ],
       ),
-      content: Text(
-        '$feature is currently in development and will be available in the next release of NeuroVision AI.',
-        style: const TextStyle(color: NVColors.textSecondary, height: 1.5),
+      content: SizedBox(
+        width: 500,
+        child: Text(
+          content,
+          style: const TextStyle(color: NVColors.textSecondary, height: 1.6, fontSize: 14),
+        ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx),
-          child: const Text('Got it', style: TextStyle(color: NVColors.primary)),
+          child: const Text('Close', style: TextStyle(color: NVColors.primary)),
         ),
       ],
     ),
@@ -566,22 +579,8 @@ void _showVideoDemoDialog(BuildContext context) {
                     size: const Size(800, 450),
                     painter: _GridPainter(),
                   ),
+                  const Positioned.fill(child: _MockVideoPlayer()),
                 ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: NVColors.primary.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.play_arrow_rounded, color: NVColors.primary, size: 64),
-            ),
-            const Positioned(
-              bottom: 40,
-              child: Text(
-                'Demo Video Placeholder',
-                style: TextStyle(color: NVColors.textSecondary, fontSize: 16, letterSpacing: 1.2),
               ),
             ),
             Positioned(
@@ -596,6 +595,69 @@ void _showVideoDemoDialog(BuildContext context) {
       ),
     ),
   );
+}
+
+class _MockVideoPlayer extends StatefulWidget {
+  const _MockVideoPlayer();
+  @override
+  State<_MockVideoPlayer> createState() => _MockVideoPlayerState();
+}
+
+class _MockVideoPlayerState extends State<_MockVideoPlayer> with SingleTickerProviderStateMixin {
+  late AnimationController _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _anim = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _anim.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (context, _) {
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            // Center mock brain
+            Icon(Icons.psychology_rounded, size: 200, color: NVColors.primary.withValues(alpha: 0.1)),
+            // Scanning line
+            Positioned(
+              left: 100 + (_anim.value * 600),
+              top: 0, bottom: 0,
+              child: Container(
+                width: 2,
+                decoration: BoxDecoration(
+                  color: NVColors.primary,
+                  boxShadow: [BoxShadow(color: NVColors.primary.withValues(alpha: 0.5), blurRadius: 10, spreadRadius: 2)],
+                ),
+              ),
+            ),
+            // Text overlay
+            Positioned(
+              bottom: 40,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.circle, color: NVColors.error, size: 12),
+                  const SizedBox(width: 8),
+                  Text('LIVE DEMO - AI ANALYSIS IN PROGRESS: ${(_anim.value * 100).toStringAsFixed(1)}%',
+                      style: const TextStyle(color: NVColors.textSecondary, letterSpacing: 1.5, fontSize: 13)),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class _NavButton extends StatelessWidget {

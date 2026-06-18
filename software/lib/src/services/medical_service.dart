@@ -56,16 +56,12 @@ class MedicalService {
     ),
   ];
 
-  Stream<List<MedicalCase>> casesStream({String? uploadedBy, String? status}) async* {
+  Stream<List<MedicalCase>> casesStream({String? uploadedBy, String? status}) {
     List<MedicalCase> filtered = List.from(_mockCases);
     if (status != null && status != 'all') {
       filtered = filtered.where((c) => c.status == status).toList();
     }
-    yield filtered;
-  }
-
-  Stream<List<MedicalCase>> getBroadcastCasesStream({String? uploadedBy, String? status}) {
-    return casesStream(uploadedBy: uploadedBy, status: status).asBroadcastStream();
+    return Stream.fromFuture(Future.microtask(() => filtered));
   }
 
   /// Get single case by ID

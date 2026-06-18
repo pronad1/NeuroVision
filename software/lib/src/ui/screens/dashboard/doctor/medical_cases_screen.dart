@@ -30,7 +30,7 @@ class _MedicalCasesScreenState extends State<MedicalCasesScreen> {
   void initState() {
     super.initState();
     final user = Provider.of<NVAuthProvider>(context, listen: false).nvUser;
-    _casesStream = _medService.getBroadcastCasesStream(
+    _casesStream = _medService.casesStream(
       uploadedBy: user?.uid,
       status: _filterStatus == 'all' ? null : _filterStatus,
     );
@@ -39,7 +39,7 @@ class _MedicalCasesScreenState extends State<MedicalCasesScreen> {
   void _refreshStream() {
     final user = Provider.of<NVAuthProvider>(context, listen: false).nvUser;
     setState(() {
-      _casesStream = _medService.getBroadcastCasesStream(
+      _casesStream = _medService.casesStream(
         uploadedBy: user?.uid,
         status: _filterStatus == 'all' ? null : _filterStatus,
       );
