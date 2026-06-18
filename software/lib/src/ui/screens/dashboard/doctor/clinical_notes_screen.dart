@@ -45,31 +45,35 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<NVAuthProvider>(context).nvUser;
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
-        children: [
-          NVSidebar(currentRoute: '/dashboard/doctor/notes', role: AppConstants.roleDoctor),
-          Expanded(
-            child: FadeTransition(
-              opacity: _fade,
-              child: Column(children: [
-                NVTopBar(title: 'Clinical Notes', subtitle: 'Structured case notes and diagnostic reports', user: user?.name ?? 'Doctor', roleColor: NVColors.doctorColor),
-                Expanded(child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    // Left: Note editor
-                    Expanded(flex: 3, child: _buildEditor()),
-                    const SizedBox(width: 16),
-                    // Right: Note history
-                    SizedBox(width: 340, child: _buildHistory()),
-                  ]),
-                )),
-              ]),
-            ),
-          ),
-        ],
-      ),
+    return NVScaffold(
+      currentRoute: '/dashboard/doctor/notes',
+      role: AppConstants.roleDoctor,
+      title: 'Clinical Notes',
+      subtitle: 'Structured case notes and diagnostic reports',
+      userName: user?.name ?? 'Doctor',
+      roleColor: NVColors.doctorColor,
+      fadeAnimation: _fade,
+      body: Column(children: [
+        NVTopBar(title: 'Clinical Notes', subtitle: 'Structured case notes and diagnostic reports', user: user?.name ?? 'Doctor', roleColor: NVColors.doctorColor),
+        Expanded(child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: LayoutBuilder(builder: (context, constraints) {
+            final isWide = constraints.maxWidth > 700;
+            if (isWide) {
+              return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Expanded(flex: 3, child: _buildEditor()),
+                const SizedBox(width: 16),
+                SizedBox(width: 320, child: _buildHistory()),
+              ]);
+            }
+            return Column(children: [
+              _buildEditor(),
+              const SizedBox(height: 16),
+              _buildHistory(),
+            ]);
+          }),
+        )),
+      ]),
     );
   }
 
@@ -129,15 +133,16 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
         const SizedBox(height: 16),
 
         // Fields row
-        Row(children: [
-          Expanded(child: _FieldBlock(label: 'Case ID', value: _selectedCase)),
-          const SizedBox(width: 12),
-          Expanded(child: _FieldBlock(label: 'Note Type', value: _selectedTemplate)),
-          const SizedBox(width: 12),
-          Expanded(child: _FieldBlock(label: 'Date', value: DateTime.now().toString().substring(0, 10))),
-          const SizedBox(width: 12),
-          const Expanded(child: _FieldBlock(label: 'Priority', value: 'Routine')),
-        ]),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            SizedBox(width: 150, child: _FieldBlock(label: 'Case ID', value: _selectedCase)),
+            SizedBox(width: 150, child: _FieldBlock(label: 'Note Type', value: _selectedTemplate)),
+            SizedBox(width: 130, child: _FieldBlock(label: 'Date', value: DateTime.now().toString().substring(0, 10))),
+            const SizedBox(width: 110, child: _FieldBlock(label: 'Priority', value: 'Routine')),
+          ],
+        ),
         const SizedBox(height: 16),
 
         // Text editor

@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 import uvicorn
 
 from app.core.config import settings
-from app.api.routes import brain, spine, chest, heart, health
+from app.api.routes import brain, spine, chest, heart, health, report
 from app.core.model_registry import ModelRegistry
 
 app = FastAPI(
@@ -37,6 +37,7 @@ app.include_router(brain.router, prefix="/api/v1/brain", tags=["Brain MRI"])
 app.include_router(spine.router, prefix="/api/v1/spine", tags=["Spine MRI"])
 app.include_router(chest.router, prefix="/api/v1/chest", tags=["Chest X-Ray"])
 app.include_router(heart.router, prefix="/api/v1/heart", tags=["Heart (Echo)"])
+app.include_router(report.router, prefix="/api/v1/report", tags=["AI Report Generation"])
 
 @app.on_event("startup")
 async def startup_event():

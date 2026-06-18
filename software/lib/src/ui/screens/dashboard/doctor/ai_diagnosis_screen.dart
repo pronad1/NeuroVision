@@ -90,51 +90,58 @@ class _AIDiagnosisScreenState extends State<AIDiagnosisScreen>
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<NVAuthProvider>(context).nvUser;
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
-        children: [
-          NVSidebar(currentRoute: '/dashboard/doctor/ai-diagnosis', role: AppConstants.roleDoctor),
-          Expanded(
-            child: FadeTransition(
-              opacity: _fade,
-              child: Column(children: [
-                NVTopBar(title: 'AI Diagnosis Review', subtitle: 'Review and validate AI predictions per case', user: user?.name ?? 'Doctor', roleColor: NVColors.doctorColor),
-                Expanded(child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    // Stat row and action button
-                    Row(
-                      children: [
-                        const Expanded(child: Text('Dashboard Statistics', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18))),
-                        if (_isUploading)
-                          const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: NVColors.doctorColor, strokeWidth: 2)))
-                        else
-                          ElevatedButton.icon(
-                            onPressed: _uploadAndAnalyze,
-                            icon: const Icon(Icons.upload_file_rounded, size: 16),
-                            label: const Text('Upload Scan for AI Review'),
-                            style: ElevatedButton.styleFrom(backgroundColor: NVColors.doctorColor, foregroundColor: Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildStats(),
-                    const SizedBox(height: 24),
-                    Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      // Case list
-                      SizedBox(width: 280, child: _buildCaseList()),
-                      const SizedBox(width: 16),
-                      // Detail panel
-                      Expanded(child: _buildDetailPanel()),
-                    ]),
-                  ]),
-                )),
-              ]),
+    return NVScaffold(
+      currentRoute: '/dashboard/doctor/ai-diagnosis',
+      role: AppConstants.roleDoctor,
+      title: 'AI Diagnosis Review',
+      subtitle: 'Review and validate AI predictions per case',
+      userName: user?.name ?? 'Doctor',
+      roleColor: NVColors.doctorColor,
+      fadeAnimation: _fade,
+      body: Column(children: [
+        NVTopBar(title: 'AI Diagnosis Review', subtitle: 'Review and validate AI predictions per case', user: user?.name ?? 'Doctor', roleColor: NVColors.doctorColor),
+        Expanded(child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            // Stat row and action button
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              alignment: WrapAlignment.spaceBetween,
+              children: [
+                const Text('Dashboard Statistics', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18)),
+                if (_isUploading)
+                  const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: NVColors.doctorColor, strokeWidth: 2))
+                else
+                  ElevatedButton.icon(
+                    onPressed: _uploadAndAnalyze,
+                    icon: const Icon(Icons.upload_file_rounded, size: 16),
+                    label: const Text('Upload Scan for AI Review'),
+                    style: ElevatedButton.styleFrom(backgroundColor: NVColors.doctorColor, foregroundColor: Colors.black, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                  ),
+              ],
             ),
-          ),
-        ],
-      ),
+            const SizedBox(height: 16),
+            _buildStats(),
+            const SizedBox(height: 24),
+            LayoutBuilder(builder: (context, constraints) {
+              final isWide = constraints.maxWidth > 650;
+              if (isWide) {
+                return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  SizedBox(width: 260, child: _buildCaseList()),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildDetailPanel()),
+                ]);
+              }
+              return Column(children: [
+                _buildCaseList(),
+                const SizedBox(height: 16),
+                _buildDetailPanel(),
+              ]);
+            }),
+          ]),
+        )),
+      ]),
     );
   }
 

@@ -104,39 +104,31 @@ class _HeatmapsScreenState extends State<HeatmapsScreen>
   Widget build(BuildContext context) {
     final user = Provider.of<NVAuthProvider>(context).nvUser;
 
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
+    return NVScaffold(
+      currentRoute: '/dashboard/doctor/heatmaps',
+      role: AppConstants.roleDoctor,
+      title: 'Grad-CAM Heatmaps',
+      subtitle: 'Explainable AI activation maps & lesion attention visualization',
+      userName: user?.name ?? 'Doctor',
+      roleColor: NVColors.doctorColor,
+      fadeAnimation: _fade,
+      body: Column(
         children: [
-          NVSidebar(
-            currentRoute: '/dashboard/doctor/heatmaps',
-            role: AppConstants.roleDoctor,
+          NVTopBar(
+            title: 'Grad-CAM Heatmaps',
+            subtitle: 'Explainable AI activation maps & lesion attention visualization',
+            user: user?.name ?? 'Doctor',
+            roleColor: NVColors.doctorColor,
           ),
           Expanded(
-            child: FadeTransition(
-              opacity: _fade,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  NVTopBar(
-                    title: 'Grad-CAM Heatmaps',
-                    subtitle:
-                        'Explainable AI activation maps & lesion attention visualization',
-                    user: user?.name ?? 'Doctor',
-                    roleColor: NVColors.doctorColor,
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildStats(),
-                          const SizedBox(height: 24),
-                          _buildMainLayout(),
-                        ],
-                      ),
-                    ),
-                  ),
+                  _buildStats(),
+                  const SizedBox(height: 24),
+                  _buildMainLayout(),
                 ],
               ),
             ),
@@ -193,36 +185,67 @@ class _HeatmapsScreenState extends State<HeatmapsScreen>
 
   // ── three-column layout ───────────────────────────────────────────────────
   Widget _buildMainLayout() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Left: cases queue
-        SizedBox(width: 280, child: _buildCasesQueue()),
-        const SizedBox(width: 16),
-        // Center: viewer + activation chart
-        Expanded(
-          child: Column(
-            children: [
-              _buildGradCamViewer(),
-              const SizedBox(height: 16),
-              _buildActivationChart(),
-            ],
-          ),
-        ),
-        const SizedBox(width: 16),
-        // Right: details + attention map
-        SizedBox(
-          width: 260,
-          child: Column(
-            children: [
-              _buildActivationDetails(),
-              const SizedBox(height: 16),
-              _buildAttentionMap(),
-            ],
-          ),
-        ),
-      ],
-    );
+    return LayoutBuilder(builder: (context, constraints) {
+      final isWide = constraints.maxWidth > 800;
+      final isMedium = constraints.maxWidth > 560;
+      if (isWide) {
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(width: 260, child: _buildCasesQueue()),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                children: [
+                  _buildGradCamViewer(),
+                  const SizedBox(height: 16),
+                  _buildActivationChart(),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            SizedBox(
+              width: 240,
+              child: Column(
+                children: [
+                  _buildActivationDetails(),
+                  const SizedBox(height: 16),
+                  _buildAttentionMap(),
+                ],
+              ),
+            ),
+          ],
+        );
+      }
+      if (isMedium) {
+        return Column(children: [
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(child: _buildGradCamViewer()),
+            const SizedBox(width: 16),
+            SizedBox(width: 220, child: _buildActivationDetails()),
+          ]),
+          const SizedBox(height: 16),
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Expanded(child: _buildCasesQueue()),
+            const SizedBox(width: 16),
+            Expanded(child: _buildActivationChart()),
+          ]),
+          const SizedBox(height: 16),
+          _buildAttentionMap(),
+        ]);
+      }
+      return Column(children: [
+        _buildGradCamViewer(),
+        const SizedBox(height: 16),
+        _buildActivationDetails(),
+        const SizedBox(height: 16),
+        _buildActivationChart(),
+        const SizedBox(height: 16),
+        _buildCasesQueue(),
+        const SizedBox(height: 16),
+        _buildAttentionMap(),
+      ]);
+    });
   }
 
   // ── left: cases queue ─────────────────────────────────────────────────────

@@ -19,6 +19,7 @@ import '../ui/screens/dashboard/doctor/segmentation_screen.dart';
 import '../ui/screens/dashboard/doctor/clinical_notes_screen.dart';
 import '../ui/screens/dashboard/doctor/heatmaps_screen.dart';
 import '../ui/screens/dashboard/doctor/comparative_analysis_screen.dart';
+import '../ui/screens/dashboard/doctor/ai_report_screen.dart';
 
 // Radiologist Dashboards
 import '../ui/screens/dashboard/radiologist/radiologist_dashboard.dart';
@@ -27,6 +28,7 @@ import '../ui/screens/dashboard/radiologist/dicom_viewer_screen.dart';
 import '../ui/screens/dashboard/radiologist/lesion_localization_screen.dart';
 import '../ui/screens/dashboard/radiologist/segmentation_review_screen.dart';
 import '../ui/screens/dashboard/radiologist/explainability_screen.dart';
+import '../ui/screens/dashboard/radiologist/uncertainty_screen.dart';
 
 // Researcher Dashboards
 import '../ui/screens/dashboard/researcher/researcher_dashboard.dart';
@@ -36,6 +38,8 @@ import '../ui/screens/dashboard/researcher/metrics_screen.dart';
 import '../ui/screens/dashboard/researcher/confusion_matrix_screen.dart';
 import '../ui/screens/dashboard/researcher/dataset_management_screen.dart';
 import '../ui/screens/dashboard/researcher/gpu_monitor_screen.dart';
+import '../ui/screens/dashboard/researcher/federated_learning_screen.dart';
+import '../ui/screens/dashboard/researcher/model_benchmark_screen.dart';
 
 
 
@@ -58,6 +62,7 @@ class Routes {
   static const String doctorHeatmaps = '/dashboard/doctor/heatmaps';
   static const String doctorComparative = '/dashboard/doctor/comparative';
   static const String doctorNotes = '/dashboard/doctor/notes';
+  static const String doctorAIReport = '/dashboard/doctor/ai-report';
 
   // ── Radiologist ──
   static const String radiologistDashboard = '/dashboard/radiologist';
@@ -66,6 +71,7 @@ class Routes {
   static const String radiologistLesions = '/dashboard/radiologist/lesions';
   static const String radiologistSegmentation = '/dashboard/radiologist/segmentation';
   static const String radiologistExplainability = '/dashboard/radiologist/explainability';
+  static const String radiologistUncertainty = '/dashboard/radiologist/uncertainty';
 
   // ── Researcher ──
   static const String researcherDashboard = '/dashboard/researcher';
@@ -75,6 +81,8 @@ class Routes {
   static const String researcherExperiments = '/dashboard/researcher/experiments';
   static const String researcherDatasets = '/dashboard/researcher/datasets';
   static const String researcherGpu = '/dashboard/researcher/gpu';
+  static const String researcherFederated = '/dashboard/researcher/federated';
+  static const String researcherBenchmark = '/dashboard/researcher/benchmark';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -110,6 +118,8 @@ class Routes {
         return _fade(const ComparativeAnalysisScreen());
       case doctorNotes:
         return _fade(const ClinicalNotesScreen());
+      case doctorAIReport:
+        return _fade(const AIReportScreen());
 
       // ── Radiologist Routes ──
       case radiologistDashboard:
@@ -124,6 +134,8 @@ class Routes {
         return _fade(const SegmentationReviewScreen());
       case radiologistExplainability:
         return _fade(const ExplainabilityScreen());
+      case radiologistUncertainty:
+        return _fade(const UncertaintyScreen());
 
       // ── Researcher Routes ──
       case researcherDashboard:
@@ -140,6 +152,10 @@ class Routes {
         return _fade(const DatasetManagementScreen());
       case researcherGpu:
         return _fade(const GpuMonitorScreen());
+      case researcherFederated:
+        return _fade(const FederatedLearningScreen());
+      case researcherBenchmark:
+        return _fade(const ModelBenchmarkScreen());
 
       default:
         return _fade(const SplashScreen());

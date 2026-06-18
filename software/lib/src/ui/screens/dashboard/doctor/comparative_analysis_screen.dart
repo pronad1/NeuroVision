@@ -153,45 +153,37 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<NVAuthProvider>(context).nvUser;
-    return Scaffold(
-      backgroundColor: NVColors.bgDeep,
-      body: Row(
+    return NVScaffold(
+      currentRoute: '/dashboard/doctor/comparative',
+      role: AppConstants.roleDoctor,
+      title: 'Comparative Scan Analysis',
+      subtitle: 'Multi-timepoint imaging comparison & progression tracking',
+      userName: user?.name ?? 'Doctor',
+      roleColor: NVColors.doctorColor,
+      fadeAnimation: _fade,
+      body: Column(
         children: [
-          NVSidebar(
-            currentRoute: '/dashboard/doctor/comparative',
-            role: AppConstants.roleDoctor,
+          NVTopBar(
+            title: 'Comparative Scan Analysis',
+            subtitle: 'Multi-timepoint imaging comparison & progression tracking',
+            user: user?.name ?? 'Doctor',
+            roleColor: NVColors.doctorColor,
           ),
           Expanded(
-            child: FadeTransition(
-              opacity: _fade,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  NVTopBar(
-                    title: 'Comparative Scan Analysis',
-                    subtitle:
-                        'Multi-timepoint imaging comparison & progression tracking',
-                    user: user?.name ?? 'Doctor',
-                    roleColor: NVColors.doctorColor,
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildStats(),
-                          const SizedBox(height: 24),
-                          _buildCaseSelector(),
-                          const SizedBox(height: 20),
-                          _buildDualScanViewer(),
-                          const SizedBox(height: 20),
-                          _buildComparisonResultsGrid(),
-                          const SizedBox(height: 20),
-                          _buildDiagnosisTable(),
-                        ],
-                      ),
-                    ),
-                  ),
+                  _buildStats(),
+                  const SizedBox(height: 24),
+                  _buildCaseSelector(),
+                  const SizedBox(height: 20),
+                  _buildDualScanViewer(),
+                  const SizedBox(height: 20),
+                  _buildComparisonResultsGrid(),
+                  const SizedBox(height: 20),
+                  _buildDiagnosisTable(),
                 ],
               ),
             ),
@@ -267,79 +259,81 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
             ),
           ),
           const SizedBox(height: 14),
-          Row(
-            children: [
-              // Case A dropdown
-              Expanded(child: _buildDropdown(
-                label: 'Baseline Scan (Jan 2026)',
-                value: _selectedCaseAId,
-                items: _caseAOptions
-                    .map((c) => DropdownMenuItem(
-                          value: c.id,
-                          child: Text(c.label,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  color: NVColors.textPrimary, fontSize: 13)),
-                        ))
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) setState(() => _selectedCaseAId = v);
-                },
-              )),
-              const SizedBox(width: 12),
-              // VS divider chip
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: NVColors.doctorColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                      color: NVColors.doctorColor.withValues(alpha: 0.4)),
+          LayoutBuilder(builder: (context, constraints) {
+            final isWide = constraints.maxWidth > 600;
+            if (isWide) {
+              return Row(
+                children: [
+                  Expanded(child: _buildDropdown(
+                    label: 'Baseline Scan (Jan 2026)',
+                    value: _selectedCaseAId,
+                    items: _caseAOptions.map((c) => DropdownMenuItem(value: c.id, child: Text(c.label, overflow: TextOverflow.ellipsis, style: const TextStyle(color: NVColors.textPrimary, fontSize: 13)))).toList(),
+                    onChanged: (v) { if (v != null) setState(() => _selectedCaseAId = v); },
+                  )),
+                  const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: NVColors.doctorColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: NVColors.doctorColor.withValues(alpha: 0.4)),
+                    ),
+                    child: const Text('VS', style: TextStyle(color: NVColors.doctorColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildDropdown(
+                    label: 'Follow-up Scan (May 2026)',
+                    value: _selectedCaseBId,
+                    items: _caseBOptions.map((c) => DropdownMenuItem(value: c.id, child: Text(c.label, overflow: TextOverflow.ellipsis, style: const TextStyle(color: NVColors.textPrimary, fontSize: 13)))).toList(),
+                    onChanged: (v) { if (v != null) setState(() => _selectedCaseBId = v); },
+                  )),
+                  const SizedBox(width: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => setState(() => _comparisonActive = true),
+                    icon: const Icon(Icons.compare_rounded, size: 16),
+                    label: const Text('Compare'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: NVColors.doctorColor,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ],
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildDropdown(
+                  label: 'Baseline Scan (Jan 2026)',
+                  value: _selectedCaseAId,
+                  items: _caseAOptions.map((c) => DropdownMenuItem(value: c.id, child: Text(c.label, overflow: TextOverflow.ellipsis, style: const TextStyle(color: NVColors.textPrimary, fontSize: 13)))).toList(),
+                  onChanged: (v) { if (v != null) setState(() => _selectedCaseAId = v); },
                 ),
-                child: const Text('VS',
-                    style: TextStyle(
-                        color: NVColors.doctorColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12)),
-              ),
-              const SizedBox(width: 12),
-              // Case B dropdown
-              Expanded(child: _buildDropdown(
-                label: 'Follow-up Scan (May 2026)',
-                value: _selectedCaseBId,
-                items: _caseBOptions
-                    .map((c) => DropdownMenuItem(
-                          value: c.id,
-                          child: Text(c.label,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  color: NVColors.textPrimary, fontSize: 13)),
-                        ))
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) setState(() => _selectedCaseBId = v);
-                },
-              )),
-              const SizedBox(width: 16),
-              // Compare button
-              ElevatedButton.icon(
-                onPressed: () => setState(() => _comparisonActive = true),
-                icon: const Icon(Icons.compare_rounded, size: 16),
-                label: const Text('Compare'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: NVColors.doctorColor,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20, vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
-                  textStyle: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w700),
+                const SizedBox(height: 10),
+                _buildDropdown(
+                  label: 'Follow-up Scan (May 2026)',
+                  value: _selectedCaseBId,
+                  items: _caseBOptions.map((c) => DropdownMenuItem(value: c.id, child: Text(c.label, overflow: TextOverflow.ellipsis, style: const TextStyle(color: NVColors.textPrimary, fontSize: 13)))).toList(),
+                  onChanged: (v) { if (v != null) setState(() => _selectedCaseBId = v); },
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(height: 12),
+                SizedBox(width: double.infinity, child: ElevatedButton.icon(
+                  onPressed: () => setState(() => _comparisonActive = true),
+                  icon: const Icon(Icons.compare_rounded, size: 16),
+                  label: const Text('Compare'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: NVColors.doctorColor, foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                  ),
+                )),
+              ],
+            );
+          }),
         ],
       ),
     );
@@ -438,89 +432,85 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
   // -------------------------------------------------------------------------
 
   Widget _buildComparisonResultsGrid() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Lesion volume chart
-        Expanded(
-          flex: 3,
-          child: NVGlassCard(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: NVColors.doctorColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.show_chart_rounded,
-                        color: NVColors.doctorColor, size: 16),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'Lesion Volume Progression',
-                    style: TextStyle(
-                        color: NVColors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14),
-                  ),
-                  const Spacer(),
-                  _LegendDot(color: NVColors.doctorColor, label: 'Volume (cm³)'),
-                  const SizedBox(width: 12),
-                  _LegendDot(color: NVColors.success, label: 'Target', dashed: true),
-                ]),
-                const SizedBox(height: 8),
-                const Text(
-                  'Y axis: cm³',
-                  style: TextStyle(color: NVColors.textMuted, fontSize: 10),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 200,
-                  child: _buildLesionChart(),
-                ),
-              ],
+    return LayoutBuilder(builder: (context, constraints) {
+      final isWide = constraints.maxWidth > 650;
+      if (isWide) {
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: _buildLesionVolumeCard(),
             ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        // Change summary
-        Expanded(
-          flex: 2,
-          child: NVGlassCard(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: NVColors.success.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.compare_arrows_rounded,
-                        color: NVColors.success, size: 16),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'Change Summary',
-                    style: TextStyle(
-                        color: NVColors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14),
-                  ),
-                ]),
-                const SizedBox(height: 20),
-                _buildChangeSummary(),
-              ],
+            const SizedBox(width: 16),
+            Expanded(
+              flex: 2,
+              child: _buildChangeSummaryCard(),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      }
+      return Column(children: [
+        _buildLesionVolumeCard(),
+        const SizedBox(height: 16),
+        _buildChangeSummaryCard(),
+      ]);
+    });
+  }
+
+  Widget _buildLesionVolumeCard() {
+    return NVGlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: NVColors.doctorColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.show_chart_rounded, color: NVColors.doctorColor, size: 16),
+            ),
+            const SizedBox(width: 10),
+            const Text('Lesion Volume Progression', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 14)),
+            const Spacer(),
+            _LegendDot(color: NVColors.doctorColor, label: 'Volume (cm³)'),
+            const SizedBox(width: 12),
+            _LegendDot(color: NVColors.success, label: 'Target', dashed: true),
+          ]),
+          const SizedBox(height: 8),
+          const Text('Y axis: cm³', style: TextStyle(color: NVColors.textMuted, fontSize: 10)),
+          const SizedBox(height: 16),
+          SizedBox(height: 200, child: _buildLesionChart()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChangeSummaryCard() {
+    return NVGlassCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: NVColors.success.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.compare_arrows_rounded, color: NVColors.success, size: 16),
+            ),
+            const SizedBox(width: 10),
+            const Text('Change Summary', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 14)),
+          ]),
+          const SizedBox(height: 20),
+          _buildChangeSummary(),
+        ],
+      ),
     );
   }
 

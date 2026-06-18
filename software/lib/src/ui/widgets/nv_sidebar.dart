@@ -176,6 +176,7 @@ class _NVSidebarState extends State<NVSidebar> {
     NVSidebarItem(label: 'Heatmaps', icon: Icons.thermostat_rounded, route: '/dashboard/doctor/heatmaps'),
     NVSidebarItem(label: 'Comparative', icon: Icons.compare_rounded, route: '/dashboard/doctor/comparative'),
     NVSidebarItem(label: 'Clinical Notes', icon: Icons.note_alt_rounded, route: '/dashboard/doctor/notes'),
+    NVSidebarItem(label: 'AI Report Gen', icon: Icons.auto_awesome_rounded, route: '/dashboard/doctor/ai-report'),
   ];
 
   static const _radiologistItems = [
@@ -185,6 +186,7 @@ class _NVSidebarState extends State<NVSidebar> {
     NVSidebarItem(label: 'Lesion Local.', icon: Icons.location_searching_rounded, route: '/dashboard/radiologist/lesions'),
     NVSidebarItem(label: 'Segmentation', icon: Icons.layers_rounded, route: '/dashboard/radiologist/segmentation'),
     NVSidebarItem(label: 'Explainability', icon: Icons.visibility_rounded, route: '/dashboard/radiologist/explainability'),
+    NVSidebarItem(label: 'Uncertainty Map', icon: Icons.blur_on_rounded, route: '/dashboard/radiologist/uncertainty'),
   ];
 
   static const _researcherItems = [
@@ -195,6 +197,8 @@ class _NVSidebarState extends State<NVSidebar> {
     NVSidebarItem(label: 'Experiments', icon: Icons.science_rounded, route: '/dashboard/researcher/experiments'),
     NVSidebarItem(label: 'Datasets', icon: Icons.storage_rounded, route: '/dashboard/researcher/datasets'),
     NVSidebarItem(label: 'GPU Monitor', icon: Icons.memory_rounded, route: '/dashboard/researcher/gpu'),
+    NVSidebarItem(label: 'Federated AI', icon: Icons.hub_rounded, route: '/dashboard/researcher/federated'),
+    NVSidebarItem(label: 'Benchmark Arena', icon: Icons.leaderboard_rounded, route: '/dashboard/researcher/benchmark'),
   ];
 
   List<NVSidebarItem> get _items {

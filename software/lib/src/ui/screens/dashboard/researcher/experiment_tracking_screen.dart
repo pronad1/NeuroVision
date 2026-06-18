@@ -203,23 +203,29 @@ class _ExperimentTrackingScreenState extends State<ExperimentTrackingScreen>
           ]),
           const SizedBox(height: 16),
           // Metrics grid
-          GridView.count(
-            crossAxisCount: 4, crossAxisSpacing: 12, mainAxisSpacing: 12,
-            childAspectRatio: 1.4, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+          LayoutBuilder(builder: (context, constraints) {
+            return GridView.count(
+              crossAxisCount: constraints.maxWidth > 500 ? 4 : 2,
+              crossAxisSpacing: 12, mainAxisSpacing: 12,
+              childAspectRatio: 1.4, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+              children: [
+                _MetricCard(label: 'Accuracy', value: '${e.accuracy}%', color: NVColors.researcherColor),
+                _MetricCard(label: 'Loss', value: e.loss.toString(), color: NVColors.error),
+                _MetricCard(label: 'Precision', value: '${(e.precision * 100).toStringAsFixed(1)}%', color: NVColors.success),
+                _MetricCard(label: 'Recall', value: '${(e.recall * 100).toStringAsFixed(1)}%', color: NVColors.doctorColor),
+              ],
+            );
+          }),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 16, runSpacing: 12,
             children: [
-              _MetricCard(label: 'Accuracy', value: '${e.accuracy}%', color: NVColors.researcherColor),
-              _MetricCard(label: 'Loss', value: e.loss.toString(), color: NVColors.error),
-              _MetricCard(label: 'Precision', value: '${(e.precision * 100).toStringAsFixed(1)}%', color: NVColors.success),
-              _MetricCard(label: 'Recall', value: '${(e.recall * 100).toStringAsFixed(1)}%', color: NVColors.doctorColor),
+              _ExpDetail(label: 'Model', value: e.model),
+              _ExpDetail(label: 'Modality', value: e.modality),
+              _ExpDetail(label: 'Epochs', value: '${e.epochsCurrent}/${e.epochsTotal}'),
+              _ExpDetail(label: 'F1 Score', value: (e.precision * e.recall * 2 / (e.precision + e.recall)).toStringAsFixed(3)),
             ],
           ),
-          const SizedBox(height: 16),
-          Row(children: [
-            _ExpDetail(label: 'Model', value: e.model),
-            _ExpDetail(label: 'Modality', value: e.modality),
-            _ExpDetail(label: 'Epochs', value: '${e.epochsCurrent}/${e.epochsTotal}'),
-            _ExpDetail(label: 'F1 Score', value: (e.precision * e.recall * 2 / (e.precision + e.recall)).toStringAsFixed(3)),
-          ].map((w) => Expanded(child: w)).toList()),
         ]),
       ),
       const SizedBox(height: 16),

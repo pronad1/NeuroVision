@@ -102,50 +102,56 @@ class _ModelMonitoringScreenState extends State<ModelMonitoringScreen>
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Row(children: [Icon(Icons.leaderboard_rounded, color: NVColors.researcherColor, size: 18), SizedBox(width: 8), Text('Model Leaderboard', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14))]),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(color: NVColors.bgDeep, borderRadius: BorderRadius.circular(8)),
-          child: const Row(children: [
-            SizedBox(width: 28),
-            Expanded(flex: 3, child: Text('Model', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-            Expanded(flex: 2, child: Text('Modality', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-            Expanded(flex: 2, child: Text('Accuracy', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-            Expanded(flex: 2, child: Text('Loss', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-            Expanded(flex: 2, child: Text('F1 Score', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-            Expanded(flex: 3, child: Text('Performance', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-          ]),
-        ),
-        const SizedBox(height: 4),
-        ..._models.asMap().entries.map((entry) {
-          final i = entry.key; final m = entry.value;
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            margin: const EdgeInsets.only(bottom: 4),
-            decoration: BoxDecoration(
-              color: i == 0 ? m.color.withValues(alpha: 0.05) : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-              border: i == 0 ? Border.all(color: m.color.withValues(alpha: 0.2)) : null,
+        LayoutBuilder(builder: (context, constraints) {
+          final isWide = constraints.maxWidth > 600;
+          return Column(children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(color: NVColors.bgDeep, borderRadius: BorderRadius.circular(8)),
+              child: Row(children: [
+                const SizedBox(width: 28),
+                Expanded(flex: 3, child: const Text('Model', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                if (isWide) Expanded(flex: 2, child: const Text('Modality', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                Expanded(flex: 2, child: const Text('Accuracy', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                if (isWide) Expanded(flex: 2, child: const Text('Loss', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                Expanded(flex: 2, child: const Text('F1 Score', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                Expanded(flex: 3, child: const Text('Performance', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+              ]),
             ),
-            child: Row(children: [
-              SizedBox(width: 28, child: i == 0
-                  ? const Icon(Icons.emoji_events_rounded, color: NVColors.warning, size: 18)
-                  : Text('${i + 1}', style: const TextStyle(color: NVColors.textMuted, fontSize: 12, fontWeight: FontWeight.bold))),
-              Expanded(flex: 3, child: Row(children: [
-                Container(width: 8, height: 8, decoration: BoxDecoration(color: m.color, shape: BoxShape.circle)),
-                const SizedBox(width: 8),
-                Text(m.name, style: TextStyle(color: i == 0 ? NVColors.textPrimary : NVColors.textSecondary, fontWeight: i == 0 ? FontWeight.w700 : FontWeight.normal, fontSize: 12), overflow: TextOverflow.ellipsis),
-              ])),
-              Expanded(flex: 2, child: Text(m.modality, style: const TextStyle(color: NVColors.textMuted, fontSize: 11), overflow: TextOverflow.ellipsis)),
-              Expanded(flex: 2, child: Text('${m.accuracy}%', style: TextStyle(color: m.color, fontWeight: FontWeight.bold, fontSize: 12))),
-              Expanded(flex: 2, child: Text(m.loss.toString(), style: TextStyle(color: NVColors.error.withValues(alpha: 0.8), fontSize: 12))),
-              Expanded(flex: 2, child: Text(m.f1.toStringAsFixed(3), style: TextStyle(color: m.color, fontWeight: FontWeight.w600, fontSize: 12))),
-              Expanded(flex: 3, child: Row(children: [
-                Expanded(child: LinearProgressIndicator(value: m.accuracy / 100, backgroundColor: NVColors.border, valueColor: AlwaysStoppedAnimation<Color>(m.color), minHeight: 5, borderRadius: BorderRadius.circular(3))),
-                const SizedBox(width: 6),
-                Text('${m.accuracy}%', style: const TextStyle(color: NVColors.textMuted, fontSize: 10)),
-              ])),
-            ]),
-          );
+            const SizedBox(height: 4),
+            ..._models.asMap().entries.map((entry) {
+              final i = entry.key; final m = entry.value;
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                margin: const EdgeInsets.only(bottom: 4),
+                decoration: BoxDecoration(
+                  color: i == 0 ? m.color.withValues(alpha: 0.05) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                  border: i == 0 ? Border.all(color: m.color.withValues(alpha: 0.2)) : null,
+                ),
+                child: Row(children: [
+                  SizedBox(width: 28, child: i == 0
+                      ? const Icon(Icons.emoji_events_rounded, color: NVColors.warning, size: 18)
+                      : Text('${i + 1}', style: const TextStyle(color: NVColors.textMuted, fontSize: 12, fontWeight: FontWeight.bold))),
+                  Expanded(flex: 3, child: Row(children: [
+                    Container(width: 8, height: 8, decoration: BoxDecoration(color: m.color, shape: BoxShape.circle)),
+                    const SizedBox(width: 8),
+                    Flexible(child: Text(m.name, style: TextStyle(color: i == 0 ? NVColors.textPrimary : NVColors.textSecondary, fontWeight: i == 0 ? FontWeight.w700 : FontWeight.normal, fontSize: 12), overflow: TextOverflow.ellipsis)),
+                  ])),
+                  if (isWide) Expanded(flex: 2, child: Text(m.modality, style: const TextStyle(color: NVColors.textMuted, fontSize: 11), overflow: TextOverflow.ellipsis)),
+                  Expanded(flex: 2, child: Text('${m.accuracy}%', style: TextStyle(color: m.color, fontWeight: FontWeight.bold, fontSize: 12))),
+                  if (isWide) Expanded(flex: 2, child: Text(m.loss.toString(), style: TextStyle(color: NVColors.error.withValues(alpha: 0.8), fontSize: 12))),
+                  Expanded(flex: 2, child: Text(m.f1.toStringAsFixed(3), style: TextStyle(color: m.color, fontWeight: FontWeight.w600, fontSize: 12))),
+                  Expanded(flex: 3, child: Row(children: [
+                    Expanded(child: LinearProgressIndicator(value: m.accuracy / 100, backgroundColor: NVColors.border, valueColor: AlwaysStoppedAnimation<Color>(m.color), minHeight: 5, borderRadius: BorderRadius.circular(3))),
+                    const SizedBox(width: 6),
+                    Text('${m.accuracy}%', style: const TextStyle(color: NVColors.textMuted, fontSize: 10)),
+                  ])),
+                ]),
+              );
+            }),
+          ]);
         }),
       ]),
     );
