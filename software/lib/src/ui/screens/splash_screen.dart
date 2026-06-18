@@ -482,9 +482,9 @@ class _FeatureStrip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: [
-            Icon(f.$1, color: f.$2, size: 16),
+            Icon(f.$1, color: f.$3, size: 16),
             const SizedBox(width: 8),
-            Text(f.$3, style: const TextStyle(color: NVColors.textSecondary, fontSize: 13)),
+            Text(f.$2, style: const TextStyle(color: NVColors.textSecondary, fontSize: 13)),
           ],
         ),
       );
