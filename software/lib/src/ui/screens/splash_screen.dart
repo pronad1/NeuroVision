@@ -89,6 +89,7 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isWide = size.width > 900;
+    final isMobile = size.width < 600;
 
     return Scaffold(
       backgroundColor: NVColors.bgDeep,
@@ -103,7 +104,10 @@ class _SplashScreenState extends State<SplashScreen>
               children: [
                 // Top nav bar
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 16 : 32,
+                    vertical: 14,
+                  ),
                   child: Row(
                     children: [
                       // Logo mark
@@ -117,39 +121,50 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                         child: const Icon(Icons.biotech_rounded, color: Colors.black, size: 20),
                       ),
-                      const SizedBox(width: 10),
-                      const Text(
-                        'NeuroVision AI',
-                        style: TextStyle(
-                          color: NVColors.textPrimary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                      const SizedBox(width: 8),
+                      const Flexible(
+                        child: Text(
+                          'NeuroVision AI',
+                          style: TextStyle(
+                            color: NVColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const Spacer(),
-                      _NavButton(label: 'Features', onTap: () => _showInfoDialog(
-                        context, 
-                        'Platform Features', 
-                        '• AI Diagnosis Review: Automated multi-modal pathology detection using state-of-the-art vision models.\n\n• DICOM & Annotation: Medical-grade WebGL DICOM viewer with 3D mask annotation tools.\n\n• Federated Learning: Distributed model training for AI researchers with robust privacy controls.\n\n• Enterprise Security: Granular Role-Based Access Control (RBAC) ensuring HIPAA compliance.',
-                        Icons.auto_awesome_mosaic_rounded,
-                      )),
-                      const SizedBox(width: 8),
-                      _NavButton(label: 'About', onTap: () => _showInfoDialog(
-                        context, 
-                        'About NeuroVision AI', 
-                        'NeuroVision AI is an enterprise-grade medical imaging ecosystem designed to bridge the gap between clinical radiologists and AI researchers.\n\nBy integrating Explainable AI (XAI) such as Grad-CAM visualizations directly into the clinical workflow, we empower doctors to make faster, more accurate diagnoses while allowing researchers to continuously track and improve model performance.',
-                        Icons.info_outline_rounded,
-                      )),
-                      const SizedBox(width: 16),
+                      // Hide text nav buttons on very small screens
+                      if (!isMobile) ...[
+                        _NavButton(label: 'Features', onTap: () => _showInfoDialog(
+                          context,
+                          'Platform Features',
+                          '• AI Diagnosis Review: Automated multi-modal pathology detection using state-of-the-art vision models.\n\n• DICOM & Annotation: Medical-grade WebGL DICOM viewer with 3D mask annotation tools.\n\n• Federated Learning: Distributed model training for AI researchers with robust privacy controls.\n\n• Enterprise Security: Granular Role-Based Access Control (RBAC) ensuring HIPAA compliance.',
+                          Icons.auto_awesome_mosaic_rounded,
+                        )),
+                        const SizedBox(width: 4),
+                        _NavButton(label: 'About', onTap: () => _showInfoDialog(
+                          context,
+                          'About NeuroVision AI',
+                          'NeuroVision AI is an enterprise-grade medical imaging ecosystem designed to bridge the gap between clinical radiologists and AI researchers.\n\nBy integrating Explainable AI (XAI) such as Grad-CAM visualizations directly into the clinical workflow, we empower doctors to make faster, more accurate diagnoses while allowing researchers to continuously track and improve model performance.',
+                          Icons.info_outline_rounded,
+                        )),
+                        const SizedBox(width: 12),
+                      ],
                       OutlinedButton(
                         onPressed: _navigateBasedOnAuth,
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: NVColors.primary),
                           foregroundColor: NVColors.primary,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 14 : 20,
+                            vertical: 8,
+                          ),
+                          minimumSize: const Size(0, 0),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         ),
-                        child: const Text('Sign In'),
+                        child: const Text('Sign In', style: TextStyle(fontSize: 13)),
                       ),
                     ],
                   ),
@@ -160,23 +175,23 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Center(
                     child: SingleChildScrollView(
                       padding: EdgeInsets.symmetric(
-                        horizontal: isWide ? 80 : 24,
-                        vertical: 20,
+                        horizontal: isWide ? 80 : (isMobile ? 20 : 32),
+                        vertical: 16,
                       ),
                       child: isWide
                           ? Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Expanded(child: _HeroText(contentFade: _contentFade, contentSlide: _contentSlide, onGetStarted: _navigateBasedOnAuth)),
+                                Expanded(child: _HeroText(contentFade: _contentFade, contentSlide: _contentSlide, onGetStarted: _navigateBasedOnAuth, isMobile: false)),
                                 const SizedBox(width: 60),
-                                Expanded(child: _HeroVisual(logoScale: _logoScale, logoOpacity: _logoOpacity)),
+                                Expanded(child: _HeroVisual(logoScale: _logoScale, logoOpacity: _logoOpacity, size: 380)),
                               ],
                             )
                           : Column(
                               children: [
-                                _HeroVisual(logoScale: _logoScale, logoOpacity: _logoOpacity),
-                                const SizedBox(height: 40),
-                                _HeroText(contentFade: _contentFade, contentSlide: _contentSlide, onGetStarted: _navigateBasedOnAuth),
+                                _HeroVisual(logoScale: _logoScale, logoOpacity: _logoOpacity, size: isMobile ? 220 : 300),
+                                const SizedBox(height: 24),
+                                _HeroText(contentFade: _contentFade, contentSlide: _contentSlide, onGetStarted: _navigateBasedOnAuth, isMobile: isMobile),
                               ],
                             ),
                     ),
@@ -188,7 +203,7 @@ class _SplashScreenState extends State<SplashScreen>
                   opacity: _contentFade,
                   child: const _FeatureStrip(),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
               ],
             ),
           ),
@@ -202,11 +217,13 @@ class _HeroText extends StatelessWidget {
   final Animation<double> contentFade;
   final Animation<Offset> contentSlide;
   final VoidCallback onGetStarted;
+  final bool isMobile;
 
   const _HeroText({
     required this.contentFade,
     required this.contentSlide,
     required this.onGetStarted,
+    this.isMobile = false,
   });
 
   @override
@@ -233,65 +250,76 @@ class _HeroText extends StatelessWidget {
                     decoration: const BoxDecoration(color: NVColors.primary, shape: BoxShape.circle),
                   ),
                   const SizedBox(width: 6),
-                  const Text(
-                    'Enterprise Medical AI Platform',
-                    style: TextStyle(color: NVColors.primary, fontSize: 12, fontWeight: FontWeight.w500),
+                  const Flexible(
+                    child: Text(
+                      'Enterprise Medical AI Platform',
+                      style: TextStyle(color: NVColors.primary, fontSize: 12, fontWeight: FontWeight.w500),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
-            const Text(
+            SizedBox(height: isMobile ? 14 : 24),
+            Text(
               'AI-Powered\nClinical Imaging\nIntelligence',
               style: TextStyle(
-                fontSize: 48,
+                fontSize: isMobile ? 32 : 48,
                 fontWeight: FontWeight.bold,
                 color: NVColors.textPrimary,
                 height: 1.1,
               ),
             ),
-            const SizedBox(height: 16),
-            const Text(
+            SizedBox(height: isMobile ? 10 : 16),
+            Text(
               'Enterprise-grade medical imaging ecosystem for\nclinical specialists, radiologists, and AI researchers.\nDiagnose, annotate, and monitor with explainable AI.',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: isMobile ? 13 : 16,
                 color: NVColors.textSecondary,
                 height: 1.6,
               ),
             ),
-            const SizedBox(height: 36),
-            Row(
+            SizedBox(height: isMobile ? 20 : 36),
+            // Use Wrap so buttons don't overflow on narrow screens
+            Wrap(
+              spacing: 12,
+              runSpacing: 10,
               children: [
                 ElevatedButton.icon(
                   onPressed: onGetStarted,
-                  icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                  icon: const Icon(Icons.arrow_forward_rounded, size: 16),
                   label: const Text('Access Platform'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: NVColors.primary,
                     foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isMobile ? 18 : 24,
+                      vertical: isMobile ? 12 : 14,
+                    ),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                    textStyle: TextStyle(fontWeight: FontWeight.w600, fontSize: isMobile ? 13 : 15),
                   ),
                 ),
-                const SizedBox(width: 12),
                 OutlinedButton.icon(
                   onPressed: () => _showVideoDemoDialog(context),
-                  icon: const Icon(Icons.play_circle_outline_rounded, size: 18),
+                  icon: const Icon(Icons.play_circle_outline_rounded, size: 16),
                   label: const Text('Watch Demo'),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: NVColors.borderBright),
                     foregroundColor: NVColors.textSecondary,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isMobile ? 18 : 24,
+                      vertical: isMobile ? 12 : 14,
+                    ),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 36),
+            SizedBox(height: isMobile ? 20 : 36),
             // Role badges
             Wrap(
-              spacing: 12,
+              spacing: 10,
               runSpacing: 8,
               children: [
                 _RoleBadge(label: 'Doctors', icon: Icons.medical_services_rounded, color: NVColors.doctorColor),
@@ -309,8 +337,13 @@ class _HeroText extends StatelessWidget {
 class _HeroVisual extends StatelessWidget {
   final Animation<double> logoScale;
   final Animation<double> logoOpacity;
+  final double size;
 
-  const _HeroVisual({required this.logoScale, required this.logoOpacity});
+  const _HeroVisual({
+    required this.logoScale,
+    required this.logoOpacity,
+    this.size = 380,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -319,15 +352,15 @@ class _HeroVisual extends StatelessWidget {
       child: FadeTransition(
         opacity: logoOpacity,
         child: SizedBox(
-          width: 380,
-          height: 380,
+          width: size,
+          height: size,
           child: Stack(
             alignment: Alignment.center,
             children: [
               // Outer glow ring
               Container(
-                width: 360,
-                height: 360,
+                width: size * 0.95,
+                height: size * 0.95,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
@@ -337,8 +370,8 @@ class _HeroVisual extends StatelessWidget {
                 ),
               ),
               Container(
-                width: 300,
-                height: 300,
+                width: size * 0.79,
+                height: size * 0.79,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
@@ -349,8 +382,8 @@ class _HeroVisual extends StatelessWidget {
               ),
               // Main brain icon container
               Container(
-                width: 200,
-                height: 200,
+                width: size * 0.53,
+                height: size * 0.53,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
@@ -368,28 +401,30 @@ class _HeroVisual extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.psychology_rounded,
                   color: NVColors.primary,
-                  size: 100,
+                  size: size * 0.26,
                 ),
               ),
-              // Floating metric badges
-              Positioned(
-                top: 40,
-                right: 20,
-                child: _FloatingBadge(label: '98.7%', sublabel: 'Accuracy', color: NVColors.accent),
-              ),
-              Positioned(
-                bottom: 50,
-                left: 10,
-                child: _FloatingBadge(label: '< 2s', sublabel: 'Analysis', color: NVColors.secondary),
-              ),
-              Positioned(
-                top: 120,
-                left: 5,
-                child: _FloatingBadge(label: 'XAI', sublabel: 'Explainable', color: NVColors.warning),
-              ),
+              // Floating metric badges (only shown when large enough)
+              if (size > 260) ...[
+                Positioned(
+                  top: size * 0.1,
+                  right: size * 0.05,
+                  child: _FloatingBadge(label: '98.7%', sublabel: 'Accuracy', color: NVColors.accent),
+                ),
+                Positioned(
+                  bottom: size * 0.13,
+                  left: size * 0.025,
+                  child: _FloatingBadge(label: '< 2s', sublabel: 'Analysis', color: NVColors.secondary),
+                ),
+                Positioned(
+                  top: size * 0.32,
+                  left: size * 0.01,
+                  child: _FloatingBadge(label: 'XAI', sublabel: 'Explainable', color: NVColors.warning),
+                ),
+              ],
             ],
           ),
         ),

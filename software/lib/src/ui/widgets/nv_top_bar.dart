@@ -22,6 +22,10 @@ class NVTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (MediaQuery.of(context).size.width < 768) {
+      return const SizedBox.shrink();
+    }
+
     final auth = context.watch<NVAuthProvider>();
     final nvUser = auth.nvUser;
 

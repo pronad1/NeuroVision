@@ -92,12 +92,14 @@ class _ResearcherDashboardState extends State<ResearcherDashboard>
   Widget _buildStatsRow() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final count = constraints.maxWidth > 900 ? 4 : 2;
+        final w = constraints.maxWidth;
+        final count = w > 900 ? 4 : 2;
+        final ratio = w > 900 ? 1.7 : w > 380 ? 1.5 : 1.4;
         return GridView.count(
           crossAxisCount: count,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
-          childAspectRatio: constraints.maxWidth > 900 ? 1.7 : 1.8,
+          childAspectRatio: ratio,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           children: const [
@@ -157,12 +159,14 @@ class _ResearcherDashboardState extends State<ResearcherDashboard>
         ),
         const SizedBox(height: 12),
         LayoutBuilder(builder: (context, constraints) {
-          final count = constraints.maxWidth > 800 ? 4 : 2;
+          final w = constraints.maxWidth;
+          final count = w > 800 ? 4 : 2;
+          final ratio = w > 800 ? 1.4 : w > 380 ? 1.2 : 1.1;
           return GridView.count(
             crossAxisCount: count,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 1.4,
+            childAspectRatio: ratio,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             children: models.map((m) => _ModelCard(

@@ -130,16 +130,9 @@ class _DoctorDashboardState extends State<DoctorDashboard>
   Widget _buildStatsRow() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 700
-            ? 4
-            : constraints.maxWidth > 400
-                ? 2
-                : 1;
-        final aspectRatio = constraints.maxWidth > 700
-            ? 1.7
-            : constraints.maxWidth > 400
-                ? 1.8
-                : 2.5;
+        final w = constraints.maxWidth;
+        final crossAxisCount = w > 700 ? 4 : w > 380 ? 2 : 1;
+        final aspectRatio = w > 700 ? 1.7 : w > 380 ? 1.5 : 3.5;
         return GridView.count(
           crossAxisCount: crossAxisCount,
           crossAxisSpacing: 12,

@@ -4,6 +4,7 @@
 
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
@@ -71,12 +72,22 @@ class AIResult {
 // ignore: avoid_classes_with_only_static_members
 class AIService {
   // ──────────────────────────────────────────────────────────────────────────
-  // Change this to your server IP when running on a real device.
-  // Use 10.0.2.2 for Android emulator, localhost for desktop.
+  // Server base URL — automatically selected per platform:
+  //   • Web (Chrome/browser) → localhost:8000  (same machine as server)
+  //   • Physical Android     → 192.168.0.196:8000  (PC LAN IP)
+  //   • Android emulator     → change 192.168.0.196 to 10.0.2.2
+  // Update the Android IP below if your PC IP changes (run `ipconfig`).
   // ──────────────────────────────────────────────────────────────────────────
-  static const String _baseUrl = 'http://localhost:8000/api/v1';
+  static String get _baseUrl {
+    if (kIsWeb) {
+      // Browser runs on same machine as the server
+      return 'http://localhost:8000/api/v1';
+    }
+    // Physical Android device — use PC's LAN IP
+    return 'http://192.168.0.196:8000/api/v1';
+  }
 
-  static const Duration _timeout = Duration(seconds: 120);
+  static const Duration _timeout = Duration(seconds: 100); // 5 mins for CPU inference
 
   // ── Brain MRI Analysis ────────────────────────────────────────────────────
 

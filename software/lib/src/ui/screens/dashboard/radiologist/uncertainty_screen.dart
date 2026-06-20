@@ -175,68 +175,134 @@ class _UncertaintyScreenState extends State<UncertaintyScreen>
   Widget _buildControlPanel() {
     return NVGlassCard(
       padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          const Icon(Icons.tune_rounded, color: NVColors.radiologistColor, size: 16),
-          const SizedBox(width: 8),
-          const Text('Monte Carlo Dropout Passes:', style: TextStyle(color: NVColors.textSecondary, fontSize: 13)),
-          const SizedBox(width: 16),
-          Expanded(
-            child: SliderTheme(
-              data: SliderThemeData(
-                activeTrackColor: NVColors.radiologistColor,
-                thumbColor: NVColors.radiologistColor,
-                inactiveTrackColor: NVColors.border,
-                overlayColor: NVColors.radiologistColor.withValues(alpha: 0.15),
+      child: LayoutBuilder(builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 500;
+        if (isNarrow) {
+          // Stack vertically on mobile to avoid overflow
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.tune_rounded, color: NVColors.radiologistColor, size: 16),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text('Monte Carlo Dropout Passes:',
+                        style: TextStyle(color: NVColors.textSecondary, fontSize: 13)),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: NVColors.radiologistColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: NVColors.radiologistColor.withValues(alpha: 0.3)),
+                    ),
+                    child: Text('$_mcPasses',
+                        style: const TextStyle(color: NVColors.radiologistColor, fontWeight: FontWeight.w700, fontSize: 13)),
+                  ),
+                ],
               ),
-              child: Slider(
-                value: _mcPasses.toDouble(),
-                min: 10, max: 50, divisions: 8,
-                onChanged: (v) => setState(() => _mcPasses = v.toInt()),
-                onChangeEnd: (_) => _recompute(),
+              SliderTheme(
+                data: SliderThemeData(
+                  activeTrackColor: NVColors.radiologistColor,
+                  thumbColor: NVColors.radiologistColor,
+                  inactiveTrackColor: NVColors.border,
+                  overlayColor: NVColors.radiologistColor.withValues(alpha: 0.15),
+                ),
+                child: Slider(
+                  value: _mcPasses.toDouble(),
+                  min: 10, max: 50, divisions: 8,
+                  onChanged: (v) => setState(() => _mcPasses = v.toInt()),
+                  onChangeEnd: (_) => _recompute(),
+                ),
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: _isComputing ? null : _recompute,
+                  icon: _isComputing
+                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                      : const Icon(Icons.refresh_rounded, size: 16),
+                  label: Text(_isComputing ? 'Computing...' : 'Recompute'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: NVColors.radiologistColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    minimumSize: const Size(0, 0),
+                    textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+        // Wide layout: single row
+        return Row(
+          children: [
+            const Icon(Icons.tune_rounded, color: NVColors.radiologistColor, size: 16),
+            const SizedBox(width: 8),
+            const Text('Monte Carlo Dropout Passes:', style: TextStyle(color: NVColors.textSecondary, fontSize: 13)),
+            const SizedBox(width: 16),
+            Expanded(
+              child: SliderTheme(
+                data: SliderThemeData(
+                  activeTrackColor: NVColors.radiologistColor,
+                  thumbColor: NVColors.radiologistColor,
+                  inactiveTrackColor: NVColors.border,
+                  overlayColor: NVColors.radiologistColor.withValues(alpha: 0.15),
+                ),
+                child: Slider(
+                  value: _mcPasses.toDouble(),
+                  min: 10, max: 50, divisions: 8,
+                  onChanged: (v) => setState(() => _mcPasses = v.toInt()),
+                  onChangeEnd: (_) => _recompute(),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              color: NVColors.radiologistColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: NVColors.radiologistColor.withValues(alpha: 0.3)),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: NVColors.radiologistColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: NVColors.radiologistColor.withValues(alpha: 0.3)),
+              ),
+              child: Text('$_mcPasses passes',
+                  style: const TextStyle(color: NVColors.radiologistColor, fontWeight: FontWeight.w700, fontSize: 13)),
             ),
-            child: Text('$_mcPasses passes',
-                style: const TextStyle(color: NVColors.radiologistColor, fontWeight: FontWeight.w700, fontSize: 13)),
-          ),
-          const SizedBox(width: 12),
-          ElevatedButton.icon(
-            onPressed: _isComputing ? null : _recompute,
-            icon: _isComputing
-                ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
-                : const Icon(Icons.refresh_rounded, size: 16),
-            label: Text(_isComputing ? 'Computing...' : 'Recompute'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: NVColors.radiologistColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              minimumSize: const Size(0, 0),
-              textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            const SizedBox(width: 12),
+            ElevatedButton.icon(
+              onPressed: _isComputing ? null : _recompute,
+              icon: _isComputing
+                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                  : const Icon(Icons.refresh_rounded, size: 16),
+              label: Text(_isComputing ? 'Computing...' : 'Recompute'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: NVColors.radiologistColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                minimumSize: const Size(0, 0),
+                textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      }),
     );
   }
 
   Widget _buildStatsRow() {
     return LayoutBuilder(builder: (context, constraints) {
-      final count = constraints.maxWidth > 800 ? 4 : 2;
+      final w = constraints.maxWidth;
+      final count = w > 800 ? 4 : 2;
+      final ratio = w > 800 ? 1.8 : w > 380 ? 1.5 : 1.4;
       return GridView.count(
         crossAxisCount: count,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: constraints.maxWidth > 800 ? 1.8 : 1.8,
+        childAspectRatio: ratio,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         children: [

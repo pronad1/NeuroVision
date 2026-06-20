@@ -213,7 +213,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildNarrowLayout() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
       child: Column(
         children: [
           // Logo
@@ -243,8 +243,9 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildLoginCard() {
+    final isMobile = MediaQuery.of(context).size.width < 600;
     return Container(
-      padding: const EdgeInsets.all(36),
+      padding: EdgeInsets.all(isMobile ? 20 : 36),
       decoration: BoxDecoration(
         color: NVColors.bgSurface,
         borderRadius: BorderRadius.circular(20),
@@ -399,7 +400,7 @@ class _LoginScreenState extends State<LoginScreen>
                           Image.network(
                             'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
                             width: 18, height: 18,
-                            errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata, size: 22, color: Colors.blue),
+                            errorBuilder: (_, e, s) => const Icon(Icons.g_mobiledata, size: 22, color: Colors.blue),
                           ),
                           const SizedBox(width: 10),
                           const Text(
@@ -414,8 +415,9 @@ class _LoginScreenState extends State<LoginScreen>
 
             // Sign up link
             Center(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   const Text(
                     "Don't have an account? ",
