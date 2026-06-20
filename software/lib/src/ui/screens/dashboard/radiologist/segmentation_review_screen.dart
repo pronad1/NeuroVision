@@ -244,7 +244,7 @@ class _SegmentationReviewScreenState extends State<SegmentationReviewScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           LimitedBox(
-                            maxHeight: 150,
+                            maxHeight: 180,
                             child: _buildStatsRow(),
                           ),
                           const SizedBox(height: 16),
@@ -653,42 +653,45 @@ class _SegmentationReviewScreenState extends State<SegmentationReviewScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Card header
-                Row(
-                  children: [
-                    Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: NVColors.radiologistColor.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                            color:
-                                NVColors.radiologistColor.withValues(alpha: 0.3)),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: NVColors.radiologistColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                              color:
+                                  NVColors.radiologistColor.withValues(alpha: 0.3)),
+                        ),
+                        child: const Icon(Icons.biotech_rounded,
+                            color: NVColors.radiologistColor, size: 16),
                       ),
-                      child: const Icon(Icons.biotech_rounded,
-                          color: NVColors.radiologistColor, size: 16),
-                    ),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'Segmentation Viewer',
-                      style: TextStyle(
-                        color: NVColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                      const SizedBox(width: 10),
+                      const Text(
+                        'Segmentation Viewer',
+                        style: TextStyle(
+                          color: NVColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
                       ),
-                    ),
-                    const Spacer(),
-                    // View mode chips
-                    ...[
-                      'Original',
-                      'Overlay',
-                      'Contour Only',
-                    ].map((mode) => _ViewModeChip(
-                          label: mode,
-                          selected: _viewMode == mode,
-                          onTap: () => setState(() => _viewMode = mode),
-                        )),
-                  ],
+                      const SizedBox(width: 16),
+                      // View mode chips
+                      ...[
+                        'Original',
+                        'Overlay',
+                        'Contour Only',
+                      ].map((mode) => _ViewModeChip(
+                            label: mode,
+                            selected: _viewMode == mode,
+                            onTap: () => setState(() => _viewMode = mode),
+                          )),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 12),
 

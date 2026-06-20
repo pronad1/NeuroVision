@@ -131,43 +131,48 @@ class _UncertaintyScreenState extends State<UncertaintyScreen>
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: NVColors.radiologistColor.withValues(alpha: 0.25)),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 44, height: 44,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [NVColors.radiologistColor, Color(0xFF4F1D96)]),
-              borderRadius: BorderRadius.circular(12),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            Container(
+              width: 44, height: 44,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [NVColors.radiologistColor, Color(0xFF4F1D96)]),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.blur_on_rounded, color: Colors.white, size: 22),
             ),
-            child: const Icon(Icons.blur_on_rounded, color: Colors.white, size: 22),
-          ),
-          const SizedBox(width: 14),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Uncertainty Quantification — Bayesian Deep Learning',
-                    style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 14)),
-                SizedBox(height: 3),
-                Text(
-                  'The AI model runs N stochastic forward passes (MC Dropout). Pixel-wise variance across '
-                  'passes creates an "uncertainty map" — red = AI is unsure. Critical for patient safety.',
-                  style: TextStyle(color: NVColors.textMuted, fontSize: 11),
-                ),
-              ],
+            const SizedBox(width: 14),
+            const SizedBox(
+              width: 300, // Fixed width for text area to allow horizontal scroll
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Uncertainty Quantification — Bayesian Deep Learning',
+                      style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 14)),
+                  SizedBox(height: 3),
+                  Text(
+                    'The AI model runs N stochastic forward passes (MC Dropout). Pixel-wise variance across '
+                    'passes creates an "uncertainty map" — red = AI is unsure. Critical for patient safety.',
+                    style: TextStyle(color: NVColors.textMuted, fontSize: 11),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: NVColors.radiologistColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: NVColors.radiologistColor.withValues(alpha: 0.3)),
+            const SizedBox(width: 14),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: NVColors.radiologistColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: NVColors.radiologistColor.withValues(alpha: 0.3)),
+              ),
+              child: const Text('BAYESIAN AI',
+                  style: TextStyle(color: NVColors.radiologistColor, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1)),
             ),
-            child: const Text('BAYESIAN AI',
-                style: TextStyle(color: NVColors.radiologistColor, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1)),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -297,7 +302,8 @@ class _UncertaintyScreenState extends State<UncertaintyScreen>
     return LayoutBuilder(builder: (context, constraints) {
       final w = constraints.maxWidth;
       final count = w > 800 ? 4 : 2;
-      final ratio = w > 800 ? 1.8 : w > 380 ? 1.5 : 1.4;
+      final itemWidth = w / count;
+      final ratio = w > 800 ? 1.8 : w > 380 ? 1.5 : (itemWidth / 180.0);
       return GridView.count(
         crossAxisCount: count,
         crossAxisSpacing: 12,
@@ -393,23 +399,26 @@ class _UncertaintyScreenState extends State<UncertaintyScreen>
           }),
           const SizedBox(height: 14),
           // Color legend for uncertainty map
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text('Low uncertainty', style: TextStyle(color: NVColors.textMuted, fontSize: 10)),
-              const SizedBox(width: 8),
-              Container(
-                width: 120, height: 10,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [NVColors.success, NVColors.warning, NVColors.error],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('Low uncertainty', style: TextStyle(color: NVColors.textMuted, fontSize: 10)),
+                const SizedBox(width: 8),
+                Container(
+                  width: 120, height: 10,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [NVColors.success, NVColors.warning, NVColors.error],
+                    ),
+                    borderRadius: BorderRadius.circular(5),
                   ),
-                  borderRadius: BorderRadius.circular(5),
                 ),
-              ),
-              const SizedBox(width: 8),
-              const Text('High uncertainty', style: TextStyle(color: NVColors.textMuted, fontSize: 10)),
-            ],
+                const SizedBox(width: 8),
+                const Text('High uncertainty', style: TextStyle(color: NVColors.textMuted, fontSize: 10)),
+              ],
+            ),
           ),
         ],
       ),
@@ -497,13 +506,16 @@ class _UncertaintyScreenState extends State<UncertaintyScreen>
             ),
           ),
           const SizedBox(height: 12),
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            _UncertLegend(color: NVColors.success, label: 'Confident'),
-            const SizedBox(width: 14),
-            _UncertLegend(color: NVColors.warning, label: 'Moderate'),
-            const SizedBox(width: 14),
-            _UncertLegend(color: NVColors.error, label: 'Uncertain'),
-          ]),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+              _UncertLegend(color: NVColors.success, label: 'Confident'),
+              const SizedBox(width: 14),
+              _UncertLegend(color: NVColors.warning, label: 'Moderate'),
+              const SizedBox(width: 14),
+              _UncertLegend(color: NVColors.error, label: 'Uncertain'),
+            ]),
+          ),
           const SizedBox(height: 16),
           // MC passes info
           Container(

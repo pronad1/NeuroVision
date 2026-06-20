@@ -82,6 +82,7 @@ class NVScaffold extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
               Text(
                 subtitle,

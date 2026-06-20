@@ -203,12 +203,15 @@ class _LesionLocalizationScreenState extends State<LesionLocalizationScreen>
             children: [
               const Icon(Icons.biotech_rounded, color: NVColors.radiologistColor, size: 16),
               const SizedBox(width: 8),
-              const Text(
-                'Live AI Analysis Result',
-                style: TextStyle(
-                    color: NVColors.radiologistColor,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13),
+              const Expanded(
+                child: Text(
+                  'Live AI Analysis Result',
+                  style: TextStyle(
+                      color: NVColors.radiologistColor,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               const Spacer(),
               Container(
@@ -520,11 +523,14 @@ class _LesionLocalizationScreenState extends State<LesionLocalizationScreen>
                   color: labelColor, shape: BoxShape.circle),
             ),
             const SizedBox(width: 6),
-            Text(label,
-                style: TextStyle(
-                    color: labelColor,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600)),
+            Expanded(
+              child: Text(label,
+                  style: TextStyle(
+                      color: labelColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600),
+                  overflow: TextOverflow.ellipsis),
+            ),
           ],
         ),
         const SizedBox(height: 6),
@@ -657,9 +663,13 @@ class _LesionLocalizationScreenState extends State<LesionLocalizationScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Spatial Agreement',
-                        style: TextStyle(
-                            color: NVColors.textSecondary, fontSize: 11)),
+                    const Flexible(
+                      child: Text('Spatial Agreement',
+                          style: TextStyle(
+                              color: NVColors.textSecondary, fontSize: 11),
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                    const SizedBox(width: 4),
                     const Text('87.3%',
                         style: TextStyle(
                             color: NVColors.radiologistColor,
@@ -679,14 +689,17 @@ class _LesionLocalizationScreenState extends State<LesionLocalizationScreen>
                   ),
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    _diceLegend(NVColors.success, 'Excellent (>0.9)'),
-                    const SizedBox(width: 12),
-                    _diceLegend(NVColors.radiologistColor, 'Good (>0.8)'),
-                    const SizedBox(width: 12),
-                    _diceLegend(NVColors.warning, 'Fair (>0.7)'),
-                  ],
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _diceLegend(NVColors.success, 'Excellent (>0.9)'),
+                      const SizedBox(width: 12),
+                      _diceLegend(NVColors.radiologistColor, 'Good (>0.8)'),
+                      const SizedBox(width: 12),
+                      _diceLegend(NVColors.warning, 'Fair (>0.7)'),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -747,22 +760,34 @@ class _LesionLocalizationScreenState extends State<LesionLocalizationScreen>
           ),
           const SizedBox(height: 10),
           // Column headers
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Row(
-              children: const [
-                SizedBox(width: 80, child: Text('ID / Region', style: TextStyle(color: NVColors.textMuted, fontSize: 10))),
-                Expanded(child: Text('AI · Rad', style: TextStyle(color: NVColors.textMuted, fontSize: 10))),
-                SizedBox(width: 60, child: Text('Dice', style: TextStyle(color: NVColors.textMuted, fontSize: 10))),
-                SizedBox(width: 44, child: Text('Status', textAlign: TextAlign.center, style: TextStyle(color: NVColors.textMuted, fontSize: 10))),
-              ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: 350, // Minimum width to avoid overflow
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Row(
+                  children: const [
+                    SizedBox(width: 80, child: Text('ID / Region', style: TextStyle(color: NVColors.textMuted, fontSize: 10))),
+                    Expanded(child: Text('AI · Rad', style: TextStyle(color: NVColors.textMuted, fontSize: 10))),
+                    SizedBox(width: 60, child: Text('Dice', style: TextStyle(color: NVColors.textMuted, fontSize: 10))),
+                    SizedBox(width: 44, child: Text('Status', textAlign: TextAlign.center, style: TextStyle(color: NVColors.textMuted, fontSize: 10))),
+                  ],
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 6),
           const Divider(color: NVColors.border, height: 1),
           const SizedBox(height: 6),
           // Lesion rows
-          ..._lesions.map((l) => _buildLesionRow(l)),
+          ..._lesions.map((l) => SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: 350,
+              child: _buildLesionRow(l),
+            ),
+          )),
         ],
       ),
     );
@@ -914,23 +939,26 @@ class _LesionLocalizationScreenState extends State<LesionLocalizationScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              const Icon(Icons.bar_chart_rounded,
-                  color: NVColors.radiologistColor, size: 16),
-              const SizedBox(width: 8),
-              const Text('Localization Accuracy by Brain Region',
-                  style: TextStyle(
-                      color: NVColors.textPrimary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14)),
-              const Spacer(),
-              _buildLegendChip(NVColors.success, '>85%'),
-              const SizedBox(width: 8),
-              _buildLegendChip(NVColors.radiologistColor, '>75%'),
-              const SizedBox(width: 8),
-              _buildLegendChip(NVColors.warning, '≤75%'),
-            ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                const Icon(Icons.bar_chart_rounded,
+                    color: NVColors.radiologistColor, size: 16),
+                const SizedBox(width: 8),
+                const Text('Localization Accuracy by Brain Region',
+                    style: TextStyle(
+                        color: NVColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14)),
+                const SizedBox(width: 16),
+                _buildLegendChip(NVColors.success, '>85%'),
+                const SizedBox(width: 8),
+                _buildLegendChip(NVColors.radiologistColor, '>75%'),
+                const SizedBox(width: 8),
+                _buildLegendChip(NVColors.warning, '≤75%'),
+              ],
+            ),
           ),
           const SizedBox(height: 20),
           SizedBox(
@@ -1033,24 +1061,33 @@ class _LesionLocalizationScreenState extends State<LesionLocalizationScreen>
           ),
           const SizedBox(height: 12),
           // Summary row
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: NVColors.bgDeep,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: NVColors.border),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _summaryStat('Best Region', 'Frontal', NVColors.success),
-                _divider(),
-                _summaryStat('Avg Agreement', '83.7%', NVColors.radiologistColor),
-                _divider(),
-                _summaryStat('Lowest', 'Basal G.', NVColors.warning),
-                _divider(),
-                _summaryStat('Above 85%', '4 / 6', NVColors.info),
-              ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: NVColors.bgDeep,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: NVColors.border),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _summaryStat('Best Region', 'Frontal', NVColors.success),
+                  const SizedBox(width: 16),
+                  _divider(),
+                  const SizedBox(width: 16),
+                  _summaryStat('Avg Agreement', '83.7%', NVColors.radiologistColor),
+                  const SizedBox(width: 16),
+                  _divider(),
+                  const SizedBox(width: 16),
+                  _summaryStat('Lowest', 'Basal G.', NVColors.warning),
+                  const SizedBox(width: 16),
+                  _divider(),
+                  const SizedBox(width: 16),
+                  _summaryStat('Above 85%', '4 / 6', NVColors.info),
+                ],
+              ),
             ),
           ),
         ],

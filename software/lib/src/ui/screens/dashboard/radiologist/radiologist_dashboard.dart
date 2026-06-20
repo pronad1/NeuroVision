@@ -96,7 +96,7 @@ class _RadiologistDashboardState extends State<RadiologistDashboard>
             ? 1.7
             : w > 380
                 ? 1.5
-                : 3.5;
+                : (w / 160.0);
         return GridView.count(
           crossAxisCount: crossAxisCount,
           crossAxisSpacing: 12,
@@ -267,7 +267,7 @@ class _RadiologistDashboardState extends State<RadiologistDashboard>
             children: [
               Icon(Icons.donut_large_rounded, color: NVColors.radiologistColor, size: 18),
               SizedBox(width: 8),
-              Text('Annotation Types', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
+              Expanded(child: Text('Annotation Types', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14), overflow: TextOverflow.ellipsis)),
             ],
           ),
           const SizedBox(height: 20),
@@ -324,8 +324,8 @@ class _RadiologistDashboardState extends State<RadiologistDashboard>
             children: [
               const Icon(Icons.queue_rounded, color: NVColors.radiologistColor, size: 18),
               const SizedBox(width: 8),
-              const Text('Annotation Queue', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
-              const Spacer(),
+              const Expanded(child: Text('Annotation Queue', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14), overflow: TextOverflow.ellipsis)),
+              const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
