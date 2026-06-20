@@ -616,8 +616,10 @@ class _AIReportScreenState extends State<AIReportScreen>
             Icon(index < icons.length ? icons[index] : Icons.article_rounded,
                 color: NVColors.doctorColor, size: 15),
             const SizedBox(width: 8),
-            Text(section.title,
-                style: const TextStyle(color: NVColors.doctorColor, fontWeight: FontWeight.w700, fontSize: 12, letterSpacing: 0.3)),
+            Expanded(
+              child: Text(section.title,
+                  style: const TextStyle(color: NVColors.doctorColor, fontWeight: FontWeight.w700, fontSize: 12, letterSpacing: 0.3)),
+            ),
           ]),
           const SizedBox(height: 10),
           Text(section.content,

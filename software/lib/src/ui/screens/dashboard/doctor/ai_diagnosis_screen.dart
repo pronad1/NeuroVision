@@ -172,10 +172,13 @@ class _AIDiagnosisScreenState extends State<AIDiagnosisScreen>
 
   Widget _buildStats() {
     return LayoutBuilder(builder: (context, c) {
-      final count = c.maxWidth > 900 ? 4 : 2;
+      final w = c.maxWidth;
+      final count = w > 900 ? 4 : w > 400 ? 2 : 1;
+      final itemWidth = w / count;
+      final ratio = w > 400 ? 1.6 : (itemWidth / 160.0);
       return GridView.count(
         crossAxisCount: count, crossAxisSpacing: 16, mainAxisSpacing: 16,
-        childAspectRatio: 1.6, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+        childAspectRatio: ratio, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
         children: const [
           NVStatCard(label: 'Pending Review', value: '12', icon: Icons.pending_rounded, color: NVColors.warning, subtitle: 'Awaiting validation'),
           NVStatCard(label: 'Avg. Confidence', value: '92.4%', icon: Icons.psychology_rounded, color: NVColors.doctorColor, trend: '+2.1%', trendPositive: true, subtitle: 'This week'),
@@ -235,11 +238,13 @@ class _AIDiagnosisScreenState extends State<AIDiagnosisScreen>
               child: const Icon(Icons.psychology_rounded, color: NVColors.doctorColor, size: 22),
             ),
             const SizedBox(width: 12),
-            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('${c.patientName} · ${c.caseId}', style: const TextStyle(color: NVColors.primary, fontWeight: FontWeight.bold, fontSize: 16)),
-              Text('${c.modality} · ${c.modelUsed}', style: const TextStyle(color: NVColors.textMuted, fontSize: 12)),
-            ]),
-            const Spacer(),
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('${c.patientName} · ${c.caseId}', style: const TextStyle(color: NVColors.primary, fontWeight: FontWeight.bold, fontSize: 16), overflow: TextOverflow.ellipsis),
+                Text('${c.modality} · ${c.modelUsed}', style: const TextStyle(color: NVColors.textMuted, fontSize: 12), overflow: TextOverflow.ellipsis),
+              ]),
+            ),
+            const SizedBox(width: 10),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(color: c.severityColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: c.severityColor.withValues(alpha: 0.4))),

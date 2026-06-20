@@ -89,11 +89,14 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
       padding: const EdgeInsets.all(20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         // Header
-        Row(children: [
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          runSpacing: 10,
+          children: [
           const Icon(Icons.note_alt_rounded, color: NVColors.doctorColor, size: 18),
           const SizedBox(width: 8),
           const Text('New Clinical Note', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
-          const Spacer(),
+          const SizedBox(width: 16),
           // Case selector
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -191,7 +194,10 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
         const SizedBox(height: 16),
 
         // Action buttons
-        Row(children: [
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
           ElevatedButton.icon(
             onPressed: _isSaving ? null : _saveNote,
             icon: _isSaving
@@ -205,7 +211,6 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
               textStyle: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
-          const SizedBox(width: 10),
           OutlinedButton.icon(
             onPressed: () {
               downloadFile('Clinical_Note_Export.txt', _noteController.text.isNotEmpty ? _noteController.text : 'Empty Note');
@@ -222,7 +227,6 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
           ),
-          const SizedBox(width: 10),
           OutlinedButton.icon(
             onPressed: () => setState(() => _noteController.clear()),
             icon: const Icon(Icons.clear_rounded, size: 16),

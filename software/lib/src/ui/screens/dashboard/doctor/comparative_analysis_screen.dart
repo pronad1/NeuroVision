@@ -199,14 +199,13 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
 
   Widget _buildStats() {
     return LayoutBuilder(builder: (context, c) {
-      final count = c.maxWidth > 900 ? 4 : 2;
+      final w = c.maxWidth;
+      final count = w > 800 ? 4 : w > 400 ? 2 : 1;
+      final itemWidth = w / count;
+      final ratio = w > 400 ? 1.6 : (itemWidth / 160.0);
       return GridView.count(
-        crossAxisCount: count,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.6,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
+        crossAxisCount: count, crossAxisSpacing: 16, mainAxisSpacing: 16,
+        childAspectRatio: ratio, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
         children: const [
           NVStatCard(
             label: 'Cases Compared',
@@ -464,7 +463,11 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 10,
+            runSpacing: 10,
+            children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -473,11 +476,8 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
               ),
               child: const Icon(Icons.show_chart_rounded, color: NVColors.doctorColor, size: 16),
             ),
-            const SizedBox(width: 10),
             const Text('Lesion Volume Progression', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 14)),
-            const Spacer(),
             _LegendDot(color: NVColors.doctorColor, label: 'Volume (cm³)'),
-            const SizedBox(width: 12),
             _LegendDot(color: NVColors.success, label: 'Target', dashed: true),
           ]),
           const SizedBox(height: 8),
@@ -673,7 +673,11 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 10,
+            runSpacing: 10,
+            children: [
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -683,7 +687,6 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
               child: const Icon(Icons.psychology_rounded,
                   color: NVColors.secondary, size: 16),
             ),
-            const SizedBox(width: 10),
             const Text(
               'AI Diagnosis Comparison',
               style: TextStyle(
@@ -691,7 +694,6 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
                   fontWeight: FontWeight.w700,
                   fontSize: 14),
             ),
-            const Spacer(),
             Container(
               padding:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

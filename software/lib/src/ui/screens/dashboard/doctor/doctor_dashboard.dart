@@ -132,7 +132,7 @@ class _DoctorDashboardState extends State<DoctorDashboard>
       builder: (context, constraints) {
         final w = constraints.maxWidth;
         final crossAxisCount = w > 700 ? 4 : w > 380 ? 2 : 1;
-        final aspectRatio = w > 700 ? 1.7 : w > 380 ? 1.5 : 3.5;
+        final aspectRatio = w > 700 ? 1.7 : w > 380 ? 1.5 : (w / 160.0);
         return GridView.count(
           crossAxisCount: crossAxisCount,
           crossAxisSpacing: 12,
@@ -455,7 +455,7 @@ class _MobileCaseCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(item.caseId, style: const TextStyle(color: NVColors.primary, fontSize: 12, fontWeight: FontWeight.w600)),
+              Flexible(child: Text(item.caseId, style: const TextStyle(color: NVColors.primary, fontSize: 12, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(

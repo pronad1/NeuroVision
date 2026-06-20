@@ -140,15 +140,14 @@ class _HeatmapsScreenState extends State<HeatmapsScreen>
 
   // ── stats row ─────────────────────────────────────────────────────────────
   Widget _buildStats() {
-    return LayoutBuilder(
-      builder: (context, c) {
-        return GridView.count(
-          crossAxisCount: c.maxWidth > 700 ? 4 : 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 1.65,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
+    return LayoutBuilder(builder: (context, c) {
+      final w = c.maxWidth;
+      final count = w > 800 ? 4 : w > 400 ? 2 : 1;
+      final itemWidth = w / count;
+      final ratio = w > 400 ? 1.65 : (itemWidth / 160.0);
+      return GridView.count(
+        crossAxisCount: count, crossAxisSpacing: 16, mainAxisSpacing: 16,
+        childAspectRatio: ratio, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
           children: const [
             NVStatCard(
               label: 'Cases Heatmapped',

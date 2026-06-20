@@ -304,10 +304,12 @@ class _CaseCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 10,
+                  runSpacing: 4,
                   children: [
                     Text(case_.caseId, style: const TextStyle(color: NVColors.primary, fontWeight: FontWeight.w700, fontSize: 14)),
-                    const SizedBox(width: 10),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
@@ -320,15 +322,16 @@ class _CaseCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                Row(
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 4,
+                  runSpacing: 4,
                   children: [
                     Icon(Icons.medical_information_rounded, color: NVColors.textMuted, size: 12),
-                    const SizedBox(width: 4),
                     Text(case_.modality, style: const TextStyle(color: NVColors.textSecondary, fontSize: 12)),
                     if (case_.aiPrediction != null) ...[
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       Icon(Icons.psychology_rounded, color: NVColors.textMuted, size: 12),
-                      const SizedBox(width: 4),
                       Text(case_.aiPrediction!, style: const TextStyle(color: NVColors.textSecondary, fontSize: 12)),
                     ],
                   ],

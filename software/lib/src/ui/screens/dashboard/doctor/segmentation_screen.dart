@@ -87,9 +87,13 @@ class _SegmentationScreenState extends State<SegmentationScreen>
 
   Widget _buildStats() {
     return LayoutBuilder(builder: (context, c) {
+      final w = c.maxWidth;
+      final count = w > 900 ? 4 : w > 400 ? 2 : 1;
+      final itemWidth = w / count;
+      final ratio = w > 400 ? 1.6 : (itemWidth / 160.0);
       return GridView.count(
-        crossAxisCount: c.maxWidth > 800 ? 4 : 2, crossAxisSpacing: 16, mainAxisSpacing: 16,
-        childAspectRatio: 1.6, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+        crossAxisCount: count, crossAxisSpacing: 16, mainAxisSpacing: 16,
+        childAspectRatio: ratio, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
         children: const [
           NVStatCard(label: 'Lesion Volume', value: '24.3 cc', icon: Icons.bubble_chart_rounded, color: NVColors.error, subtitle: 'Active lesion region'),
           NVStatCard(label: 'Total Edema', value: '58.7 cc', icon: Icons.water_drop_rounded, color: NVColors.warning, subtitle: 'Perilesional zone'),
@@ -107,8 +111,7 @@ class _SegmentationScreenState extends State<SegmentationScreen>
         Row(children: [
           const Icon(Icons.layers_rounded, color: NVColors.doctorColor, size: 18),
           const SizedBox(width: 8),
-          const Text('Segmentation Viewer', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14)),
-          const Spacer(),
+          const Expanded(child: Text('Segmentation Viewer', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 14), overflow: TextOverflow.ellipsis)),
           // Region filter
           DropdownButtonHideUnderline(child: DropdownButton<String>(
             value: _selectedRegion,
@@ -120,13 +123,14 @@ class _SegmentationScreenState extends State<SegmentationScreen>
         ]),
         const SizedBox(height: 16),
         // Layer toggles
-        Row(children: [
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 8,
+          runSpacing: 8,
+          children: [
           _LayerToggle(label: 'Original', active: _showOriginal, color: NVColors.textSecondary, onTap: () => setState(() => _showOriginal = !_showOriginal)),
-          const SizedBox(width: 8),
           _LayerToggle(label: 'Mask', active: _showMask, color: NVColors.error, onTap: () => setState(() => _showMask = !_showMask)),
-          const SizedBox(width: 8),
           _LayerToggle(label: 'Contour', active: _showContour, color: NVColors.secondary, onTap: () => setState(() => _showContour = !_showContour)),
-          const Spacer(),
           Text('Opacity: ${(_opacity * 100).toInt()}%', style: const TextStyle(color: NVColors.textMuted, fontSize: 11)),
         ]),
         const SizedBox(height: 8),
@@ -262,10 +266,10 @@ class _SegmentationScreenState extends State<SegmentationScreen>
             Expanded(flex: 3, child: Row(children: [
               Container(width: 8, height: 8, decoration: BoxDecoration(color: r.color, shape: BoxShape.circle)),
               const SizedBox(width: 8),
-              Text(r.name, style: const TextStyle(color: NVColors.textPrimary, fontSize: 12)),
+              Expanded(child: Text(r.name, style: const TextStyle(color: NVColors.textPrimary, fontSize: 12), overflow: TextOverflow.ellipsis)),
             ])),
-            Expanded(flex: 2, child: Text(r.volume, style: const TextStyle(color: NVColors.textSecondary, fontSize: 12))),
-            Expanded(flex: 2, child: Text(r.percentage, style: TextStyle(color: r.color, fontWeight: FontWeight.w600, fontSize: 12))),
+            Expanded(flex: 2, child: Text(r.volume, style: const TextStyle(color: NVColors.textSecondary, fontSize: 12), overflow: TextOverflow.ellipsis)),
+            Expanded(flex: 2, child: Text(r.percentage, style: TextStyle(color: r.color, fontWeight: FontWeight.w600, fontSize: 12), overflow: TextOverflow.ellipsis)),
             Expanded(flex: 3, child: Row(children: [
               Expanded(child: LinearProgressIndicator(value: r.confidence, backgroundColor: NVColors.border, valueColor: AlwaysStoppedAnimation<Color>(r.color), minHeight: 5, borderRadius: BorderRadius.circular(3))),
               const SizedBox(width: 8),
