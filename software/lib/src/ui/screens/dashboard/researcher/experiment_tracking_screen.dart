@@ -86,9 +86,13 @@ class _ExperimentTrackingScreenState extends State<ExperimentTrackingScreen>
 
   Widget _buildStats() {
     return LayoutBuilder(builder: (context, c) {
+      final w = c.maxWidth;
+      final count = w > 800 ? 4 : (w > 400 ? 2 : 1);
+      final itemWidth = w / count;
+      final ratio = w > 400 ? 1.6 : (itemWidth / 160.0);
       return GridView.count(
-        crossAxisCount: c.maxWidth > 800 ? 4 : 2, crossAxisSpacing: 16, mainAxisSpacing: 16,
-        childAspectRatio: 1.6, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+        crossAxisCount: count, crossAxisSpacing: 16, mainAxisSpacing: 16,
+        childAspectRatio: ratio, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
         children: const [
           NVStatCard(label: 'Total Experiments', value: '6', icon: Icons.science_rounded, color: NVColors.researcherColor, subtitle: 'All runs'),
           NVStatCard(label: 'Best Accuracy', value: '96.8%', icon: Icons.emoji_events_rounded, color: NVColors.warning, subtitle: 'DERNet v2.1'),
@@ -117,7 +121,7 @@ class _ExperimentTrackingScreenState extends State<ExperimentTrackingScreen>
         ]),
         const SizedBox(height: 8),
         // Sort
-        Row(children: [
+        Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
           const Text('Sort by:', style: TextStyle(color: NVColors.textMuted, fontSize: 11)),
           const SizedBox(width: 8),
           ...['accuracy', 'loss', 'date'].map((s) {
@@ -160,13 +164,13 @@ class _ExperimentTrackingScreenState extends State<ExperimentTrackingScreen>
                 const SizedBox(height: 4),
                 Text('${e.model} · ${e.modality}', style: const TextStyle(color: NVColors.textMuted, fontSize: 11)),
                 const SizedBox(height: 6),
-                Row(children: [
+                Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
                   Text('Acc: ', style: const TextStyle(color: NVColors.textMuted, fontSize: 10)),
                   Text('${e.accuracy}%', style: const TextStyle(color: NVColors.researcherColor, fontWeight: FontWeight.bold, fontSize: 11)),
                   const SizedBox(width: 12),
                   Text('Loss: ', style: const TextStyle(color: NVColors.textMuted, fontSize: 10)),
                   Text(e.loss.toString(), style: const TextStyle(color: NVColors.doctorColor, fontWeight: FontWeight.bold, fontSize: 11)),
-                  const Spacer(),
+                  const SizedBox(width: 12),
                   Text('${e.epochsCurrent}/${e.epochsTotal} ep', style: const TextStyle(color: NVColors.textMuted, fontSize: 10)),
                 ]),
                 if (e.status == 'running') ...[
@@ -192,22 +196,23 @@ class _ExperimentTrackingScreenState extends State<ExperimentTrackingScreen>
       NVGlassCard(
         padding: const EdgeInsets.all(20),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
+          Wrap(crossAxisAlignment: WrapCrossAlignment.center, spacing: 10, runSpacing: 10, children: [
             const Icon(Icons.science_rounded, color: NVColors.researcherColor, size: 18),
-            const SizedBox(width: 8),
             Text(e.id, style: const TextStyle(color: NVColors.primary, fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(width: 10),
             Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: e.statusColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: e.statusColor.withValues(alpha: 0.4))), child: Text(e.status.toUpperCase(), style: TextStyle(color: e.statusColor, fontWeight: FontWeight.bold, fontSize: 11))),
-            const Spacer(),
             OutlinedButton.icon(onPressed: () {}, icon: const Icon(Icons.compare_arrows_rounded, size: 14), label: const Text('Compare'), style: OutlinedButton.styleFrom(foregroundColor: NVColors.researcherColor, side: const BorderSide(color: NVColors.researcherColor), padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), textStyle: const TextStyle(fontSize: 12))),
           ]),
           const SizedBox(height: 16),
           // Metrics grid
           LayoutBuilder(builder: (context, constraints) {
+            final w = constraints.maxWidth;
+            final count = w > 500 ? 4 : 2;
+            final itemWidth = w / count;
+            final ratio = w > 400 ? 1.4 : 1.1;
             return GridView.count(
-              crossAxisCount: constraints.maxWidth > 500 ? 4 : 2,
+              crossAxisCount: count,
               crossAxisSpacing: 12, mainAxisSpacing: 12,
-              childAspectRatio: 1.4, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+              childAspectRatio: ratio, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
               children: [
                 _MetricCard(label: 'Accuracy', value: '${e.accuracy}%', color: NVColors.researcherColor),
                 _MetricCard(label: 'Loss', value: e.loss.toString(), color: NVColors.error),

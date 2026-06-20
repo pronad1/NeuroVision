@@ -142,11 +142,15 @@ class _DatasetManagementScreenState extends State<DatasetManagementScreen>
 
   Widget _buildStats() {
     return LayoutBuilder(builder: (context, c) {
+      final w = c.maxWidth;
+      final count = w > 800 ? 4 : (w > 400 ? 2 : 1);
+      final itemWidth = w / count;
+      final ratio = w > 400 ? 1.6 : (itemWidth / 160.0);
       return GridView.count(
-        crossAxisCount: c.maxWidth > 800 ? 4 : 2,
+        crossAxisCount: count,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 1.6,
+        childAspectRatio: ratio,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         children: const [
@@ -215,12 +219,15 @@ class _DatasetManagementScreenState extends State<DatasetManagementScreen>
           const SizedBox(height: 16),
           // Dataset cards grid - responsive
           LayoutBuilder(builder: (context, constraints) {
-            final count = constraints.maxWidth > 700 ? 3 : constraints.maxWidth > 400 ? 2 : 1;
+            final w = constraints.maxWidth;
+            final count = w > 700 ? 3 : w > 400 ? 2 : 1;
+            final itemWidth = w / count;
+            final ratio = w > 400 ? (w > 700 ? 1.55 : 1.4) : (itemWidth / 180.0);
             return GridView.count(
               crossAxisCount: count,
               crossAxisSpacing: 14,
               mainAxisSpacing: 14,
-              childAspectRatio: constraints.maxWidth > 700 ? 1.55 : 1.4,
+              childAspectRatio: ratio,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               children: List.generate(_datasets.length, (i) => _DatasetCard(
@@ -623,20 +630,21 @@ class _DatasetManagementScreenState extends State<DatasetManagementScreen>
               const Icon(Icons.verified_rounded,
                   color: NVColors.info, size: 18),
               const SizedBox(width: 8),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Quality Analysis',
-                      style: TextStyle(
-                          color: NVColors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15)),
-                  Text('Automated quality checks',
-                      style: TextStyle(
-                          color: NVColors.textMuted, fontSize: 11)),
-                ],
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Quality Analysis',
+                        style: TextStyle(
+                            color: NVColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15)),
+                    Text('Automated quality checks',
+                        style: TextStyle(
+                            color: NVColors.textMuted, fontSize: 11)),
+                  ],
+                ),
               ),
-              const Spacer(),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),

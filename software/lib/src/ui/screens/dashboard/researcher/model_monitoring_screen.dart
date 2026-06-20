@@ -83,9 +83,13 @@ class _ModelMonitoringScreenState extends State<ModelMonitoringScreen>
 
   Widget _buildStats() {
     return LayoutBuilder(builder: (context, c) {
+      final w = c.maxWidth;
+      final count = w > 800 ? 4 : (w > 400 ? 2 : 1);
+      final itemWidth = w / count;
+      final ratio = w > 400 ? 1.6 : (itemWidth / 160.0);
       return GridView.count(
-        crossAxisCount: c.maxWidth > 800 ? 4 : 2, crossAxisSpacing: 16, mainAxisSpacing: 16,
-        childAspectRatio: 1.6, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+        crossAxisCount: count, crossAxisSpacing: 16, mainAxisSpacing: 16,
+        childAspectRatio: ratio, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
         children: const [
           NVStatCard(label: 'Models Deployed', value: '5', icon: Icons.model_training_rounded, color: NVColors.researcherColor, subtitle: 'Active pipelines'),
           NVStatCard(label: 'Best F1 Score', value: '0.968', icon: Icons.star_rounded, color: NVColors.warning, trend: '+0.012', trendPositive: true, subtitle: 'DERNet v2.1'),
@@ -111,12 +115,12 @@ class _ModelMonitoringScreenState extends State<ModelMonitoringScreen>
               decoration: BoxDecoration(color: NVColors.bgDeep, borderRadius: BorderRadius.circular(8)),
               child: Row(children: [
                 const SizedBox(width: 28),
-                Expanded(flex: 3, child: const Text('Model', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                if (isWide) Expanded(flex: 2, child: const Text('Modality', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                Expanded(flex: 2, child: const Text('Accuracy', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                if (isWide) Expanded(flex: 2, child: const Text('Loss', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                Expanded(flex: 2, child: const Text('F1 Score', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                Expanded(flex: 3, child: const Text('Performance', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                Expanded(flex: 3, child: const Text('Model', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
+                if (isWide) Expanded(flex: 2, child: const Text('Modality', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
+                Expanded(flex: 2, child: const Text('Accuracy', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
+                if (isWide) Expanded(flex: 2, child: const Text('Loss', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
+                Expanded(flex: 2, child: const Text('F1 Score', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
+                Expanded(flex: 3, child: const Text('Performance', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
               ]),
             ),
             const SizedBox(height: 4),
@@ -140,9 +144,9 @@ class _ModelMonitoringScreenState extends State<ModelMonitoringScreen>
                     Flexible(child: Text(m.name, style: TextStyle(color: i == 0 ? NVColors.textPrimary : NVColors.textSecondary, fontWeight: i == 0 ? FontWeight.w700 : FontWeight.normal, fontSize: 12), overflow: TextOverflow.ellipsis)),
                   ])),
                   if (isWide) Expanded(flex: 2, child: Text(m.modality, style: const TextStyle(color: NVColors.textMuted, fontSize: 11), overflow: TextOverflow.ellipsis)),
-                  Expanded(flex: 2, child: Text('${m.accuracy}%', style: TextStyle(color: m.color, fontWeight: FontWeight.bold, fontSize: 12))),
-                  if (isWide) Expanded(flex: 2, child: Text(m.loss.toString(), style: TextStyle(color: NVColors.error.withValues(alpha: 0.8), fontSize: 12))),
-                  Expanded(flex: 2, child: Text(m.f1.toStringAsFixed(3), style: TextStyle(color: m.color, fontWeight: FontWeight.w600, fontSize: 12))),
+                  Expanded(flex: 2, child: Text('${m.accuracy}%', style: TextStyle(color: m.color, fontWeight: FontWeight.bold, fontSize: 12), overflow: TextOverflow.ellipsis)),
+                  if (isWide) Expanded(flex: 2, child: Text(m.loss.toString(), style: TextStyle(color: NVColors.error.withValues(alpha: 0.8), fontSize: 12), overflow: TextOverflow.ellipsis)),
+                  Expanded(flex: 2, child: Text(m.f1.toStringAsFixed(3), style: TextStyle(color: m.color, fontWeight: FontWeight.w600, fontSize: 12), overflow: TextOverflow.ellipsis)),
                   Expanded(flex: 3, child: Row(children: [
                     Expanded(child: LinearProgressIndicator(value: m.accuracy / 100, backgroundColor: NVColors.border, valueColor: AlwaysStoppedAnimation<Color>(m.color), minHeight: 5, borderRadius: BorderRadius.circular(3))),
                     const SizedBox(width: 6),

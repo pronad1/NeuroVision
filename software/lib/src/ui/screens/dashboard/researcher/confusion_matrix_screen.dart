@@ -204,11 +204,15 @@ class _ConfusionMatrixScreenState extends State<ConfusionMatrixScreen>
   Widget _buildStatsRow() {
     return LayoutBuilder(
       builder: (context, c) {
+        final w = c.maxWidth;
+        final count = w > 700 ? 4 : (w > 400 ? 2 : 1);
+        final itemWidth = w / count;
+        final ratio = w > 400 ? 1.6 : (itemWidth / 160.0);
         return GridView.count(
-          crossAxisCount: c.maxWidth > 700 ? 4 : 2,
+          crossAxisCount: count,
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
-          childAspectRatio: 1.6,
+          childAspectRatio: ratio,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           children: const [
@@ -248,12 +252,14 @@ class _ConfusionMatrixScreenState extends State<ConfusionMatrixScreen>
   Widget _buildSelectors() {
     return NVGlassCard(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      child: Row(
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 10,
+        runSpacing: 10,
         children: [
           // Model icon
           const Icon(Icons.model_training_rounded,
               color: NVColors.researcherColor, size: 18),
-          const SizedBox(width: 10),
           const Text(
             'Model:',
             style: TextStyle(
@@ -261,7 +267,6 @@ class _ConfusionMatrixScreenState extends State<ConfusionMatrixScreen>
                 fontSize: 13,
                 fontWeight: FontWeight.w500),
           ),
-          const SizedBox(width: 12),
           // Model dropdown
           Theme(
             data: Theme.of(context).copyWith(
@@ -288,7 +293,7 @@ class _ConfusionMatrixScreenState extends State<ConfusionMatrixScreen>
               },
             ),
           ),
-          const SizedBox(width: 32),
+          const SizedBox(width: 20),
           const Text(
             'Display:',
             style: TextStyle(
@@ -296,20 +301,17 @@ class _ConfusionMatrixScreenState extends State<ConfusionMatrixScreen>
                 fontSize: 13,
                 fontWeight: FontWeight.w500),
           ),
-          const SizedBox(width: 12),
           // Mode toggle chips
           _ModeChip(
             label: 'Raw Counts',
             active: !_showNormalized,
             onTap: () => setState(() => _showNormalized = false),
           ),
-          const SizedBox(width: 8),
           _ModeChip(
             label: 'Normalized (%)',
             active: _showNormalized,
             onTap: () => setState(() => _showNormalized = true),
           ),
-          const Spacer(),
           // Tapped cell info
           if (_tappedRow != null && _tappedCol != null)
             _buildTappedCellInfo(),
@@ -401,84 +403,96 @@ class _ConfusionMatrixScreenState extends State<ConfusionMatrixScreen>
           ),
           const SizedBox(height: 20),
 
-          // Axis label: "Predicted →"
-          Padding(
-            padding: const EdgeInsets.only(left: 72),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Center(
-                    child: Text(
-                      'Predicted Class →',
-                      style: TextStyle(
-                          color: NVColors.textMuted,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5),
+          // Matrix
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: 500,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Axis label: "Predicted →"
+                  Padding(
+                    padding: const EdgeInsets.only(left: 72),
+                    child: Row(
+                      children: [
+                        const Expanded(
+                          child: Center(
+                            child: Text(
+                              'Predicted Class →',
+                              style: TextStyle(
+                                  color: NVColors.textMuted,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 6),
+
+                  // Column headers
+                  Row(
+                    children: [
+                      // Spacer for row label column + "Actual" label
+                      const SizedBox(width: 72),
+                      ...List.generate(4, (c) {
+                        return Expanded(
+                          child: Center(
+                            child: Text(
+                              _classNames[c],
+                              style: TextStyle(
+                                  color: _classColors[c],
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w700),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Actual label + matrix rows
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Rotated "Actual Class ↓" label
+                      SizedBox(
+                        width: 16,
+                        height: 4 * 58.0,
+                        child: RotatedBox(
+                          quarterTurns: 3,
+                          child: const Text(
+                            'Actual Class ↓',
+                            style: TextStyle(
+                                color: NVColors.textMuted,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.5),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Column(
+                          children: List.generate(4, (r) => _buildMatrixRow(r)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Legend
+                  _buildMatrixLegend(),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 6),
-
-          // Column headers
-          Row(
-            children: [
-              // Spacer for row label column + "Actual" label
-              const SizedBox(width: 72),
-              ...List.generate(4, (c) {
-                return Expanded(
-                  child: Center(
-                    child: Text(
-                      _classNames[c],
-                      style: TextStyle(
-                          color: _classColors[c],
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                );
-              }),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // Actual label + matrix rows
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Rotated "Actual Class ↓" label
-              SizedBox(
-                width: 16,
-                height: 4 * 58.0,
-                child: RotatedBox(
-                  quarterTurns: 3,
-                  child: const Text(
-                    'Actual Class ↓',
-                    style: TextStyle(
-                        color: NVColors.textMuted,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Column(
-                  children: List.generate(4, (r) => _buildMatrixRow(r)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Legend
-          _buildMatrixLegend(),
         ],
       ),
     );

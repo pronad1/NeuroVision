@@ -163,12 +163,15 @@ class _MetricsScreenState extends State<MetricsScreen>
   // ---------------------------------------------------------------------------
   Widget _buildStatRow() {
     return LayoutBuilder(builder: (context, constraints) {
-      final count = constraints.maxWidth > 700 ? 4 : 2;
+      final w = constraints.maxWidth;
+      final count = w > 700 ? 4 : (w > 400 ? 2 : 1);
+      final itemWidth = w / count;
+      final ratio = w > 400 ? (w > 700 ? 1.7 : 1.8) : (itemWidth / 160.0);
       return GridView.count(
         crossAxisCount: count,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: constraints.maxWidth > 700 ? 1.7 : 1.8,
+        childAspectRatio: ratio,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         children: const [
@@ -252,28 +255,39 @@ class _MetricsScreenState extends State<MetricsScreen>
 
     return NVGlassCard(
       padding: const EdgeInsets.all(14),
-      child: Row(
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          const Icon(Icons.tune_rounded,
-              color: NVColors.researcherColor, size: 18),
-          const SizedBox(width: 10),
-          const Text('Model:', style: labelStyle),
-          const SizedBox(width: 8),
-          dropdown<String>(
-            value: _selectedModel,
-            items: _models,
-            onChanged: (v) => setState(() => _selectedModel = v ?? _selectedModel),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.tune_rounded,
+                  color: NVColors.researcherColor, size: 18),
+              const SizedBox(width: 8),
+              const Text('Model:', style: labelStyle),
+              const SizedBox(width: 8),
+              dropdown<String>(
+                value: _selectedModel,
+                items: _models,
+                onChanged: (v) => setState(() => _selectedModel = v ?? _selectedModel),
+              ),
+            ],
           ),
-          const SizedBox(width: 24),
-          const Text('Dataset:', style: labelStyle),
-          const SizedBox(width: 8),
-          dropdown<String>(
-            value: _selectedDataset,
-            items: _datasets,
-            onChanged: (v) =>
-                setState(() => _selectedDataset = v ?? _selectedDataset),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Dataset:', style: labelStyle),
+              const SizedBox(width: 8),
+              dropdown<String>(
+                value: _selectedDataset,
+                items: _datasets,
+                onChanged: (v) =>
+                    setState(() => _selectedDataset = v ?? _selectedDataset),
+              ),
+            ],
           ),
-          const Spacer(),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
@@ -707,94 +721,100 @@ class _MetricsScreenState extends State<MetricsScreen>
           ),
           const SizedBox(height: 16),
           // Table
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Table(
-              border: TableBorder(
-                horizontalInside: BorderSide(
-                    color: NVColors.border, width: 0.8),
-                top: BorderSide(color: NVColors.borderBright, width: 0.8),
-                bottom: BorderSide(color: NVColors.borderBright, width: 0.8),
-              ),
-              columnWidths: const {
-                0: FlexColumnWidth(2.2),
-                1: FlexColumnWidth(1),
-                2: FlexColumnWidth(1),
-                3: FlexColumnWidth(1),
-                4: FlexColumnWidth(1),
-                5: FlexColumnWidth(1.3),
-                6: FlexColumnWidth(1.3),
-                7: FlexColumnWidth(1.3),
-                8: FlexColumnWidth(1),
-              },
-              children: [
-                // Header
-                TableRow(
-                  decoration:
-                      const BoxDecoration(color: NVColors.bgSurface),
-                  children: columns.map(headerCell).toList(),
-                ),
-                // Data rows
-                ..._tableRows.asMap().entries.map((entry) {
-                  final i = entry.key;
-                  final row = entry.value;
-                  final rowBg = i.isEven
-                      ? NVColors.bgCard
-                      : NVColors.bgSurface;
-                  return TableRow(
-                    decoration: BoxDecoration(color: rowBg),
-                    children: List.generate(row.length, (colIdx) {
-                      // First cell: class name bold
-                      if (colIdx == 0) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 10),
-                          child: Text(
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: 800,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Table(
+                  border: TableBorder(
+                    horizontalInside: BorderSide(
+                        color: NVColors.border, width: 0.8),
+                    top: BorderSide(color: NVColors.borderBright, width: 0.8),
+                    bottom: BorderSide(color: NVColors.borderBright, width: 0.8),
+                  ),
+                  columnWidths: const {
+                    0: FlexColumnWidth(2.2),
+                    1: FlexColumnWidth(1),
+                    2: FlexColumnWidth(1),
+                    3: FlexColumnWidth(1),
+                    4: FlexColumnWidth(1),
+                    5: FlexColumnWidth(1.3),
+                    6: FlexColumnWidth(1.3),
+                    7: FlexColumnWidth(1.3),
+                    8: FlexColumnWidth(1),
+                  },
+                  children: [
+                    // Header
+                    TableRow(
+                      decoration:
+                          const BoxDecoration(color: NVColors.bgSurface),
+                      children: columns.map(headerCell).toList(),
+                    ),
+                    // Data rows
+                    ..._tableRows.asMap().entries.map((entry) {
+                      final i = entry.key;
+                      final row = entry.value;
+                      final rowBg = i.isEven
+                          ? NVColors.bgCard
+                          : NVColors.bgSurface;
+                      return TableRow(
+                        decoration: BoxDecoration(color: rowBg),
+                        children: List.generate(row.length, (colIdx) {
+                          // First cell: class name bold
+                          if (colIdx == 0) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 10),
+                              child: Text(
+                                row[colIdx],
+                                style: const TextStyle(
+                                  color: NVColors.textPrimary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            );
+                          }
+                          return dataCell(
                             row[colIdx],
-                            style: const TextStyle(
-                              color: NVColors.textPrimary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        );
-                      }
-                      return dataCell(
-                        row[colIdx],
-                        isMetric: metricCols.contains(colIdx),
+                            isMetric: metricCols.contains(colIdx),
+                          );
+                        }),
                       );
                     }),
-                  );
-                }),
-                // Macro avg footer
-                TableRow(
-                  decoration: BoxDecoration(
-                    color: NVColors.researcherColor.withValues(alpha: 0.06),
-                  ),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 10),
-                      child: const Text(
-                        'Macro Average',
-                        style: TextStyle(
-                          color: NVColors.researcherColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
+                    // Macro avg footer
+                    TableRow(
+                      decoration: BoxDecoration(
+                        color: NVColors.researcherColor.withValues(alpha: 0.06),
                       ),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          child: const Text(
+                            'Macro Average',
+                            style: TextStyle(
+                              color: NVColors.researcherColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        dataCell('—'),
+                        dataCell('—'),
+                        dataCell('—'),
+                        dataCell('—'),
+                        dataCell('0.941', isMetric: true),
+                        dataCell('0.928', isMetric: true),
+                        dataCell('0.934', isMetric: true),
+                        dataCell('530'),
+                      ],
                     ),
-                    dataCell('—'),
-                    dataCell('—'),
-                    dataCell('—'),
-                    dataCell('—'),
-                    dataCell('0.941', isMetric: true),
-                    dataCell('0.928', isMetric: true),
-                    dataCell('0.934', isMetric: true),
-                    dataCell('530'),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
         ],

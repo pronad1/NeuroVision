@@ -226,11 +226,15 @@ class _GpuMonitorScreenState extends State<GpuMonitorScreen>
 
   Widget _buildStats() {
     return LayoutBuilder(builder: (context, c) {
+      final w = c.maxWidth;
+      final count = w > 800 ? 4 : (w > 400 ? 2 : 1);
+      final itemWidth = w / count;
+      final ratio = w > 400 ? 1.6 : (itemWidth / 160.0);
       return GridView.count(
-        crossAxisCount: c.maxWidth > 800 ? 4 : 2,
+        crossAxisCount: count,
         crossAxisSpacing: 16,
         mainAxisSpacing: 16,
-        childAspectRatio: 1.6,
+        childAspectRatio: ratio,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         children: const [
@@ -359,13 +363,17 @@ class _GpuMonitorScreenState extends State<GpuMonitorScreen>
           const SizedBox(height: 20),
 
           // Metric 2×2 grid
-          GridView.count(
-            crossAxisCount: 2,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            childAspectRatio: 2.4,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
+          LayoutBuilder(builder: (context, constraints) {
+            final w = constraints.maxWidth;
+            final itemWidth = w / 2;
+            final ratio = w > 300 ? 2.4 : (itemWidth / 60.0);
+            return GridView.count(
+              crossAxisCount: 2,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: ratio,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
             children: [
               _GpuMetric(
                   icon: Icons.thermostat_rounded,
@@ -388,7 +396,8 @@ class _GpuMonitorScreenState extends State<GpuMonitorScreen>
                   value: '${g.tflops} TF',
                   color: NVColors.secondary),
             ],
-          ),
+          );
+          }),
           const SizedBox(height: 16),
 
           // VRAM bar
@@ -666,49 +675,49 @@ class _GpuMonitorScreenState extends State<GpuMonitorScreen>
                         style: TextStyle(
                             color: NVColors.textMuted,
                             fontSize: 11,
-                            fontWeight: FontWeight.w600))),
+                            fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
                 Expanded(
                     flex: 3,
                     child: Text('Model',
                         style: TextStyle(
                             color: NVColors.textMuted,
                             fontSize: 11,
-                            fontWeight: FontWeight.w600))),
+                            fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
                 Expanded(
                     flex: 3,
                     child: Text('Dataset',
                         style: TextStyle(
                             color: NVColors.textMuted,
                             fontSize: 11,
-                            fontWeight: FontWeight.w600))),
+                            fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
                 Expanded(
                     flex: 2,
                     child: Text('GPU',
                         style: TextStyle(
                             color: NVColors.textMuted,
                             fontSize: 11,
-                            fontWeight: FontWeight.w600))),
+                            fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
                 Expanded(
                     flex: 2,
                     child: Text('Status',
                         style: TextStyle(
                             color: NVColors.textMuted,
                             fontSize: 11,
-                            fontWeight: FontWeight.w600))),
+                            fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
                 Expanded(
                     flex: 4,
                     child: Text('Progress',
                         style: TextStyle(
                             color: NVColors.textMuted,
                             fontSize: 11,
-                            fontWeight: FontWeight.w600))),
+                            fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
                 Expanded(
                     flex: 2,
                     child: Text('ETA',
                         style: TextStyle(
                             color: NVColors.textMuted,
                             fontSize: 11,
-                            fontWeight: FontWeight.w600))),
+                            fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
                 SizedBox(width: 60),
               ],
             ),
@@ -789,7 +798,8 @@ class _GpuMonitorScreenState extends State<GpuMonitorScreen>
                       color: statusColor,
                       fontSize: 10,
                       fontWeight: FontWeight.w700),
-                  overflow: TextOverflow.ellipsis),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1),
             ),
           ),
           // Progress
@@ -850,37 +860,71 @@ class _GpuMonitorScreenState extends State<GpuMonitorScreen>
   // ── 5) System metrics ─────────────────────────────────────────────────────
 
   Widget _buildSystemMetrics() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: _SystemMetricCard(
-          icon: Icons.developer_board_rounded,
-          label: 'CPU Usage',
-          value: '42%',
-          subtitle: '32 cores active',
-          progress: 0.42,
-          progressColor: NVColors.researcherColor,
-        )),
-        const SizedBox(width: 16),
-        Expanded(child: _SystemMetricCard(
-          icon: Icons.memory_rounded,
-          label: 'System RAM',
-          value: '128 / 512 GB',
-          subtitle: '25% used',
-          progress: 0.25,
-          progressColor: NVColors.info,
-        )),
-        const SizedBox(width: 16),
-        Expanded(child: _SystemMetricCard(
-          icon: Icons.storage_rounded,
-          label: 'Storage',
-          value: '4.2 / 20 TB',
-          subtitle: '21% used',
-          progress: 0.21,
-          progressColor: NVColors.success,
-        )),
-      ],
-    );
+    return LayoutBuilder(builder: (context, constraints) {
+      if (constraints.maxWidth > 600) {
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: _SystemMetricCard(
+              icon: Icons.developer_board_rounded,
+              label: 'CPU Usage',
+              value: '42%',
+              subtitle: '32 cores active',
+              progress: 0.42,
+              progressColor: NVColors.researcherColor,
+            )),
+            const SizedBox(width: 16),
+            Expanded(child: _SystemMetricCard(
+              icon: Icons.memory_rounded,
+              label: 'System RAM',
+              value: '128 / 512 GB',
+              subtitle: '25% used',
+              progress: 0.25,
+              progressColor: NVColors.info,
+            )),
+            const SizedBox(width: 16),
+            Expanded(child: _SystemMetricCard(
+              icon: Icons.storage_rounded,
+              label: 'Storage',
+              value: '4.2 / 20 TB',
+              subtitle: '21% used',
+              progress: 0.21,
+              progressColor: NVColors.success,
+            )),
+          ],
+        );
+      }
+      return Column(
+        children: [
+          _SystemMetricCard(
+            icon: Icons.developer_board_rounded,
+            label: 'CPU Usage',
+            value: '42%',
+            subtitle: '32 cores active',
+            progress: 0.42,
+            progressColor: NVColors.researcherColor,
+          ),
+          const SizedBox(height: 16),
+          _SystemMetricCard(
+            icon: Icons.memory_rounded,
+            label: 'System RAM',
+            value: '128 / 512 GB',
+            subtitle: '25% used',
+            progress: 0.25,
+            progressColor: NVColors.info,
+          ),
+          const SizedBox(height: 16),
+          _SystemMetricCard(
+            icon: Icons.storage_rounded,
+            label: 'Storage',
+            value: '4.2 / 20 TB',
+            subtitle: '21% used',
+            progress: 0.21,
+            progressColor: NVColors.success,
+          ),
+        ],
+      );
+    });
   }
 
   // ── helpers ───────────────────────────────────────────────────────────────

@@ -229,12 +229,15 @@ class _FederatedLearningScreenState extends State<FederatedLearningScreen>
 
   Widget _buildStatsRow() {
     return LayoutBuilder(builder: (context, constraints) {
-      final count = constraints.maxWidth > 800 ? 4 : 2;
+      final w = constraints.maxWidth;
+      final count = w > 800 ? 4 : (w > 400 ? 2 : 1);
+      final itemWidth = w / count;
+      final ratio = w > 400 ? 1.8 : (itemWidth / 160.0);
       return GridView.count(
         crossAxisCount: count,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: constraints.maxWidth > 800 ? 1.8 : 1.8,
+        childAspectRatio: ratio,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         children: [
@@ -456,12 +459,15 @@ class _FederatedLearningScreenState extends State<FederatedLearningScreen>
         ]),
         const SizedBox(height: 12),
         LayoutBuilder(builder: (context, constraints) {
-          final count = constraints.maxWidth > 900 ? 3 : constraints.maxWidth > 500 ? 2 : 1;
+          final w = constraints.maxWidth;
+          final count = w > 900 ? 3 : (w > 500 ? 2 : 1);
+          final itemWidth = w / count;
+          final ratio = w > 300 ? 2.1 : (itemWidth / 120.0);
           return GridView.count(
             crossAxisCount: count,
             crossAxisSpacing: 12,
             mainAxisSpacing: 12,
-            childAspectRatio: 2.1,
+            childAspectRatio: ratio,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             children: _nodes.map((n) => _HospitalNodeCard(node: n)).toList(),

@@ -93,8 +93,9 @@ class _ResearcherDashboardState extends State<ResearcherDashboard>
     return LayoutBuilder(
       builder: (context, constraints) {
         final w = constraints.maxWidth;
-        final count = w > 900 ? 4 : 2;
-        final ratio = w > 900 ? 1.7 : w > 380 ? 1.5 : 1.4;
+        final count = w > 900 ? 4 : (w > 400 ? 2 : 1);
+        final itemWidth = w / count;
+        final ratio = w > 400 ? (w > 900 ? 1.7 : 1.5) : (itemWidth / 180.0);
         return GridView.count(
           crossAxisCount: count,
           crossAxisSpacing: 16,
@@ -160,8 +161,9 @@ class _ResearcherDashboardState extends State<ResearcherDashboard>
         const SizedBox(height: 12),
         LayoutBuilder(builder: (context, constraints) {
           final w = constraints.maxWidth;
-          final count = w > 800 ? 4 : 2;
-          final ratio = w > 800 ? 1.4 : w > 380 ? 1.2 : 1.1;
+          final count = w > 800 ? 4 : (w > 400 ? 2 : 1);
+          final itemWidth = w / count;
+          final ratio = w > 400 ? (w > 800 ? 1.4 : 1.2) : (itemWidth / 160.0);
           return GridView.count(
             crossAxisCount: count,
             crossAxisSpacing: 12,
@@ -435,11 +437,11 @@ class _ResearcherDashboardState extends State<ResearcherDashboard>
               decoration: BoxDecoration(color: NVColors.bgDeep, borderRadius: BorderRadius.circular(8)),
               child: const Row(
                 children: [
-                  Expanded(flex: 2, child: Text('Experiment ID', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                  Expanded(flex: 2, child: Text('Model', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                  Expanded(flex: 2, child: Text('Modality', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                  Expanded(flex: 2, child: Text('Accuracy', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                  Expanded(flex: 2, child: Text('Status', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                  Expanded(flex: 2, child: Text('Experiment ID', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
+                  Expanded(flex: 2, child: Text('Model', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
+                  Expanded(flex: 2, child: Text('Modality', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
+                  Expanded(flex: 2, child: Text('Accuracy', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
+                  Expanded(flex: 2, child: Text('Status', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis)),
                 ],
               ),
             ),

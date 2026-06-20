@@ -221,12 +221,13 @@ class _ModelBenchmarkScreenState extends State<ModelBenchmarkScreen>
   Widget _buildControlBar() {
     return NVGlassCard(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 10,
+        runSpacing: 10,
         children: [
           const Icon(Icons.tune_rounded, color: NVColors.researcherColor, size: 16),
-          const SizedBox(width: 8),
           const Text('Test Modality:', style: TextStyle(color: NVColors.textSecondary, fontSize: 13)),
-          const SizedBox(width: 12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
@@ -245,7 +246,6 @@ class _ModelBenchmarkScreenState extends State<ModelBenchmarkScreen>
               dropdownColor: NVColors.bgCard,
             ),
           ),
-          const Spacer(),
           ElevatedButton.icon(
             onPressed: _isBenchmarking ? null : _runBenchmark,
             icon: _isBenchmarking
@@ -571,48 +571,58 @@ class _ModelBenchmarkScreenState extends State<ModelBenchmarkScreen>
           ]),
           const SizedBox(height: 14),
           // Table header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(color: NVColors.bgDeep, borderRadius: BorderRadius.circular(8)),
-            child: const Row(
-              children: [
-                Expanded(flex: 2, child: Text('Model', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                Expanded(flex: 2, child: Text('Accuracy', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                Expanded(flex: 2, child: Text('Dice Score', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                Expanded(flex: 2, child: Text('Precision', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                Expanded(flex: 2, child: Text('Recall', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-                Expanded(flex: 2, child: Text('Speed', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
-              ],
-            ),
-          ),
-          const SizedBox(height: 4),
-          ..._models.asMap().entries.map((e) {
-            final m = e.value;
-            final isFirst = e.key == 0;
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              margin: const EdgeInsets.only(bottom: 4),
-              decoration: BoxDecoration(
-                color: isFirst ? m.color.withValues(alpha: 0.05) : Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-                border: isFirst ? Border.all(color: m.color.withValues(alpha: 0.2)) : null,
-              ),
-              child: Row(
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: 700,
+              child: Column(
                 children: [
-                  Expanded(flex: 2, child: Row(children: [
-                    if (isFirst) const Icon(Icons.emoji_events_rounded, color: NVColors.warning, size: 12),
-                    if (isFirst) const SizedBox(width: 4),
-                    Text(m.name, style: TextStyle(color: m.color, fontWeight: FontWeight.w600, fontSize: 12)),
-                  ])),
-                  Expanded(flex: 2, child: Text('${m.accuracy.toStringAsFixed(1)}%', style: const TextStyle(color: NVColors.textPrimary, fontSize: 12))),
-                  Expanded(flex: 2, child: Text(m.dice.toStringAsFixed(3), style: const TextStyle(color: NVColors.textPrimary, fontSize: 12))),
-                  Expanded(flex: 2, child: Text('${(m.precision * 100).toStringAsFixed(1)}%', style: const TextStyle(color: NVColors.textPrimary, fontSize: 12))),
-                  Expanded(flex: 2, child: Text('${(m.recall * 100).toStringAsFixed(1)}%', style: const TextStyle(color: NVColors.textPrimary, fontSize: 12))),
-                  Expanded(flex: 2, child: Text('${m.inferenceMs}ms', style: const TextStyle(color: NVColors.textPrimary, fontSize: 12))),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(color: NVColors.bgDeep, borderRadius: BorderRadius.circular(8)),
+                    child: const Row(
+                      children: [
+                        Expanded(flex: 2, child: Text('Model', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                        Expanded(flex: 2, child: Text('Accuracy', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                        Expanded(flex: 2, child: Text('Dice Score', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                        Expanded(flex: 2, child: Text('Precision', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                        Expanded(flex: 2, child: Text('Recall', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                        Expanded(flex: 2, child: Text('Speed', style: TextStyle(color: NVColors.textMuted, fontSize: 11, fontWeight: FontWeight.w600))),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  ..._models.asMap().entries.map((e) {
+                    final m = e.value;
+                    final isFirst = e.key == 0;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      margin: const EdgeInsets.only(bottom: 4),
+                      decoration: BoxDecoration(
+                        color: isFirst ? m.color.withValues(alpha: 0.05) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                        border: isFirst ? Border.all(color: m.color.withValues(alpha: 0.2)) : null,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(flex: 2, child: Row(children: [
+                            if (isFirst) const Icon(Icons.emoji_events_rounded, color: NVColors.warning, size: 12),
+                            if (isFirst) const SizedBox(width: 4),
+                            Text(m.name, style: TextStyle(color: m.color, fontWeight: FontWeight.w600, fontSize: 12)),
+                          ])),
+                          Expanded(flex: 2, child: Text('${m.accuracy.toStringAsFixed(1)}%', style: const TextStyle(color: NVColors.textPrimary, fontSize: 12))),
+                          Expanded(flex: 2, child: Text(m.dice.toStringAsFixed(3), style: const TextStyle(color: NVColors.textPrimary, fontSize: 12))),
+                          Expanded(flex: 2, child: Text('${(m.precision * 100).toStringAsFixed(1)}%', style: const TextStyle(color: NVColors.textPrimary, fontSize: 12))),
+                          Expanded(flex: 2, child: Text('${(m.recall * 100).toStringAsFixed(1)}%', style: const TextStyle(color: NVColors.textPrimary, fontSize: 12))),
+                          Expanded(flex: 2, child: Text('${m.inferenceMs}ms', style: const TextStyle(color: NVColors.textPrimary, fontSize: 12))),
+                        ],
+                      ),
+                    );
+                  }),
                 ],
               ),
-            );
-          }),
+            ),
+          ),
         ],
       ),
     );
