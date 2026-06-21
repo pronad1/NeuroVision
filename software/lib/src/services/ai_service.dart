@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'server_config.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
@@ -74,23 +75,20 @@ class AIResult {
 // ignore: avoid_classes_with_only_static_members
 class AIService {
   // ──────────────────────────────────────────────────────────────────────────
-  // Server base URL — automatically selected per platform:
-  //   • Web (Chrome/browser) → localhost:8000  (same machine as server)
-  //   • Physical Android     → 192.168.0.196:8000  (PC LAN IP)
-  //   • Android emulator     → change 192.168.0.196 to 10.0.2.2
-  // Update the Android IP below if your PC IP changes (run `ipconfig`).
+  // Server base URL — resolved at runtime from ServerConfig (SharedPreferences).
+  //   • Web (Chrome/browser) → always localhost:8000 (same machine as server)
+  //   • Android / other     → IP stored via the in-app Server Settings dialog
+  //
+  // To change the IP without rebuilding: open the app → tap the Wi-Fi icon
+  // in the top-right corner → enter the new IP → Save.
   // ──────────────────────────────────────────────────────────────────────────
   static String get _baseUrl {
-    if (kIsWeb) {
-      // Browser runs on same machine as the server
-      return 'http://localhost:8000/api/v1';
-    }
-    // Physical Android device — use PC's LAN IP
-    return 'http://192.168.0.196:8000/api/v1';
+    if (kIsWeb) return 'http://localhost:8000/api/v1';
+    return ServerConfig.instance.baseUrl;
   }
 
   /// Total wall-clock budget for upload + AI inference + response download.
-  /// Heavy models (SegResNet, YOLO) can take 60-90 s on CPU — 5 min is safe.
+  /// Heavy models (SegResNet, YOLO) can take 60-90 s on CPU — 2 min is safe.
   static const Duration _timeout = Duration(minutes: 2);
 
   /// Socket-level connection timeout — fails fast when the PC is unreachable

@@ -10,6 +10,7 @@ import 'src/config/routes.dart';
 import 'src/config/theme.dart';
 import 'src/providers/auth_provider.dart';
 import 'src/providers/analysis_provider.dart';
+import 'src/services/server_config.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +29,9 @@ Future<void> main() async {
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFwZmN5Y2doZndpdXBmbHJwZGduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxOTM3ODMsImV4cCI6MjA3Mzc2OTc4M30.-bXtNLIizqYRoKwigPs21uRLcNwSI7Nj9w8ujaah_Gk',
   );
 
+  // Initialize ServerConfig (loads saved server IP from SharedPreferences)
+  await ServerConfig.instance.init();
+
   runApp(const NeuroVisionApp());
 }
 
@@ -40,6 +44,7 @@ class NeuroVisionApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => NVAuthProvider()),
         ChangeNotifierProvider(create: (_) => AnalysisProvider()),
+        ChangeNotifierProvider.value(value: ServerConfig.instance),
       ],
       child: MaterialApp(
         title: 'NeuroVision AI',

@@ -1,9 +1,9 @@
-// lib/src/ui/widgets/nv_sidebar.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../config/constants.dart';
 import '../../providers/auth_provider.dart';
+import 'server_settings_sheet.dart';
 
 class NVSidebarItem {
   final String label;
@@ -93,9 +93,10 @@ class NVScaffold extends StatelessWidget {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.notifications_outlined,
+              icon: const Icon(Icons.wifi_rounded,
                   color: NVColors.textSecondary),
-              onPressed: () {},
+              tooltip: 'Server Settings',
+              onPressed: () => ServerSettingsSheet.show(context),
             ),
             GestureDetector(
               onTap: () {
@@ -472,19 +473,38 @@ class _NVSidebarState extends State<NVSidebar> {
                   children: [
                     if (!collapsed)
                       Expanded(
-                        child: TextButton.icon(
-                          onPressed: () async {
-                            await auth.signOut();
-                            if (context.mounted) {
-                              Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
-                            }
-                          },
-                          icon: const Icon(Icons.logout_rounded, size: 16, color: NVColors.error),
-                          label: const Text('Sign Out', style: TextStyle(color: NVColors.error, fontSize: 13)),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                            alignment: Alignment.centerLeft,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            TextButton.icon(
+                              onPressed: () {
+                                if (isMobileLayout(context)) {
+                                  Navigator.pop(context);
+                                }
+                                ServerSettingsSheet.show(context);
+                              },
+                              icon: const Icon(Icons.dns_rounded, size: 16, color: NVColors.textSecondary),
+                              label: const Text('Server IP', style: TextStyle(color: NVColors.textSecondary, fontSize: 13)),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                alignment: Alignment.centerLeft,
+                              ),
+                            ),
+                            TextButton.icon(
+                              onPressed: () async {
+                                await auth.signOut();
+                                if (context.mounted) {
+                                  Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+                                }
+                              },
+                              icon: const Icon(Icons.logout_rounded, size: 16, color: NVColors.error),
+                              label: const Text('Sign Out', style: TextStyle(color: NVColors.error, fontSize: 13)),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                alignment: Alignment.centerLeft,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     // Only show collapse toggle on desktop
