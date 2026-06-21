@@ -1,12 +1,14 @@
 // lib/src/services/ai_service.dart
-/// NeuroVision AI — Client service for the FastAPI inference server.
-/// Sends images to the backend and parses AI predictions.
+// NeuroVision AI — Client service for the FastAPI inference server.
+// Sends images to the backend and parses AI predictions.
 
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
 import 'package:http_parser/http_parser.dart';
 
 class AIResult {
@@ -87,8 +89,13 @@ class AIService {
     return 'http://192.168.0.196:8000/api/v1';
   }
 
-  static const Duration _timeout = Duration(seconds: 100); // 5 mins for CPU inference
+  /// Total wall-clock budget for upload + AI inference + response download.
+  /// Heavy models (SegResNet, YOLO) can take 60-90 s on CPU — 5 min is safe.
+  static const Duration _timeout = Duration(minutes: 2);
 
+  /// Socket-level connection timeout — fails fast when the PC is unreachable
+  /// (wrong IP / Android on a different subnet / PC firewall blocking).
+  static const Duration _connectTimeout = Duration(seconds: 15);
   // ── Brain MRI Analysis ────────────────────────────────────────────────────
 
   /// Analyze a brain MRI image file.
@@ -207,38 +214,73 @@ class AIService {
 
   // ── Private Helper ────────────────────────────────────────────────────────
 
+  /// Build an [http.Client] with socket-level timeouts for Android LAN calls.
+  /// On Web, dart:io is unavailable so a plain [http.Client] is returned.
+  static http.Client _buildClient() {
+    if (kIsWeb) return http.Client();
+    final ioClient = HttpClient()
+      // Fail fast if the PC can't be reached (wrong IP / different subnet).
+      ..connectionTimeout = _connectTimeout
+      // Keep the TCP socket alive during long server-side AI inference.
+      ..idleTimeout = _timeout;
+    return IOClient(ioClient);
+  }
+
   static Future<AIResult> _uploadAndAnalyze({
     required String endpoint,
     required Uint8List imageBytes,
     required String filename,
   }) async {
-    try {
-      final uri = Uri.parse(endpoint);
-      final request = http.MultipartRequest('POST', uri);
-      final isPng = filename.toLowerCase().endsWith('.png');
-      final mediaType = isPng ? MediaType('image', 'png') : MediaType('image', 'jpeg');
-      request.files.add(http.MultipartFile.fromBytes(
-        'file',
-        imageBytes,
-        filename: filename,
-        contentType: mediaType,
-      ));
-      request.headers['Accept'] = 'application/json';
+    // Wrap the ENTIRE round-trip (upload + server inference + response body)
+    // in one timeout so Android never hangs silently past _timeout.
+    return Future(() async {
+      final client = _buildClient();
+      try {
+        final uri = Uri.parse(endpoint);
+        final request = http.MultipartRequest('POST', uri)
+          ..headers['Accept'] = 'application/json';
 
-      final streamedResponse = await request.send().timeout(_timeout);
-      final response = await http.Response.fromStream(streamedResponse);
+        final isPng = filename.toLowerCase().endsWith('.png');
+        final mediaType =
+            isPng ? MediaType('image', 'png') : MediaType('image', 'jpeg');
+        request.files.add(http.MultipartFile.fromBytes(
+          'file',
+          imageBytes,
+          filename: filename,
+          contentType: mediaType,
+        ));
 
-      if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        return AIResult.fromJson(json);
-      } else {
-        final error = jsonDecode(response.body);
-        throw Exception('Server error ${response.statusCode}: ${error['detail'] ?? error}');
+        // send() through our IOClient (respects socket-level timeouts on Android)
+        final streamedResponse = await client.send(request);
+        // fromStream() waits for the full response body — this is where
+        // server-side inference time is spent; it is now inside the outer timeout.
+        final response = await http.Response.fromStream(streamedResponse);
+
+        if (response.statusCode == 200) {
+          final json = jsonDecode(response.body) as Map<String, dynamic>;
+          return AIResult.fromJson(json);
+        } else {
+          final error = jsonDecode(response.body);
+          throw Exception(
+              'Server error ${response.statusCode}: ${error['detail'] ?? error}');
+        }
+      } on SocketException catch (e) {
+        throw Exception(
+            'Network error – cannot reach "$_baseUrl". '
+            'Ensure your Android is on the same Wi-Fi as the PC. '
+            'Details: $e');
+      } on http.ClientException catch (e) {
+        throw Exception(
+            'Cannot connect to AI server at "$_baseUrl". '
+            'Ensure the FastAPI server is running. Details: $e');
+      } finally {
+        client.close();
       }
-    } on http.ClientException {
-      throw Exception('Cannot connect to AI server. Ensure the FastAPI server is running on $_baseUrl');
-    } catch (e) {
-      throw Exception('AI analysis failed: $e');
-    }
+    }).timeout(
+      _timeout,
+      onTimeout: () => throw Exception(
+          'AI analysis timed out after ${_timeout.inMinutes} min. '
+          'The server may be overloaded or the network is very slow.'),
+    );
   }
 }
