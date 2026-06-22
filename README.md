@@ -41,10 +41,6 @@ An Enterprise Multimodal Explainable Medical Diagnosis and Lesion Localization E
 | **AI Models** | PyTorch, MONAI |
 | **Imaging** | OpenCV |
 
-
-## 📁 Project Structure
-
-```bash
 lib/
 ├── main.dart                 # App entry point
 ├── firebase_options.dart     # Firebase configuration
