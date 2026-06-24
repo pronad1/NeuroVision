@@ -8,6 +8,8 @@ import '../../../widgets/nv_sidebar.dart';
 import '../../../widgets/nv_glass_card.dart';
 import '../../../widgets/nv_top_bar.dart';
 import '../../../../utils/download_helper.dart';
+import '../../../../services/medical_service.dart';
+import '../../../../models/medical_case.dart';
 
 class ClinicalNotesScreen extends StatefulWidget {
   const ClinicalNotesScreen({super.key});
@@ -26,11 +28,7 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
 
   final _templates = ['Diagnosis Report', 'Radiology Findings', 'Follow-up Notes', 'Second Opinion', 'Treatment Plan'];
 
-  final _casesData = [
-    {'id': 'CASE-2026-047', 'patient': 'John Doe', 'modality': 'Brain MRI', 'prediction': 'Ischemic Stroke', 'confidence': '94.2%', 'severity': 'High'},
-    {'id': 'CASE-2026-046', 'patient': 'Jane Smith', 'modality': 'Spine MRI', 'prediction': 'L4-L5 Herniation', 'confidence': '88.7%', 'severity': 'Medium'},
-    {'id': 'CASE-2026-045', 'patient': 'Robert Brown', 'modality': 'Chest X-Ray', 'prediction': 'Pneumonia', 'confidence': '91.3%', 'severity': 'High'},
-  ];
+  List<MedicalCase> _cases = [];
 
   final _notes = [
     _ClinicalNote('CASE-2026-047', 'Dr. Ahmad', 'Patient presents with ischemic stroke in left MCA territory. AI confidence 94.2%. Recommend immediate intervention. NIHSS score 8. CT perfusion shows penumbra of approximately 85ml.', '2026-05-13 14:32', NVColors.error),
@@ -44,6 +42,19 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
     _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
     _fade = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
     _ctrl.forward();
+    _loadCases();
+  }
+
+  Future<void> _loadCases() async {
+    final cases = await MedicalService().getCases();
+    if (mounted) {
+      setState(() {
+        _cases = cases;
+        if (_cases.isNotEmpty && !_cases.any((e) => e.caseId == _selectedCase)) {
+          _selectedCase = _cases.first.caseId;
+        }
+      });
+    }
   }
 
   @override
@@ -102,13 +113,15 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(color: NVColors.bgDeep, borderRadius: BorderRadius.circular(8), border: Border.all(color: NVColors.border)),
             child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _selectedCase,
-                dropdownColor: NVColors.bgCard,
-                style: const TextStyle(color: NVColors.primary, fontSize: 13, fontWeight: FontWeight.w600),
-                items: _casesData.map((c) => DropdownMenuItem(value: c['id'] as String, child: Text('${c['patient']} (${c['id']})'))).toList(),
-                onChanged: (v) { if (v != null) setState(() => _selectedCase = v); },
-              ),
+              child: _cases.isEmpty 
+                ? const Text('Loading cases...', style: TextStyle(color: NVColors.textMuted, fontSize: 13))
+                : DropdownButton<String>(
+                  value: _selectedCase,
+                  dropdownColor: NVColors.bgCard,
+                  style: const TextStyle(color: NVColors.primary, fontSize: 13, fontWeight: FontWeight.w600),
+                  items: _cases.map((c) => DropdownMenuItem(value: c.caseId, child: Text('Anonymous (${c.caseId})'))).toList(),
+                  onChanged: (v) { if (v != null) setState(() => _selectedCase = v); },
+                ),
             ),
           ),
         ]),
@@ -146,7 +159,7 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
           spacing: 12,
           runSpacing: 12,
           children: [
-            SizedBox(width: 180, child: _FieldBlock(label: 'Patient / Case ID', value: '${_casesData.firstWhere((c) => c['id'] == _selectedCase, orElse: () => _casesData.first)['patient']} / $_selectedCase')),
+            SizedBox(width: 180, child: _FieldBlock(label: 'Patient / Case ID', value: 'Anonymous / $_selectedCase')),
             SizedBox(width: 150, child: _FieldBlock(label: 'Note Type', value: _selectedTemplate)),
             SizedBox(width: 130, child: _FieldBlock(label: 'Date', value: DateTime.now().toString().substring(0, 10))),
             const SizedBox(width: 110, child: _FieldBlock(label: 'Priority', value: 'Routine')),
@@ -293,13 +306,14 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
   }
 
   void _insertTemplate() {
-    final caseData = _casesData.firstWhere((c) => c['id'] == _selectedCase, orElse: () => _casesData.first);
+    if (_cases.isEmpty) return;
+    final caseData = _cases.firstWhere((c) => c.caseId == _selectedCase, orElse: () => _cases.first);
     
     final templates = {
-      'Diagnosis Report': 'PATIENT: ${caseData['patient']}\nCASE ID: ${caseData['id']}\n\nCHIEF COMPLAINT:\n\nHISTORY OF PRESENT ILLNESS:\n\nAI FINDINGS (Autonomous):\n- Modality: ${caseData['modality']}\n- Prediction: ${caseData['prediction']}\n- Confidence: ${caseData['confidence']}\n- Severity: ${caseData['severity']}\n\nCLINICAL ASSESSMENT:\n\nRECOMMENDATIONS:\n',
-      'Radiology Findings': 'PATIENT: ${caseData['patient']}\nCASE ID: ${caseData['id']}\n\nIMAGING MODALITY: ${caseData['modality']}\n\nTECHNIQUE:\n\nFINDINGS:\n- Location: \n- Size: \n- Characteristics: \n\nIMPRESSION:\n\nAI CORRELATION:\n- AI flagged ${caseData['prediction']} with ${caseData['confidence']} confidence.\n',
+      'Diagnosis Report': 'PATIENT: Anonymous\nCASE ID: ${caseData.caseId}\n\nCHIEF COMPLAINT:\n\nHISTORY OF PRESENT ILLNESS:\n\nAI FINDINGS (Autonomous):\n- Modality: ${caseData.modality}\n- Prediction: ${caseData.aiPrediction ?? "Unknown"}\n- Confidence: ${caseData.aiConfidence?.toStringAsFixed(1) ?? "N/A"}%\n- Severity: ${caseData.aiSeverity ?? "N/A"}\n\nCLINICAL ASSESSMENT:\n\nRECOMMENDATIONS:\n',
+      'Radiology Findings': 'PATIENT: Anonymous\nCASE ID: ${caseData.caseId}\n\nIMAGING MODALITY: ${caseData.modality}\n\nTECHNIQUE:\n\nFINDINGS:\n- Location: \n- Size: \n- Characteristics: \n\nIMPRESSION:\n\nAI CORRELATION:\n- AI flagged ${caseData.aiPrediction ?? "Unknown"} with ${caseData.aiConfidence?.toStringAsFixed(1) ?? "N/A"}% confidence.\n',
     };
-    _noteController.text = templates[_selectedTemplate] ?? 'PATIENT: ${caseData['patient']}\n\n';
+    _noteController.text = templates[_selectedTemplate] ?? 'PATIENT: Anonymous\n\n';
   }
 
   Future<void> _saveNote() async {

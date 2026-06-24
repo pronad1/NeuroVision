@@ -95,9 +95,9 @@ class _MedicalCasesScreenState extends State<MedicalCasesScreen> {
                       ),
                       const SizedBox(width: 12),
                       ElevatedButton.icon(
-                        onPressed: () => _showNewCaseDialog(context, user?.uid ?? ''),
+                        onPressed: () => Navigator.pushNamed(context, '/analysis'),
                         icon: const Icon(Icons.add_rounded, size: 16),
-                        label: const Text('New Case'),
+                        label: const Text('New Analysis'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: NVColors.doctorColor,
                           foregroundColor: Colors.black,
