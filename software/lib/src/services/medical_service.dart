@@ -5,7 +5,7 @@ import '../config/constants.dart';
 class MedicalService {
   // ───── Medical Cases ─────
 
-  final _mockCases = [
+  static final List<MedicalCase> _mockCases = [
     MedicalCase(
       id: 'doc-1',
       caseId: 'CASE-2026-047',
@@ -86,6 +86,12 @@ class MedicalService {
     required String modality,
     required String uploadedBy,
     String? imageUrl,
+    String? aiPrediction,
+    double? aiConfidence,
+    String? aiSeverity,
+    String? aiModelUsed,
+    String? heatmapUrl,
+    String? segmentationMaskUrl,
   }) async {
     final year = DateTime.now().year;
     final count = _mockCases.length + 1;
@@ -98,6 +104,12 @@ class MedicalService {
       uploadedBy: uploadedBy,
       status: AppConstants.caseStatusPending,
       imageUrl: imageUrl ?? '',
+      aiPrediction: aiPrediction,
+      aiConfidence: aiConfidence,
+      aiSeverity: aiSeverity,
+      aiModelUsed: aiModelUsed,
+      heatmapUrl: heatmapUrl,
+      segmentationMaskUrl: segmentationMaskUrl,
       radiologistValidated: false,
       doctorApproved: false,
       createdAt: DateTime.now(),
@@ -109,16 +121,88 @@ class MedicalService {
 
   /// Update case status
   Future<bool> updateCaseStatus(String docId, String newStatus) async {
+    final index = _mockCases.indexWhere((c) => c.id == docId || c.caseId == docId);
+    if (index == -1) return false;
+    final oldCase = _mockCases[index];
+    _mockCases[index] = MedicalCase(
+      id: oldCase.id,
+      caseId: oldCase.caseId,
+      modality: oldCase.modality,
+      uploadedBy: oldCase.uploadedBy,
+      assignedRadiologistId: oldCase.assignedRadiologistId,
+      assignedDoctorId: oldCase.assignedDoctorId,
+      aiPrediction: oldCase.aiPrediction,
+      aiConfidence: oldCase.aiConfidence,
+      aiSeverity: oldCase.aiSeverity,
+      aiModelUsed: oldCase.aiModelUsed,
+      segmentationMaskUrl: oldCase.segmentationMaskUrl,
+      heatmapUrl: oldCase.heatmapUrl,
+      imageUrl: oldCase.imageUrl,
+      status: newStatus,
+      clinicalNotes: oldCase.clinicalNotes,
+      radiologistValidated: oldCase.radiologistValidated,
+      doctorApproved: oldCase.doctorApproved,
+      createdAt: oldCase.createdAt,
+      updatedAt: DateTime.now(),
+    );
     return true;
   }
 
   /// Doctor validates/approves a case
   Future<bool> doctorApprove(String docId, String notes) async {
+    final index = _mockCases.indexWhere((c) => c.id == docId || c.caseId == docId);
+    if (index == -1) return false;
+    final oldCase = _mockCases[index];
+    _mockCases[index] = MedicalCase(
+      id: oldCase.id,
+      caseId: oldCase.caseId,
+      modality: oldCase.modality,
+      uploadedBy: oldCase.uploadedBy,
+      assignedRadiologistId: oldCase.assignedRadiologistId,
+      assignedDoctorId: oldCase.assignedDoctorId,
+      aiPrediction: oldCase.aiPrediction,
+      aiConfidence: oldCase.aiConfidence,
+      aiSeverity: oldCase.aiSeverity,
+      aiModelUsed: oldCase.aiModelUsed,
+      segmentationMaskUrl: oldCase.segmentationMaskUrl,
+      heatmapUrl: oldCase.heatmapUrl,
+      imageUrl: oldCase.imageUrl,
+      status: oldCase.status,
+      clinicalNotes: oldCase.clinicalNotes == null ? notes : '${oldCase.clinicalNotes}\n$notes',
+      radiologistValidated: oldCase.radiologistValidated,
+      doctorApproved: true,
+      createdAt: oldCase.createdAt,
+      updatedAt: DateTime.now(),
+    );
     return true;
   }
 
   /// Radiologist validates annotation
   Future<bool> radiologistValidate(String docId) async {
+    final index = _mockCases.indexWhere((c) => c.id == docId || c.caseId == docId);
+    if (index == -1) return false;
+    final oldCase = _mockCases[index];
+    _mockCases[index] = MedicalCase(
+      id: oldCase.id,
+      caseId: oldCase.caseId,
+      modality: oldCase.modality,
+      uploadedBy: oldCase.uploadedBy,
+      assignedRadiologistId: oldCase.assignedRadiologistId,
+      assignedDoctorId: oldCase.assignedDoctorId,
+      aiPrediction: oldCase.aiPrediction,
+      aiConfidence: oldCase.aiConfidence,
+      aiSeverity: oldCase.aiSeverity,
+      aiModelUsed: oldCase.aiModelUsed,
+      segmentationMaskUrl: oldCase.segmentationMaskUrl,
+      heatmapUrl: oldCase.heatmapUrl,
+      imageUrl: oldCase.imageUrl,
+      status: oldCase.status,
+      clinicalNotes: oldCase.clinicalNotes,
+      radiologistValidated: true,
+      doctorApproved: oldCase.doctorApproved,
+      createdAt: oldCase.createdAt,
+      updatedAt: DateTime.now(),
+    );
     return true;
   }
 

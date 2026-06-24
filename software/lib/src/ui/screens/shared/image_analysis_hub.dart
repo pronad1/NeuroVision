@@ -11,6 +11,7 @@ import '../../../providers/analysis_provider.dart';
 import '../../widgets/nv_sidebar.dart';
 import '../../widgets/nv_glass_card.dart';
 import '../../../config/constants.dart';
+import '../../../services/medical_service.dart';
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
@@ -1670,7 +1671,44 @@ class _ResultActions extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10)),
           ),
         ),
+        ElevatedButton.icon(
+          onPressed: () async {
+            final userId = Provider.of<NVAuthProvider>(context, listen: false).nvUser?.uid ?? 'unknown';
+            final result = provider.result;
+            if (result == null) return;
+            
+            final medService = MedicalService();
+            final caseId = await medService.createCase(
+              modality: modality.apiModality,
+              uploadedBy: userId,
+              aiPrediction: result.prediction,
+              aiConfidence: result.confidence,
+              aiSeverity: result.severity,
+              aiModelUsed: result.modelUsed,
+              heatmapUrl: result.heatmapBase64,
+              segmentationMaskUrl: result.segmentationMaskBase64,
+            );
+            
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(caseId != null ? 'Saved to Medical Cases ($caseId)' : 'Failed to save case'),
+                backgroundColor: caseId != null ? NVColors.success : NVColors.error,
+                behavior: SnackBarBehavior.floating,
+              ));
+            }
+          },
+          icon: const Icon(Icons.save_rounded, size: 16),
+          label: const Text('Save as Case'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: NVColors.success,
+            foregroundColor: Colors.black,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10)),
+          ),
+        ),
       ],
     );
   }
 }
+

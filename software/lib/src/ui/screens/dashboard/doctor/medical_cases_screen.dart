@@ -9,6 +9,7 @@ import '../../../../models/medical_case.dart';
 import '../../../widgets/nv_sidebar.dart';
 import '../../../widgets/nv_top_bar.dart';
 import '../../../widgets/nv_glass_card.dart';
+import 'dart:convert';
 
 class MedicalCasesScreen extends StatefulWidget {
   const MedicalCasesScreen({super.key});
@@ -21,7 +22,7 @@ class _MedicalCasesScreenState extends State<MedicalCasesScreen> {
   String _filterStatus = 'all';
   String _filterModality = 'all';
 
-  final _statuses = ['all', 'pending', 'in_review', 'validated', 'completed'];
+  final _statuses = ['all', 'pending', 'in_review', 'validated', 'invalidated', 'completed'];
   final _modalities = ['all', 'Brain MRI', 'Spine MRI', 'Chest X-Ray', 'CT Scan'];
 
   late Future<List<MedicalCase>> _casesFuture;
@@ -167,7 +168,23 @@ class _MedicalCasesScreenState extends State<MedicalCasesScreen> {
                         return ListView.separated(
                           itemCount: cases.length,
                           separatorBuilder: (_, __) => const SizedBox(height: 10),
-                          itemBuilder: (context, i) => _CaseCard(case_: cases[i]),
+                          itemBuilder: (context, i) => _CaseCard(
+                            case_: cases[i],
+                            onApprove: () async {
+                              final success = await _medService.doctorApprove(cases[i].id, 'Verified from dashboard');
+                              if (success) {
+                                _refreshFuture();
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                    content: Text('Case verified successfully'),
+                                    backgroundColor: NVColors.success,
+                                    behavior: SnackBarBehavior.floating,
+                                  ));
+                                }
+                              }
+                            },
+                            onTap: () => _showCaseDetailDialog(context, cases[i]),
+                          ),
                         );
                       },
                     ),
@@ -176,6 +193,90 @@ class _MedicalCasesScreenState extends State<MedicalCasesScreen> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  void _showCaseDetailDialog(BuildContext context, MedicalCase c) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: NVColors.bgCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          width: 500,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Case Analysis: ${c.caseId}', style: const TextStyle(color: NVColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+                  IconButton(icon: const Icon(Icons.close, color: NVColors.textMuted), onPressed: () => Navigator.pop(ctx)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _buildDetailRow('Modality', c.modality),
+              _buildDetailRow('Status', c.status.replaceAll('_', ' ').toUpperCase()),
+              _buildDetailRow('AI Prediction', c.aiPrediction ?? 'None'),
+              _buildDetailRow('AI Confidence', c.aiConfidence != null ? '${c.aiConfidence!.toStringAsFixed(1)}%' : 'N/A'),
+              _buildDetailRow('AI Severity', c.aiSeverity ?? 'N/A'),
+              if (c.heatmapUrl != null && c.heatmapUrl!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                const Text('AI Heatmap / Image', style: TextStyle(color: NVColors.textMuted, fontSize: 12)),
+                const SizedBox(height: 8),
+                Center(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.memory(base64Decode(c.heatmapUrl!), height: 200, fit: BoxFit.contain, errorBuilder: (_,__,___) => const SizedBox()),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      await _medService.updateCaseStatus(c.id, 'invalidated');
+                      _refreshFuture();
+                    },
+                    icon: const Icon(Icons.cancel_rounded, size: 16),
+                    label: const Text('Mark Invalid'),
+                    style: OutlinedButton.styleFrom(foregroundColor: NVColors.error, side: const BorderSide(color: NVColors.error)),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      Navigator.pop(ctx);
+                      await _medService.doctorApprove(c.id, 'Validated from dialog');
+                      await _medService.updateCaseStatus(c.id, 'validated');
+                      _refreshFuture();
+                    },
+                    icon: const Icon(Icons.check_circle_rounded, size: 16),
+                    label: const Text('Mark Valid'),
+                    style: ElevatedButton.styleFrom(backgroundColor: NVColors.success, foregroundColor: Colors.black),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        children: [
+          SizedBox(width: 120, child: Text(label, style: const TextStyle(color: NVColors.textMuted, fontSize: 14))),
+          Expanded(child: Text(value, style: const TextStyle(color: NVColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600))),
         ],
       ),
     );
@@ -273,10 +374,13 @@ class _MedicalCasesScreenState extends State<MedicalCasesScreen> {
 
 class _CaseCard extends StatelessWidget {
   final MedicalCase case_;
-  const _CaseCard({required this.case_});
+  final VoidCallback? onApprove;
+  final VoidCallback? onTap;
+  const _CaseCard({required this.case_, this.onApprove, this.onTap});
 
   Color get _statusColor => switch (case_.status) {
     'validated' => NVColors.success,
+    'invalidated' => NVColors.error,
     'in_review' => NVColors.warning,
     'completed' => NVColors.primary,
     _ => NVColors.info,
@@ -284,8 +388,10 @@ class _CaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NVGlassCard(
-      hoverable: true,
+    return GestureDetector(
+      onTap: onTap,
+      child: NVGlassCard(
+        hoverable: true,
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
@@ -357,14 +463,24 @@ class _CaseCard extends StatelessWidget {
                 const Icon(Icons.check_circle_rounded, color: NVColors.success, size: 16),
               const SizedBox(width: 4),
               if (!case_.doctorApproved)
-                Icon(Icons.radio_button_unchecked_rounded, color: NVColors.textMuted, size: 16)
+                TextButton.icon(
+                  onPressed: onApprove,
+                  icon: const Icon(Icons.check_circle_outline_rounded, size: 16),
+                  label: const Text('Verify', style: TextStyle(fontSize: 12)),
+                  style: TextButton.styleFrom(
+                    foregroundColor: NVColors.doctorColor,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                )
               else
                 const Icon(Icons.verified_rounded, color: NVColors.doctorColor, size: 16),
             ],
           ),
         ],
       ),
-    );
+    ));
   }
 
   IconData _modalityIcon(String modality) {
