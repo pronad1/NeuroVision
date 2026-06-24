@@ -4,158 +4,74 @@ An Enterprise Multimodal Explainable Medical Diagnosis and Lesion Localization E
 
 ## 🚀 Project Overview
 
-**NeuroVision AI** is a cutting-edge medical imaging platform designed to assist doctors, radiologists, and researchers in diagnosing neurological conditions through advanced deep learning models. The platform integrates multiple AI pipelines for brain, spine, and chest imaging, providing lesion detection, segmentation, explainable AI (Grad-CAM), and research monitoring in a secure, enterprise-grade environment.
+**NeuroVision AI** is a cutting-edge medical imaging platform designed to assist doctors, radiologists, and researchers in diagnosing neurological and cardiovascular conditions through advanced deep learning models. The platform integrates multiple AI pipelines for brain, spine, heart, and chest imaging, providing lesion detection, segmentation, explainable AI (Grad-CAM), and research monitoring in a secure, enterprise-grade environment.
 
 ## ✨ Key Features
 
-- **Multimodal Imaging Analysis**
-  - 🧠 **Brain Intelligence**: Ischemic stroke analysis, lesion segmentation (DERNet, SegResNet)
-  - 🦴 **Spine Intelligence**: Vertebral lesion detection and classification (DenseNet, EfficientNetV2)
-  - 🫁 **Chest X-Ray**: Pneumonia and tuberculosis screening (future module)
-  
-- **Explainable AI Engine**
-  - Visualizes AI reasoning through Grad-CAM heatmaps and activation maps
-  - Builds trust by showing *why* the AI made a prediction
-  - Enhances clinical validation and understanding
-  
-- **Research & Monitoring**
-  - Tracks model performance and experiment metrics
-  - Compares deep learning architectures (ResNet, DenseNet, etc.)
-  - Visualizes training curves, confusion matrices, and validation results
-  
-- **Enterprise Clinical Workflow**
-  - Secure, anonymized medical case management
-  - Role-based access control (Doctor, Radiologist, Researcher)
-  - Professional DICOM viewer and annotation tools
-  - Integrated reporting and diagnostic workflows
+### Multimodal Imaging Analysis
+- 🧠 **Brain Intelligence**: Ischemic stroke analysis, lesion segmentation (DERNet, SegResNet)
+- 🦴 **Spine Intelligence**: Vertebral lesion detection and classification (DenseNet, EfficientNetV2)
+- ❤️ **Heart Intelligence**: Cardiovascular abnormality detection and cardiac imaging analysis
+- 🫁 **Chest X-Ray**: Pneumonia and tuberculosis screening (future module)
+
+### Explainable AI Engine
+- Visualizes AI reasoning through Grad-CAM heatmaps and activation maps
+- Builds trust by showing *why* the AI made a prediction
+- Enhances clinical validation and understanding
+
+### Research & Monitoring
+- Tracks model performance and experiment metrics
+- Compares deep learning architectures (ResNet, DenseNet, etc.)
+- Visualizes training curves, confusion matrices, and validation results
+
+### Enterprise Clinical Workflow
+- Secure, anonymized medical case management
+- Role-based access control (Doctor, Radiologist, Researcher)
+- Professional DICOM viewer and annotation tools
+- Integrated reporting and diagnostic workflows
+
+## 👥 User Roles
+
+1. **Doctor**: Reviews AI diagnosis, monitors case progression, compares scans, and approves final reports.
+2. **Radiologist**: Handles professional medical image interpretation, lesion annotation, segmentation validation, and AI localization comparison.
+3. **Researcher**: Monitors AI models, tracks experiments, analyzes dataset metrics, compares architectures, and reviews training curves.
+
+## 🔒 Security & Privacy Model
+
+The system follows an **internal anonymized medical architecture**:
+- ✅ No public patient access
+- ✅ No direct patient accounts
+- ✅ Internal institutional usage only
+- ✅ Anonymized medical cases using unique IDs (e.g., `CASE-2026-001`)
+- ✅ Role-based access control and restricted dataset visibility
 
 ## 🔧 Technology Stack
 
 | Layer | Technology |
 |-------|------------|
-| **Frontend** | Flutter 3.x |
+| **Frontend Framework** | Flutter 3.x |
 | **State Management** | Provider |
-| **Firebase** | Auth, Firestore, Storage |
-| **Supabase** | Medical image storage |
+| **Authentication & DB**| Firebase (Auth, Firestore, Storage) |
+| **Medical Imaging DB** | Supabase |
 | **Backend API** | FastAPI (upcoming) |
-| **AI Models** | PyTorch, MONAI |
-| **Imaging** | OpenCV |
+| **AI Models Engine** | PyTorch, MONAI |
+| **Computer Vision** | OpenCV |
 
-lib/
-├── main.dart                 # App entry point
-├── firebase_options.dart     # Firebase configuration
-├── src/
-│   ├── config/
-│   │   ├── routes.dart         # Navigation
-│   │   ├── theme.dart          # Design system
-│   │   ├── constants.dart      # App constants
-│   │   ├── api.dart            # API configuration
-│   │   ├── notifications.dart  # Push notifications
-│   │   └── splash.dart         # Splash screen logic
-│   │
-│   ├── screens/
-│   │   ├── auth/
-│   │   │   ├── login_screen.dart
-│   │   │   ├── register_screen.dart
-│   │   │   └── forgot_password_screen.dart
-│   │   │
-│   │   ├── home/
-│   │   │   ├── splash_screen.dart
-│   │   │   ├── home_screen.dart
-│   │   │   ├── home_navigator.dart
-│   │   │   ├── dashboard/
-│   │   │   │   ├── doctor_dashboard.dart
-│   │   │   │   ├── radiologist_dashboard.dart
-│   │   │   │   └── researcher_dashboard.dart
-│   │   │   ├── ai_assist/
-│   │   │   │   ├── ai_assist_hub.dart
-│   │   │   │   ├── brain_analysis.dart
-│   │   │   │   ├── spine_analysis.dart
-│   │   │   │   └── chest_analysis.dart
-│   │   │   └── ai_models/
-│   │   │       ├── model_dashboard.dart
-│   │   │       ├── research_monitoring.dart
-│   │   │       ├── model_comparison.dart
-│   │   │       ├── experiment_tracking.dart
-│   │   │       └── model_training.dart
-│   │   │
-│   │   ├── cases/
-│   │   │   ├── cases_dashboard.dart
-│   │   │   ├── case_list.dart
-│   │   │   ├── case_detail.dart
-│   │   │   └── image_viewer.dart
-│   │   │
-│   │   ├── research/
-│   │   │   ├── research_dashboard.dart
-│   │   │   ├── experiment_setup.dart
-│   │   │   ├── model_training.dart
-│   │   │   └── research_reports.dart
-│   │   │
-│   │   ├── profile/
-│   │   │   ├── profile_screen.dart
-│   │   │   └── settings_screen.dart
-│   │   │
-│   │   ├── settings/
-│   │   │   ├── system_settings.dart
-│   │   │   ├── notification_settings.dart
-│   │   │   └── privacy_policy.dart
-│   │   │
-│   │   └── utilities/
-│   │       ├── notifications.dart
-│   │       ├── diagnostics.dart
-│   │       └── maintenance_screen.dart
-│   │
-│   ├── providers/
-│   │   ├── auth_provider.dart
-│   │   ├── case_provider.dart
-│   │   ├── model_provider.dart
-│   │   ├── research_provider.dart
-│   │   └── notification_provider.dart
-│   │
-│   ├── widgets/
-│   │   ├── custom_app_bar.dart
-│   │   ├── neural_network_visualizer.dart
-│   │   ├── heatmap_viewer.dart
-│   │   ├── image_carousel.dart
-│   │   └── ... (many specialized widgets)
-│   │
-│   ├── services/
-│   │   ├── firebase_service.dart
-│   │   ├── supabase_service.dart
-│   │   ├── api_service.dart
-│   │   └── file_service.dart
-│   │
-│   ├── models/
-│   │   ├── user_model.dart
-│   │   ├── case_model.dart
-│   │   ├── model_performance_model.dart
-│   │   └── experimental_result_model.dart
-│   │
-│   └── utils/
-│       ├── validators.dart
-│       ├── formatters.dart
-│       ├── image_utils.dart
-│       └── datetime_utils.dart
-│
-├── assets/
-│   └── ai/
-│       └── models/
-│           ├── brain/
-│           ├── spine/
-│           └── chest/
-│
-├── test/
-│   ├── unit_test/
-│   └── widget_test/
-│
-├── pubspec.yaml
-└── README.md
-```
+## 🏗️ Current Project Status
+
+The following milestones have already been achieved in the repository:
+1. **Flutter Frontend Scaffolded**: The core application (`software/`) is initialized using Flutter.
+2. **Architectural Layout**: A robust `lib/src` directory structure has been created to support large-scale enterprise development.
+3. **Role & Module Routing**: All UI screens and dashboard placeholders for Doctors, Radiologists, and Researchers have been mapped out.
+4. **AI Pipelines Configured**: 
+   - Dedicated analysis hubs for **Brain**, **Spine**, **Heart**, and **Chest** have been set up in the UI routing.
+   - Core directories for AI model assets (`assets/ai/models/`) are established for each modality.
+5. **Service Layer Setup**: Placeholder service integrations for Firebase, Supabase, and custom APIs have been generated.
+6. **State & Data Foundation**: Providers and data models mapping the clinical workflows are structured and ready for logic implementation.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-
 - Flutter 3.x or higher
 - Firebase CLI
 - Supabase CLI (optional)
@@ -165,14 +81,13 @@ lib/
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd NeuroVision-AI
+cd NeuroVision-AI/software
 
 # Install dependencies
 flutter pub get
 ```
 
 ### Configuration
-
 1. **Firebase Setup**
    - Follow the official Firebase documentation to add your Flutter app to a Firebase project
    - Run `flutterfire configure` to generate `lib/firebase_options.dart`
