@@ -269,19 +269,25 @@ class _ExplainabilityScreenState extends State<ExplainabilityScreen>
           children: [
             Row(
               children: [
-                const Icon(Icons.whatshot_rounded,
-                    color: NVColors.warning, size: 14),
+                const Icon(Icons.whatshot_rounded, color: NVColors.warning, size: 14),
                 const SizedBox(width: 6),
-                const Text('Grad-CAM Heatmap (Live)',
-                    style: TextStyle(
-                        color: NVColors.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600)),
-                const Spacer(),
-                Text(
-                  result.modelUsed as String,
-                  style: const TextStyle(
-                      color: NVColors.accent, fontSize: 11),
+                const Expanded(
+                  flex: 3,
+                  child: Text(
+                    'Grad-CAM Heatmap (Live)',
+                    style: TextStyle(color: NVColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    result.modelUsed as String,
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(color: NVColors.accent, fontSize: 11),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
