@@ -317,10 +317,22 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
   }
 
   Future<void> _saveNote() async {
+    if (_noteController.text.trim().isEmpty) return;
+    
     setState(() => _isSaving = true);
     await Future.delayed(const Duration(seconds: 1));
     if (mounted) {
-      setState(() => _isSaving = false);
+      final user = Provider.of<NVAuthProvider>(context, listen: false).nvUser;
+      setState(() {
+        _isSaving = false;
+        _notes.insert(0, _ClinicalNote(
+          _selectedCase,
+          user?.name ?? 'Doctor',
+          _noteController.text.trim(),
+          DateTime.now().toString().substring(0, 16),
+          NVColors.success,
+        ));
+      });
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Clinical note saved successfully'),
         backgroundColor: NVColors.success,
