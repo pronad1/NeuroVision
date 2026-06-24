@@ -12,6 +12,8 @@ import 'package:image_picker/image_picker.dart';
 import '../../../widgets/nv_glass_card.dart';
 import '../../../widgets/nv_stat_card.dart';
 import '../../../../services/ai_service.dart';
+import '../../../../services/medical_service.dart';
+import '../../../../models/medical_case.dart';
 
 class AIDiagnosisScreen extends StatefulWidget {
   const AIDiagnosisScreen({super.key});
@@ -28,38 +30,7 @@ class _AIDiagnosisScreenState extends State<AIDiagnosisScreen>
   bool _showSegmentation = false;
   bool _isUploading = false;
 
-  final List<_DiagnosisCase> _cases = [
-    _DiagnosisCase(
-      caseId: 'CASE-2026-047',
-      patientName: 'John Doe',
-      modality: 'Brain MRI',
-      prediction: 'Ischemic Stroke',
-      confidence: 94.2,
-      severity: 'High',
-      modelUsed: 'DERNet v2.1',
-      severityColor: NVColors.error,
-    ),
-    _DiagnosisCase(
-      caseId: 'CASE-2026-046',
-      patientName: 'Jane Smith',
-      modality: 'Spine MRI',
-      prediction: 'L4-L5 Herniation',
-      confidence: 88.7,
-      severity: 'Medium',
-      modelUsed: 'SpineNet-101',
-      severityColor: NVColors.warning,
-    ),
-    _DiagnosisCase(
-      caseId: 'CASE-2026-045',
-      patientName: 'Robert Brown',
-      modality: 'Chest X-Ray',
-      prediction: 'Pneumonia',
-      confidence: 91.3,
-      severity: 'High',
-      modelUsed: 'ChestX-Net',
-      severityColor: NVColors.error,
-    ),
-  ];
+  List<_DiagnosisCase> _cases = [];
 
   @override
   void initState() {
@@ -67,12 +38,46 @@ class _AIDiagnosisScreenState extends State<AIDiagnosisScreen>
     _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
     _fade = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
     _ctrl.forward();
+    _loadCases();
+  }
+
+  Future<void> _loadCases() async {
+    final cases = await MedicalService().getCases();
+    if (mounted) {
+      setState(() {
+        _cases = cases.map((c) {
+          Color sevColor = NVColors.success;
+          if (c.aiSeverity == 'Medium') sevColor = NVColors.warning;
+          if (c.aiSeverity == 'High' || c.aiSeverity == 'Critical') sevColor = NVColors.error;
+
+          final mockNames = ['Alice Johnson', 'Michael Lee', 'Sarah Connor', 'David Kim'];
+          final randomName = mockNames[c.caseId.hashCode.abs() % mockNames.length];
+
+          return _DiagnosisCase(
+            caseId: c.caseId,
+            patientName: randomName,
+            modality: c.modality,
+            prediction: c.aiPrediction ?? 'Unknown',
+            confidence: c.aiConfidence ?? 0.0,
+            severity: c.aiSeverity ?? 'Medium',
+            modelUsed: c.aiModelUsed ?? 'DERNet',
+            severityColor: sevColor,
+            heatmapBase64: c.heatmapUrl,
+            segmentationMaskBase64: c.segmentationMaskUrl,
+          );
+        }).toList();
+
+        if (_cases.isNotEmpty && !_cases.any((e) => e.caseId == _selectedCase)) {
+          _selectedCase = _cases.first.caseId;
+        }
+      });
+    }
   }
 
   @override
   void dispose() { _ctrl.dispose(); super.dispose(); }
 
-  _DiagnosisCase get _current => _cases.firstWhere((c) => c.caseId == _selectedCase, orElse: () => _cases.first);
+  _DiagnosisCase? get _current => _cases.where((c) => c.caseId == _selectedCase).firstOrNull ?? _cases.firstOrNull;
 
   Future<void> _uploadAndAnalyze() async {
     final picker = ImagePicker();
@@ -84,27 +89,27 @@ class _AIDiagnosisScreenState extends State<AIDiagnosisScreen>
     try {
       final aiResult = await AIService.analyzeBrainMRI(bytes, model: 'DERNet');
       final newCaseId = 'CASE-2026-0${_cases.length + 48}';
+
+      await MedicalService().createCase(
+        modality: aiResult.modality,
+        uploadedBy: 'doctor',
+        imageUrl: '', // mock
+        aiPrediction: aiResult.prediction,
+        aiConfidence: aiResult.confidence,
+        aiSeverity: aiResult.severity,
+        aiModelUsed: aiResult.modelUsed,
+        heatmapUrl: aiResult.heatmapBase64,
+        segmentationMaskUrl: aiResult.segmentationMaskBase64,
+      );
+
+      await _loadCases();
       
-      setState(() {
-        final mockNames = ['Alice Johnson', 'Michael Lee', 'Sarah Connor', 'David Kim'];
-        final randomName = mockNames[_cases.length % mockNames.length];
-        
-        _cases.insert(0, _DiagnosisCase(
-          caseId: newCaseId,
-          patientName: randomName,
-          modality: aiResult.modality,
-          prediction: aiResult.prediction,
-          confidence: aiResult.confidence,
-          severity: aiResult.severity,
-          modelUsed: aiResult.modelUsed,
-          severityColor: aiResult.severityColor,
-          originalImage: bytes,
-          heatmapBase64: aiResult.heatmapBase64,
-          segmentationMaskBase64: aiResult.segmentationMaskBase64,
-        ));
-        _selectedCase = newCaseId;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('AI Analysis Complete for $newCaseId'), backgroundColor: NVColors.success));
+      if (mounted) {
+        setState(() {
+          _selectedCase = newCaseId;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('AI Analysis Complete for $newCaseId'), backgroundColor: NVColors.success));
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Analysis failed: $e'), backgroundColor: NVColors.error));
     } finally {
@@ -150,6 +155,7 @@ class _AIDiagnosisScreenState extends State<AIDiagnosisScreen>
             _buildStats(),
             const SizedBox(height: 24),
             LayoutBuilder(builder: (context, constraints) {
+              if (_cases.isEmpty) return const Center(child: CircularProgressIndicator());
               final isWide = constraints.maxWidth > 650;
               if (isWide) {
                 return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -226,6 +232,8 @@ class _AIDiagnosisScreenState extends State<AIDiagnosisScreen>
 
   Widget _buildDetailPanel() {
     final c = _current;
+    if (c == null) return const SizedBox.shrink();
+
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       NVGlassCard(
         padding: const EdgeInsets.all(20),

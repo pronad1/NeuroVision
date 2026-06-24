@@ -1,4 +1,5 @@
 // lib/src/ui/screens/dashboard/doctor/comparative_analysis_screen.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -9,21 +10,17 @@ import '../../../widgets/nv_sidebar.dart';
 import '../../../widgets/nv_top_bar.dart';
 import '../../../widgets/nv_glass_card.dart';
 import '../../../widgets/nv_stat_card.dart';
+import '../../../../services/medical_service.dart';
+import '../../../../models/medical_case.dart';
 
 // ---------------------------------------------------------------------------
 // Data models
 // ---------------------------------------------------------------------------
 
 class _CompCase {
-  final String id;
-  final String label;
-  final String date;
-  final String prediction;
-  final String confidence;
-  final String severity;
-  final String model;
-  final String processingTime;
-
+  final String id, label, date, prediction, confidence, severity, model, processingTime;
+  final String? heatmapBase64;
+  
   const _CompCase({
     required this.id,
     required this.label,
@@ -33,68 +30,12 @@ class _CompCase {
     required this.severity,
     required this.model,
     required this.processingTime,
+    this.heatmapBase64,
   });
 }
 
 // ---------------------------------------------------------------------------
-// Mock data
-// ---------------------------------------------------------------------------
-
-const _caseAOptions = <_CompCase>[
-  _CompCase(
-    id: 'CASE-2026-047',
-    label: 'CASE-2026-047',
-    date: 'Jan 2026',
-    prediction: 'Ischemic',
-    confidence: '88.7%',
-    severity: 'High',
-    model: 'DERNet v2.1',
-    processingTime: '2.3 s',
-  ),
-  _CompCase(
-    id: 'CASE-2026-046',
-    label: 'CASE-2026-046',
-    date: 'Jan 2026',
-    prediction: 'Glioblastoma',
-    confidence: '91.2%',
-    severity: 'Critical',
-    model: 'SegResNet',
-    processingTime: '3.1 s',
-  ),
-  _CompCase(
-    id: 'CASE-2026-045',
-    label: 'CASE-2026-045',
-    date: 'Jan 2026',
-    prediction: 'Hemorrhage',
-    confidence: '85.4%',
-    severity: 'High',
-    model: 'DERNet v2.1',
-    processingTime: '2.8 s',
-  ),
-];
-
-const _caseBOptions = <_CompCase>[
-  _CompCase(
-    id: 'CASE-2026-047-FU',
-    label: 'CASE-2026-047 (Follow-up)',
-    date: 'May 2026',
-    prediction: 'Ischemic',
-    confidence: '94.2%',
-    severity: 'Medium',
-    model: 'DERNet v2.1',
-    processingTime: '2.1 s',
-  ),
-  _CompCase(
-    id: 'CASE-2026-046-FU',
-    label: 'CASE-2026-046 (Follow-up)',
-    date: 'May 2026',
-    prediction: 'Glioblastoma',
-    confidence: '93.8%',
-    severity: 'High',
-    model: 'SegResNet',
-    processingTime: '2.9 s',
-  ),
-];
+List<_CompCase> _allCases = [];
 
 // Lesion progression data: [Jan, Feb, Mar, Apr, May, Jun]
 const _lesionVolumes = <double>[4.2, 4.5, 4.1, 3.8, 3.4, 3.1];
@@ -118,17 +59,15 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
   late final AnimationController _ctrl;
   late final Animation<double> _fade;
 
-  String _selectedCaseAId = _caseAOptions.first.id;
-  String _selectedCaseBId = _caseBOptions.first.id;
+  String? _selectedCaseAId;
+  String? _selectedCaseBId;
   bool _comparisonActive = true;
 
-  _CompCase get _caseA =>
-      _caseAOptions.firstWhere((c) => c.id == _selectedCaseAId,
-          orElse: () => _caseAOptions.first);
+  _CompCase? get _caseA =>
+      _allCases.where((c) => c.id == _selectedCaseAId).firstOrNull ?? _allCases.firstOrNull;
 
-  _CompCase get _caseB =>
-      _caseBOptions.firstWhere((c) => c.id == _selectedCaseBId,
-          orElse: () => _caseBOptions.first);
+  _CompCase? get _caseB =>
+      _allCases.where((c) => c.id == _selectedCaseBId).firstOrNull ?? _allCases.firstOrNull;
 
   @override
   void initState() {
@@ -138,6 +77,32 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
     _fade = Tween<double>(begin: 0.0, end: 1.0)
         .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
     _ctrl.forward();
+    _loadCases();
+  }
+
+  Future<void> _loadCases() async {
+    final cases = await MedicalService().getCases();
+    if (mounted) {
+      setState(() {
+        _allCases = cases.map((c) {
+          return _CompCase(
+            id: c.caseId,
+            label: c.caseId,
+            date: 'Recently',
+            prediction: c.aiPrediction ?? 'Unknown',
+            confidence: '${(c.aiConfidence ?? 0.0).toStringAsFixed(1)}%',
+            severity: c.aiSeverity ?? 'Medium',
+            model: c.aiModelUsed ?? 'DERNet',
+            processingTime: '2.1 s',
+            heatmapBase64: c.heatmapUrl,
+          );
+        }).toList();
+        if (_allCases.isNotEmpty) {
+          _selectedCaseAId = _allCases.first.id;
+          _selectedCaseBId = _allCases.length > 1 ? _allCases[1].id : _allCases.first.id;
+        }
+      });
+    }
   }
 
   @override
@@ -170,7 +135,9 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
             roleColor: NVColors.doctorColor,
           ),
           Expanded(
-            child: SingleChildScrollView(
+            child: _allCases.isEmpty
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,9 +231,9 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
               return Row(
                 children: [
                   Expanded(child: _buildDropdown(
-                    label: 'Baseline Scan (Jan 2026)',
-                    value: _selectedCaseAId,
-                    items: _caseAOptions.map((c) => DropdownMenuItem(value: c.id, child: Text(c.label, overflow: TextOverflow.ellipsis, style: const TextStyle(color: NVColors.textPrimary, fontSize: 13)))).toList(),
+                    label: 'Baseline Scan',
+                    value: _selectedCaseAId ?? '',
+                    items: _allCases.map((c) => DropdownMenuItem(value: c.id, child: Text(c.label, overflow: TextOverflow.ellipsis, style: const TextStyle(color: NVColors.textPrimary, fontSize: 13)))).toList(),
                     onChanged: (v) { if (v != null) setState(() => _selectedCaseAId = v); },
                   )),
                   const SizedBox(width: 12),
@@ -281,9 +248,9 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
                   ),
                   const SizedBox(width: 12),
                   Expanded(child: _buildDropdown(
-                    label: 'Follow-up Scan (May 2026)',
-                    value: _selectedCaseBId,
-                    items: _caseBOptions.map((c) => DropdownMenuItem(value: c.id, child: Text(c.label, overflow: TextOverflow.ellipsis, style: const TextStyle(color: NVColors.textPrimary, fontSize: 13)))).toList(),
+                    label: 'Follow-up Scan',
+                    value: _selectedCaseBId ?? '',
+                    items: _allCases.map((c) => DropdownMenuItem(value: c.id, child: Text(c.label, overflow: TextOverflow.ellipsis, style: const TextStyle(color: NVColors.textPrimary, fontSize: 13)))).toList(),
                     onChanged: (v) { if (v != null) setState(() => _selectedCaseBId = v); },
                   )),
                   const SizedBox(width: 16),
@@ -306,16 +273,16 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildDropdown(
-                  label: 'Baseline Scan (Jan 2026)',
-                  value: _selectedCaseAId,
-                  items: _caseAOptions.map((c) => DropdownMenuItem(value: c.id, child: Text(c.label, overflow: TextOverflow.ellipsis, style: const TextStyle(color: NVColors.textPrimary, fontSize: 13)))).toList(),
+                  label: 'Baseline Scan',
+                  value: _selectedCaseAId ?? '',
+                  items: _allCases.map((c) => DropdownMenuItem(value: c.id, child: Text(c.label, overflow: TextOverflow.ellipsis, style: const TextStyle(color: NVColors.textPrimary, fontSize: 13)))).toList(),
                   onChanged: (v) { if (v != null) setState(() => _selectedCaseAId = v); },
                 ),
                 const SizedBox(height: 10),
                 _buildDropdown(
-                  label: 'Follow-up Scan (May 2026)',
-                  value: _selectedCaseBId,
-                  items: _caseBOptions.map((c) => DropdownMenuItem(value: c.id, child: Text(c.label, overflow: TextOverflow.ellipsis, style: const TextStyle(color: NVColors.textPrimary, fontSize: 13)))).toList(),
+                  label: 'Follow-up Scan',
+                  value: _selectedCaseBId ?? '',
+                  items: _allCases.map((c) => DropdownMenuItem(value: c.id, child: Text(c.label, overflow: TextOverflow.ellipsis, style: const TextStyle(color: NVColors.textPrimary, fontSize: 13)))).toList(),
                   onChanged: (v) { if (v != null) setState(() => _selectedCaseBId = v); },
                 ),
                 const SizedBox(height: 12),
@@ -381,16 +348,21 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
   // -------------------------------------------------------------------------
 
   Widget _buildDualScanViewer() {
+    final ca = _caseA;
+    final cb = _caseB;
+    if (ca == null || cb == null) return const SizedBox.shrink();
+
     return SizedBox(
       height: 280,
       child: Row(
         children: [
           // Scan A panel
           Expanded(child: _ScanPanel(
-            label: 'Scan A – Jan 2026',
-            caseLabel: _caseA.id,
-            prediction: _caseA.prediction,
-            confidence: _caseA.confidence,
+            label: 'Scan A',
+            caseLabel: ca.id,
+            prediction: ca.prediction,
+            confidence: ca.confidence,
+            heatmapBase64: ca.heatmapBase64,
             gradientColors: [
               const Color(0xFF0D1B2A),
               const Color(0xFF1A2A40),
@@ -407,10 +379,11 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
 
           // Scan B panel
           Expanded(child: _ScanPanel(
-            label: 'Scan B – May 2026',
-            caseLabel: _caseB.id,
-            prediction: _caseB.prediction,
-            confidence: _caseB.confidence,
+            label: 'Scan B',
+            caseLabel: cb.id,
+            prediction: cb.prediction,
+            confidence: cb.confidence,
+            heatmapBase64: cb.heatmapBase64,
             gradientColors: [
               const Color(0xFF0A1A10),
               const Color(0xFF152B1E),
@@ -668,6 +641,10 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
   // -------------------------------------------------------------------------
 
   Widget _buildDiagnosisTable() {
+    final ca = _caseA;
+    final cb = _caseB;
+    if (ca == null || cb == null) return const SizedBox.shrink();
+
     return NVGlassCard(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -704,7 +681,7 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
                     color: NVColors.doctorColor.withValues(alpha: 0.3)),
               ),
               child: Text(
-                '${_caseA.id}  →  ${_caseB.id}',
+                '${ca.id}  →  ${cb.id}',
                 style: const TextStyle(
                     color: NVColors.doctorColor,
                     fontSize: 11,
@@ -717,36 +694,36 @@ class _ComparativeAnalysisScreenState extends State<ComparativeAnalysisScreen>
           const Divider(color: NVColors.border, height: 1),
           _buildTableRow(
             parameter: 'Prediction',
-            baseline: _caseA.prediction,
-            followup: _caseB.prediction,
-            change: 'No change',
-            status: _TableStatus.stable,
+            baseline: ca.prediction,
+            followup: cb.prediction,
+            change: ca.prediction == cb.prediction ? 'No change' : 'Changed',
+            status: ca.prediction == cb.prediction ? _TableStatus.stable : _TableStatus.worsened,
           ),
           _buildTableRow(
             parameter: 'Confidence',
-            baseline: _caseA.confidence,
-            followup: _caseB.confidence,
-            change: '+5.5%',
+            baseline: ca.confidence,
+            followup: cb.confidence,
+            change: 'Dynamic',
             status: _TableStatus.improved,
           ),
           _buildTableRow(
             parameter: 'Severity',
-            baseline: _caseA.severity,
-            followup: _caseB.severity,
-            change: '↓ 1 level',
-            status: _TableStatus.improved,
+            baseline: ca.severity,
+            followup: cb.severity,
+            change: ca.severity == cb.severity ? 'Stable' : 'Variable',
+            status: ca.severity == cb.severity ? _TableStatus.stable : _TableStatus.improved,
           ),
           _buildTableRow(
             parameter: 'Model',
-            baseline: _caseA.model,
-            followup: _caseB.model,
+            baseline: ca.model,
+            followup: cb.model,
             change: 'Same',
             status: _TableStatus.stable,
           ),
           _buildTableRow(
             parameter: 'Processing Time',
-            baseline: _caseA.processingTime,
-            followup: _caseB.processingTime,
+            baseline: ca.processingTime,
+            followup: cb.processingTime,
             change: '−0.2 s',
             status: _TableStatus.improved,
             isLast: true,
@@ -881,6 +858,7 @@ class _ScanPanel extends StatelessWidget {
   final Color heatmapColor;
   final double heatmapAlpha;
   final String role;
+  final String? heatmapBase64;
 
   const _ScanPanel({
     required this.label,
@@ -892,6 +870,7 @@ class _ScanPanel extends StatelessWidget {
     required this.heatmapColor,
     required this.heatmapAlpha,
     required this.role,
+    this.heatmapBase64,
   });
 
   @override
@@ -904,32 +883,36 @@ class _ScanPanel extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Simulated MRI gradient background
-            Container(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: gradientCenter,
-                  radius: 0.75,
-                  colors: gradientColors,
+            if (heatmapBase64 != null)
+              Image.memory(base64Decode(heatmapBase64!), fit: BoxFit.contain, width: double.infinity, height: double.infinity)
+            else ...[
+              // Simulated MRI gradient background
+              Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: gradientCenter,
+                    radius: 0.75,
+                    colors: gradientColors,
+                  ),
                 ),
               ),
-            ),
-            // Brain outline painter
-            CustomPaint(painter: _BrainOutlinePainter(role: role)),
-            // Heatmap overlay
-            Container(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: gradientCenter,
-                  radius: 0.32,
-                  colors: [
-                    heatmapColor.withValues(alpha: heatmapAlpha),
-                    heatmapColor.withValues(alpha: heatmapAlpha * 0.5),
-                    Colors.transparent,
-                  ],
+              // Brain outline painter
+              CustomPaint(painter: _BrainOutlinePainter(role: role)),
+              // Heatmap overlay
+              Container(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: gradientCenter,
+                    radius: 0.32,
+                    colors: [
+                      heatmapColor.withValues(alpha: heatmapAlpha),
+                      heatmapColor.withValues(alpha: heatmapAlpha * 0.5),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
               ),
-            ),
+            ],
             // Top label
             Positioned(
               top: 12,

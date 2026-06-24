@@ -1,4 +1,5 @@
 // lib/src/ui/screens/dashboard/doctor/heatmaps_screen.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -9,36 +10,25 @@ import '../../../widgets/nv_sidebar.dart';
 import '../../../widgets/nv_top_bar.dart';
 import '../../../widgets/nv_glass_card.dart';
 import '../../../widgets/nv_stat_card.dart';
-
+import '../../../../services/medical_service.dart';
+import '../../../../models/medical_case.dart';
 // ---------------------------------------------------------------------------
 // Data model
 // ---------------------------------------------------------------------------
-class _HeatmapCase {
-  final String caseId;
-  final String modality;
-  final String prediction;
+class _HeatmapItemData {
+  final String id, modality, prediction;
   final double confidence;
   final Color severityColor;
+  final String? heatmapBase64;
+  final String? segmentationMaskBase64;
 
-  const _HeatmapCase(
-    this.caseId,
-    this.modality,
-    this.prediction,
-    this.confidence,
-    this.severityColor,
-  );
+  const _HeatmapItemData(this.id, this.modality, this.prediction, this.confidence, this.severityColor, {this.heatmapBase64, this.segmentationMaskBase64});
 }
 
 // ---------------------------------------------------------------------------
 // Mock dataset
 // ---------------------------------------------------------------------------
-const List<_HeatmapCase> _mockCases = [
-  _HeatmapCase('CASE-2026-047', 'Brain MRI', 'Glioblastoma', 94.2, NVColors.error),
-  _HeatmapCase('CASE-2026-046', 'Spine MRI', 'Herniated Disc', 88.7, NVColors.warning),
-  _HeatmapCase('CASE-2026-045', 'Brain MRI', 'Meningioma', 96.1, NVColors.error),
-  _HeatmapCase('CASE-2026-044', 'CT Scan', 'Hemorrhage', 91.3, NVColors.warning),
-  _HeatmapCase('CASE-2026-043', 'Chest X-Ray', 'Normal', 87.5, NVColors.success),
-];
+List<_HeatmapItemData> _mockCases = [];
 
 const List<String> _layers = ['Conv1', 'Conv3', 'Conv5', 'FC'];
 
@@ -78,7 +68,7 @@ class _HeatmapsScreenState extends State<HeatmapsScreen>
   bool _showHeatmap = true;
   bool _showContours = true;
 
-  _HeatmapCase get _activeCase => _mockCases[_selectedCaseIndex];
+  _HeatmapItemData? get _activeCase => _mockCases.isNotEmpty && _selectedCaseIndex < _mockCases.length ? _mockCases[_selectedCaseIndex] : null;
 
   @override
   void initState() {
@@ -91,6 +81,31 @@ class _HeatmapsScreenState extends State<HeatmapsScreen>
       CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
     );
     _ctrl.forward();
+    _loadCases();
+  }
+
+  Future<void> _loadCases() async {
+    final medService = MedicalService();
+    final cases = await medService.getCases();
+    if (mounted) {
+      setState(() {
+        _mockCases = cases.map((c) {
+          Color sevColor = NVColors.success;
+          if (c.aiSeverity == 'Medium') sevColor = NVColors.warning;
+          if (c.aiSeverity == 'High' || c.aiSeverity == 'Critical') sevColor = NVColors.error;
+          return _HeatmapItemData(
+            c.caseId,
+            c.modality,
+            c.aiPrediction ?? 'Unknown',
+            c.aiConfidence ?? 0.0,
+            sevColor,
+            heatmapBase64: c.heatmapUrl,
+            segmentationMaskBase64: c.segmentationMaskUrl,
+          );
+        }).toList();
+        _selectedCaseIndex = 0;
+      });
+    }
   }
 
   @override
@@ -128,7 +143,10 @@ class _HeatmapsScreenState extends State<HeatmapsScreen>
                 children: [
                   _buildStats(),
                   const SizedBox(height: 24),
-                  _buildMainLayout(),
+                  if (_mockCases.isEmpty)
+                    const Center(child: CircularProgressIndicator())
+                  else
+                    _buildMainLayout(),
                 ],
               ),
             ),
@@ -337,7 +355,7 @@ class _HeatmapsScreenState extends State<HeatmapsScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    c.caseId,
+                    c.id,
                     style: TextStyle(
                       color: isSelected
                           ? NVColors.doctorColor
@@ -383,6 +401,7 @@ class _HeatmapsScreenState extends State<HeatmapsScreen>
   // ── center: grad-cam viewer ───────────────────────────────────────────────
   Widget _buildGradCamViewer() {
     final c = _activeCase;
+    if (c == null) return const SizedBox.shrink();
     return NVGlassCard(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -482,8 +501,10 @@ class _HeatmapsScreenState extends State<HeatmapsScreen>
                     size: Size.infinite,
                   ),
 
-                  // Heatmap overlay
-                  if (_showHeatmap)
+                  // Heatmap overlay or placeholder
+                  if (c.heatmapBase64 != null)
+                    Image.memory(base64Decode(c.heatmapBase64!), fit: BoxFit.contain, width: double.infinity, height: double.infinity)
+                  else if (_showHeatmap)
                     Container(
                       decoration: BoxDecoration(
                         gradient: RadialGradient(
@@ -747,6 +768,7 @@ class _HeatmapsScreenState extends State<HeatmapsScreen>
   // ── right: activation details ──────────────────────────────────────────────
   Widget _buildActivationDetails() {
     final c = _activeCase;
+    if (c == null) return const SizedBox.shrink();
     return NVGlassCard(
       padding: const EdgeInsets.all(16),
       child: Column(

@@ -236,30 +236,70 @@ class _MedicalCasesScreenState extends State<MedicalCasesScreen> {
                 ),
               ],
               const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.spaceBetween,
                 children: [
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      Navigator.pop(ctx);
-                      await _medService.updateCaseStatus(c.id, 'invalidated');
-                      _refreshFuture();
-                    },
-                    icon: const Icon(Icons.cancel_rounded, size: 16),
-                    label: const Text('Mark Invalid'),
-                    style: OutlinedButton.styleFrom(foregroundColor: NVColors.error, side: const BorderSide(color: NVColors.error)),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          Navigator.pushNamed(context, '/dashboard/doctor/ai-diagnosis');
+                        },
+                        icon: const Icon(Icons.analytics_rounded, size: 14),
+                        label: const Text('Detailed View', style: TextStyle(fontSize: 12)),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: NVColors.primary,
+                          side: const BorderSide(color: NVColors.primary),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                        ),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          Navigator.pushNamed(context, '/dashboard/doctor/heatmaps');
+                        },
+                        icon: const Icon(Icons.visibility_rounded, size: 14),
+                        label: const Text('Explainability', style: TextStyle(fontSize: 12)),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: NVColors.accent,
+                          side: BorderSide(color: NVColors.accent.withValues(alpha: 0.5)),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      Navigator.pop(ctx);
-                      await _medService.doctorApprove(c.id, 'Validated from dialog');
-                      await _medService.updateCaseStatus(c.id, 'validated');
-                      _refreshFuture();
-                    },
-                    icon: const Icon(Icons.check_circle_rounded, size: 16),
-                    label: const Text('Mark Valid'),
-                    style: ElevatedButton.styleFrom(backgroundColor: NVColors.success, foregroundColor: Colors.black),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          Navigator.pop(ctx);
+                          await _medService.updateCaseStatus(c.id, 'invalidated');
+                          _refreshFuture();
+                        },
+                        icon: const Icon(Icons.cancel_rounded, size: 14),
+                        label: const Text('Mark Invalid', style: TextStyle(fontSize: 12)),
+                        style: OutlinedButton.styleFrom(foregroundColor: NVColors.error, side: const BorderSide(color: NVColors.error)),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          Navigator.pop(ctx);
+                          await _medService.radiologistValidate(c.id);
+                          await _medService.doctorApprove(c.id, 'Validated from dialog');
+                          await _medService.updateCaseStatus(c.id, 'validated');
+                          _refreshFuture();
+                        },
+                        icon: const Icon(Icons.check_circle_rounded, size: 14),
+                        label: const Text('Mark Valid', style: TextStyle(fontSize: 12)),
+                        style: ElevatedButton.styleFrom(backgroundColor: NVColors.success, foregroundColor: Colors.black),
+                      ),
+                    ],
                   ),
                 ],
               ),

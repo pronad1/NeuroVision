@@ -11,7 +11,8 @@ import '../../../widgets/nv_sidebar.dart';
 import '../../../widgets/nv_glass_card.dart';
 import '../../../widgets/nv_top_bar.dart';
 import '../../../../utils/download_helper.dart';
-
+import '../../../../services/medical_service.dart';
+import '../../../../models/medical_case.dart';
 // ─── Mock data models ────────────────────────────────────────────────────────
 
 class _ReportSection {
@@ -43,7 +44,7 @@ class _AIReportScreenState extends State<AIReportScreen>
   late Animation<double> _fadeAnim;
 
   // Form state
-  String _selectedCase = 'CASE-2026-047';
+  String _selectedCase = '';
   String _selectedModality = 'Brain MRI';
   String _selectedModel = 'DERNet Ensemble';
   String _selectedSeverity = 'Medium';
@@ -54,18 +55,7 @@ class _AIReportScreenState extends State<AIReportScreen>
   _MockReport? _report;
   int _visibleSections = 0;
 
-  static const _cases = [
-    'CASE-2026-047', 'CASE-2026-046', 'CASE-2026-045',
-    'CASE-2026-044', 'CASE-2026-043',
-  ];
-
-  static const _caseDetails = {
-    'CASE-2026-047': ('Ischemic Stroke Lesion Detected', 0.942, 3.7, 'Left frontal lobe'),
-    'CASE-2026-046': ('L4-L5 Disc Herniation', 0.887, 1.2, 'L4-L5 intervertebral space'),
-    'CASE-2026-045': ('Glioblastoma Multiforme', 0.961, 8.4, 'Right temporal lobe'),
-    'CASE-2026-044': ('Intracranial Hemorrhage', 0.913, 5.1, 'Left basal ganglia'),
-    'CASE-2026-043': ('Bilateral Pneumonia', 0.875, 12.3, 'Bilateral lower lobes'),
-  };
+  List<MedicalCase> _cases = [];
 
   @override
   void initState() {
@@ -78,6 +68,34 @@ class _AIReportScreenState extends State<AIReportScreen>
       CurvedAnimation(parent: _animController, curve: Curves.easeOut),
     );
     _animController.forward();
+    _loadCases();
+  }
+
+  Future<void> _loadCases() async {
+    final medService = MedicalService();
+    final cases = await medService.getCases();
+    if (mounted) {
+      setState(() {
+        final uniqueCases = <String, MedicalCase>{};
+        for (var c in cases) {
+          uniqueCases[c.caseId] = c;
+        }
+        _cases = uniqueCases.values.toList();
+        if (_cases.isNotEmpty) {
+          if (!_cases.any((e) => e.caseId == _selectedCase)) {
+             _selectedCase = _cases.first.caseId;
+          }
+          _updateSelectedCaseFields();
+        }
+      });
+    }
+  }
+
+  void _updateSelectedCaseFields() {
+    final c = _cases.firstWhere((e) => e.caseId == _selectedCase, orElse: () => _cases.first);
+    _selectedModality = c.modality;
+    _selectedModel = c.aiModelUsed ?? 'DERNet Ensemble';
+    _selectedSeverity = c.aiSeverity ?? 'Medium';
   }
 
   @override
@@ -96,7 +114,7 @@ class _AIReportScreenState extends State<AIReportScreen>
     // Simulate LLM API call latency
     await Future.delayed(const Duration(milliseconds: 2800));
 
-    final details = _caseDetails[_selectedCase]!;
+    final details = _cases.firstWhere((c) => c.caseId == _selectedCase, orElse: () => _cases.first);
     final report = _buildMockReport(details);
 
     setState(() {
@@ -112,9 +130,11 @@ class _AIReportScreenState extends State<AIReportScreen>
     }
   }
 
-  _MockReport _buildMockReport(
-      (String, double, double, String) details) {
-    final (prediction, confidence, coverage, region) = details;
+  _MockReport _buildMockReport(MedicalCase c) {
+    final prediction = c.aiPrediction ?? 'Unknown Pathology';
+    final confidence = (c.aiConfidence ?? 90.0) / 100.0;
+    final coverage = 4.2;
+    final region = 'Anatomical region of interest';
     final conf = (confidence * 100).toStringAsFixed(1);
     final cov = coverage.toStringAsFixed(2);
     final urgencyMap = {
@@ -309,22 +329,30 @@ class _AIReportScreenState extends State<AIReportScreen>
             Text('Report Configuration', style: TextStyle(color: NVColors.textPrimary, fontWeight: FontWeight.w600, fontSize: 13)),
           ]),
           const SizedBox(height: 20),
-          _buildDropdownField('Case ID', _selectedCase, _cases, (v) => setState(() => _selectedCase = v!)),
+          if (_cases.isNotEmpty)
+            _buildDropdownField('Case ID', _selectedCase, _cases.map((e) => e.caseId).toList(), (v) {
+              setState(() {
+                _selectedCase = v!;
+                _updateSelectedCaseFields();
+              });
+            })
+          else
+            const Text('No cases available', style: TextStyle(color: NVColors.textMuted)),
           const SizedBox(height: 14),
           _buildDropdownField('Modality', _selectedModality,
-              ['Brain MRI', 'Spine MRI', 'Chest X-Ray', 'CT Scan'],
+              {_selectedModality, 'Brain MRI', 'Spine MRI', 'Chest X-Ray', 'CT Scan'}.toList(),
               (v) => setState(() => _selectedModality = v!)),
           const SizedBox(height: 14),
           _buildDropdownField('AI Model Pipeline', _selectedModel,
-              ['DERNet Ensemble', 'SegResNet', 'AttentionUNet', 'EfficientNetV2'],
+              {_selectedModel, 'DERNet Ensemble', 'SegResNet', 'AttentionUNet', 'EfficientNetV2'}.toList(),
               (v) => setState(() => _selectedModel = v!)),
           const SizedBox(height: 14),
           _buildDropdownField('Severity', _selectedSeverity,
-              ['None', 'Low', 'Medium', 'High'],
+              {_selectedSeverity, 'None', 'Low', 'Medium', 'High'}.toList(),
               (v) => setState(() => _selectedSeverity = v!)),
           const SizedBox(height: 24),
           // Case details preview
-          if (_caseDetails.containsKey(_selectedCase)) ...[
+          if (_cases.any((e) => e.caseId == _selectedCase)) ...[
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -337,15 +365,15 @@ class _AIReportScreenState extends State<AIReportScreen>
                 children: [
                   const Text('AI Findings Preview', style: TextStyle(color: NVColors.textMuted, fontSize: 10, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 8),
-                  Text(_caseDetails[_selectedCase]!.$1,
+                  Text(_cases.firstWhere((e) => e.caseId == _selectedCase).aiPrediction ?? 'Unknown',
                       style: const TextStyle(color: NVColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 4),
-                  Text('Confidence: ${(_caseDetails[_selectedCase]!.$2 * 100).toStringAsFixed(1)}%',
+                  Text('Confidence: ${_cases.firstWhere((e) => e.caseId == _selectedCase).aiConfidence?.toStringAsFixed(1) ?? "N/A"}%',
                       style: const TextStyle(color: NVColors.doctorColor, fontSize: 11)),
-                  Text('Coverage: ${_caseDetails[_selectedCase]!.$3.toStringAsFixed(1)}%',
-                      style: const TextStyle(color: NVColors.textMuted, fontSize: 11)),
-                  Text('Region: ${_caseDetails[_selectedCase]!.$4}',
-                      style: const TextStyle(color: NVColors.textMuted, fontSize: 11)),
+                  const Text('Coverage: 4.2%',
+                      style: TextStyle(color: NVColors.textMuted, fontSize: 11)),
+                  const Text('Region: Localized',
+                      style: TextStyle(color: NVColors.textMuted, fontSize: 11)),
                 ],
               ),
             ),
