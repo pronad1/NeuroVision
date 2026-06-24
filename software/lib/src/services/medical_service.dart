@@ -1,4 +1,6 @@
 // lib/src/services/medical_service.dart
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/medical_case.dart';
 import '../config/constants.dart';
 
@@ -56,15 +58,39 @@ class MedicalService {
     ),
   ];
 
-  Stream<List<MedicalCase>> casesStream({String? uploadedBy, String? status}) {
+  static bool _initialized = false;
+
+  Future<void> _loadFromPrefs() async {
+    if (_initialized) return;
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getString('medical_cases');
+    if (data != null) {
+      final List<dynamic> decoded = jsonDecode(data);
+      _mockCases.clear();
+      for (var d in decoded) {
+        _mockCases.add(MedicalCase.fromJson(d));
+      }
+    }
+    _initialized = true;
+  }
+
+  Future<void> _saveToPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = _mockCases.map((e) => e.toJson()).toList();
+    await prefs.setString('medical_cases', jsonEncode(data));
+  }
+
+  Stream<List<MedicalCase>> casesStream({String? uploadedBy, String? status}) async* {
+    await _loadFromPrefs();
     List<MedicalCase> filtered = List.from(_mockCases);
     if (status != null && status != 'all') {
       filtered = filtered.where((c) => c.status == status).toList();
     }
-    return Stream.fromFuture(Future.microtask(() => filtered));
+    yield filtered;
   }
 
   Future<List<MedicalCase>> getCases({String? uploadedBy, String? status}) async {
+    await _loadFromPrefs();
     List<MedicalCase> filtered = List.from(_mockCases);
     if (status != null && status != 'all') {
       filtered = filtered.where((c) => c.status == status).toList();
@@ -74,6 +100,7 @@ class MedicalService {
 
   /// Get single case by ID
   Future<MedicalCase?> getCase(String caseId) async {
+    await _loadFromPrefs();
     try {
       return _mockCases.firstWhere((c) => c.id == caseId);
     } catch (e) {
@@ -93,6 +120,7 @@ class MedicalService {
     String? heatmapUrl,
     String? segmentationMaskUrl,
   }) async {
+    await _loadFromPrefs();
     final year = DateTime.now().year;
     final count = _mockCases.length + 1;
     final caseId = 'CASE-$year-${count.toString().padLeft(3, '0')}';
@@ -116,11 +144,13 @@ class MedicalService {
       updatedAt: DateTime.now(),
     ));
 
+    await _saveToPrefs();
     return caseId;
   }
 
   /// Update case status
   Future<bool> updateCaseStatus(String docId, String newStatus) async {
+    await _loadFromPrefs();
     final index = _mockCases.indexWhere((c) => c.id == docId || c.caseId == docId);
     if (index == -1) return false;
     final oldCase = _mockCases[index];
@@ -145,11 +175,13 @@ class MedicalService {
       createdAt: oldCase.createdAt,
       updatedAt: DateTime.now(),
     );
+    await _saveToPrefs();
     return true;
   }
 
   /// Doctor validates/approves a case
   Future<bool> doctorApprove(String docId, String notes) async {
+    await _loadFromPrefs();
     final index = _mockCases.indexWhere((c) => c.id == docId || c.caseId == docId);
     if (index == -1) return false;
     final oldCase = _mockCases[index];
@@ -174,11 +206,13 @@ class MedicalService {
       createdAt: oldCase.createdAt,
       updatedAt: DateTime.now(),
     );
+    await _saveToPrefs();
     return true;
   }
 
   /// Radiologist validates annotation
   Future<bool> radiologistValidate(String docId) async {
+    await _loadFromPrefs();
     final index = _mockCases.indexWhere((c) => c.id == docId || c.caseId == docId);
     if (index == -1) return false;
     final oldCase = _mockCases[index];
@@ -203,6 +237,7 @@ class MedicalService {
       createdAt: oldCase.createdAt,
       updatedAt: DateTime.now(),
     );
+    await _saveToPrefs();
     return true;
   }
 

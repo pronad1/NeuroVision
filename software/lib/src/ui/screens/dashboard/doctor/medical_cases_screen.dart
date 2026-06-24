@@ -204,17 +204,24 @@ class _MedicalCasesScreenState extends State<MedicalCasesScreen> {
       builder: (ctx) => Dialog(
         backgroundColor: NVColors.bgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
-          width: 500,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: SingleChildScrollView(
+          child: Container(
+            width: 500,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Case Analysis: ${c.caseId}', style: const TextStyle(color: NVColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+                  Expanded(
+                    child: Text(
+                      'Case Analysis: ${c.caseId}',
+                      style: const TextStyle(color: NVColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
+                      softWrap: true,
+                    ),
+                  ),
                   IconButton(icon: const Icon(Icons.close, color: NVColors.textMuted), onPressed: () => Navigator.pop(ctx)),
                 ],
               ),
@@ -306,6 +313,7 @@ class _MedicalCasesScreenState extends State<MedicalCasesScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -93,6 +93,54 @@ class MedicalCase {
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }
+
+  factory MedicalCase.fromJson(Map<String, dynamic> data) {
+    return MedicalCase(
+      id: data['id'] ?? '',
+      caseId: data['caseId'] ?? '',
+      modality: data['modality'] ?? '',
+      uploadedBy: data['uploadedBy'] ?? '',
+      assignedRadiologistId: data['assignedRadiologistId'],
+      assignedDoctorId: data['assignedDoctorId'],
+      aiPrediction: data['aiPrediction'],
+      aiConfidence: (data['aiConfidence'] as num?)?.toDouble(),
+      aiSeverity: data['aiSeverity'],
+      aiModelUsed: data['aiModelUsed'],
+      segmentationMaskUrl: data['segmentationMaskUrl'],
+      heatmapUrl: data['heatmapUrl'],
+      imageUrl: data['imageUrl'],
+      status: data['status'] ?? 'pending',
+      clinicalNotes: data['clinicalNotes'],
+      radiologistValidated: (data['radiologistValidated'] as bool?) ?? false,
+      doctorApproved: (data['doctorApproved'] as bool?) ?? false,
+      createdAt: data['createdAt'] != null ? DateTime.parse(data['createdAt']) : null,
+      updatedAt: data['updatedAt'] != null ? DateTime.parse(data['updatedAt']) : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'caseId': caseId,
+      'modality': modality,
+      'uploadedBy': uploadedBy,
+      if (assignedRadiologistId != null) 'assignedRadiologistId': assignedRadiologistId,
+      if (assignedDoctorId != null) 'assignedDoctorId': assignedDoctorId,
+      if (aiPrediction != null) 'aiPrediction': aiPrediction,
+      if (aiConfidence != null) 'aiConfidence': aiConfidence,
+      if (aiSeverity != null) 'aiSeverity': aiSeverity,
+      if (aiModelUsed != null) 'aiModelUsed': aiModelUsed,
+      if (segmentationMaskUrl != null) 'segmentationMaskUrl': segmentationMaskUrl,
+      if (heatmapUrl != null) 'heatmapUrl': heatmapUrl,
+      if (imageUrl != null) 'imageUrl': imageUrl,
+      'status': status,
+      if (clinicalNotes != null) 'clinicalNotes': clinicalNotes,
+      'radiologistValidated': radiologistValidated,
+      'doctorApproved': doctorApproved,
+      if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
+      if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
+    };
+  }
 }
 
 class AIExperiment {

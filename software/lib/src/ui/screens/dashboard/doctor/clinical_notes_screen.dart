@@ -1,6 +1,8 @@
 // lib/src/ui/screens/dashboard/doctor/clinical_notes_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../../../../config/theme.dart';
 import '../../../../config/constants.dart';
 import '../../../../providers/auth_provider.dart';
@@ -30,15 +32,39 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
 
   List<MedicalCase> _cases = [];
 
-  final _notes = [
+  static final List<_ClinicalNote> _notes = [
     _ClinicalNote('CASE-2026-047', 'Dr. Ahmad', 'Patient presents with ischemic stroke in left MCA territory. AI confidence 94.2%. Recommend immediate intervention. NIHSS score 8. CT perfusion shows penumbra of approximately 85ml.', '2026-05-13 14:32', NVColors.error),
     _ClinicalNote('CASE-2026-045', 'Dr. Ahmad', 'High-grade glioma confirmed by AI segmentation. Tumor volume approximately 24.3cc. Multidisciplinary team consultation required. Biopsy recommended for histological grading.', '2026-05-12 09:15', NVColors.warning),
     _ClinicalNote('CASE-2026-043', 'Dr. Ahmad', 'Right lower lobe pneumonia confirmed. Consolidation pattern consistent with bacterial etiology. Recommend broad-spectrum antibiotics. Follow-up CXR in 48 hours.', '2026-05-11 16:44', NVColors.success),
   ];
 
+  static bool _notesLoaded = false;
+
+  Future<void> _loadNotes() async {
+    if (_notesLoaded) return;
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getString('clinical_notes');
+    if (data != null) {
+      final List<dynamic> decoded = jsonDecode(data);
+      _notes.clear();
+      for (var d in decoded) {
+        _notes.add(_ClinicalNote.fromJson(d));
+      }
+    }
+    _notesLoaded = true;
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _saveNotes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = _notes.map((e) => e.toJson()).toList();
+    await prefs.setString('clinical_notes', jsonEncode(data));
+  }
+
   @override
   void initState() {
     super.initState();
+    _loadNotes();
     _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
     _fade = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
     _ctrl.forward();
@@ -275,7 +301,7 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
           child: ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Container(width: 4, color: n.accentColor),
+              Container(width: 4, color: n.severityColor),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(12),
@@ -286,12 +312,12 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
                       Text(n.date.substring(5), style: const TextStyle(color: NVColors.textMuted, fontSize: 10)),
                     ]),
                     const SizedBox(height: 4),
-                    Text(n.author, style: const TextStyle(color: NVColors.textSecondary, fontSize: 11)),
+                    Text(n.doctorName, style: const TextStyle(color: NVColors.textSecondary, fontSize: 11)),
                     const SizedBox(height: 8),
-                    Text(n.content, style: const TextStyle(color: NVColors.textMuted, fontSize: 12, height: 1.4), maxLines: 3, overflow: TextOverflow.ellipsis),
+                    Text(n.note, style: const TextStyle(color: NVColors.textMuted, fontSize: 12, height: 1.4), maxLines: 3, overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 8),
                     Row(children: [
-                      GestureDetector(onTap: () => setState(() => _noteController.text = n.content), child: const Text('Edit', style: TextStyle(color: NVColors.doctorColor, fontSize: 11, fontWeight: FontWeight.w600))),
+                      GestureDetector(onTap: () => setState(() => _noteController.text = n.note), child: const Text('Edit', style: TextStyle(color: NVColors.doctorColor, fontSize: 11, fontWeight: FontWeight.w600))),
                       const SizedBox(width: 12),
                       const Text('Export', style: TextStyle(color: NVColors.secondary, fontSize: 11, fontWeight: FontWeight.w600)),
                     ]),
@@ -324,15 +350,16 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
     if (mounted) {
       final user = Provider.of<NVAuthProvider>(context, listen: false).nvUser;
       setState(() {
-        _isSaving = false;
         _notes.insert(0, _ClinicalNote(
           _selectedCase,
-          user?.name ?? 'Doctor',
-          _noteController.text.trim(),
+          user?.name ?? 'Dr. Unknown',
+          _noteController.text,
           DateTime.now().toString().substring(0, 16),
           NVColors.success,
         ));
       });
+      await _saveNotes();
+      setState(() => _isSaving = false);
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Clinical note saved successfully'),
         backgroundColor: NVColors.success,
@@ -344,9 +371,30 @@ class _ClinicalNotesScreenState extends State<ClinicalNotesScreen>
 }
 
 class _ClinicalNote {
-  final String caseId, author, content, date;
-  final Color accentColor;
-  _ClinicalNote(this.caseId, this.author, this.content, this.date, this.accentColor);
+  final String caseId, doctorName, note, date;
+  final Color severityColor;
+
+  _ClinicalNote(this.caseId, this.doctorName, this.note, this.date, this.severityColor);
+
+  factory _ClinicalNote.fromJson(Map<String, dynamic> json) {
+    return _ClinicalNote(
+      json['caseId'] as String,
+      json['doctorName'] as String,
+      json['note'] as String,
+      json['date'] as String,
+      Color(json['severityColor'] as int),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'caseId': caseId,
+      'doctorName': doctorName,
+      'note': note,
+      'date': date,
+      'severityColor': severityColor.value,
+    };
+  }
 }
 
 class _FieldBlock extends StatelessWidget {

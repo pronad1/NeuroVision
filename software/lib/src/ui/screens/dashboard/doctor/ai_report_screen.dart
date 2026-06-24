@@ -13,12 +13,17 @@ import '../../../widgets/nv_top_bar.dart';
 import '../../../../utils/download_helper.dart';
 import '../../../../services/medical_service.dart';
 import '../../../../models/medical_case.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 // ─── Mock data models ────────────────────────────────────────────────────────
 
 class _ReportSection {
   final String title;
   final String content;
   _ReportSection(this.title, this.content);
+
+  factory _ReportSection.fromJson(Map<String, dynamic> json) => _ReportSection(json['title'], json['content']);
+  Map<String, dynamic> toJson() => {'title': title, 'content': content};
 }
 
 class _MockReport {
@@ -27,6 +32,24 @@ class _MockReport {
   final Color urgencyColor;
   final List<_ReportSection> sections;
   _MockReport(this.reportId, this.urgency, this.urgencyColor, this.sections);
+
+  factory _MockReport.fromJson(Map<String, dynamic> json) {
+    return _MockReport(
+      json['reportId'],
+      json['urgency'],
+      Color(json['urgencyColor']),
+      (json['sections'] as List).map((s) => _ReportSection.fromJson(s)).toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'reportId': reportId,
+      'urgency': urgency,
+      'urgencyColor': urgencyColor.value,
+      'sections': sections.map((s) => s.toJson()).toList(),
+    };
+  }
 }
 
 // ─── Screen ──────────────────────────────────────────────────────────────────
@@ -51,15 +74,38 @@ class _AIReportScreenState extends State<AIReportScreen>
 
   // UI state
   bool _isGenerating = false;
-  bool _reportGenerated = false;
-  _MockReport? _report;
-  int _visibleSections = 0;
+  static bool _reportGenerated = false;
+  static _MockReport? _report;
+  static int _visibleSections = 0;
+
+  static bool _reportLoaded = false;
+
+  Future<void> _loadReport() async {
+    if (_reportLoaded) return;
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getString('ai_report');
+    if (data != null) {
+      _report = _MockReport.fromJson(jsonDecode(data));
+      _reportGenerated = true;
+      _visibleSections = _report!.sections.length;
+    }
+    _reportLoaded = true;
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _saveReport() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_report != null) {
+      await prefs.setString('ai_report', jsonEncode(_report!.toJson()));
+    }
+  }
 
   List<MedicalCase> _cases = [];
 
   @override
   void initState() {
     super.initState();
+    _loadReport();
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -123,10 +169,12 @@ class _AIReportScreenState extends State<AIReportScreen>
       _report = report;
     });
 
-    // Animate sections appearing one by one
-    for (int i = 1; i <= report.sections.length; i++) {
-      await Future.delayed(const Duration(milliseconds: 220));
-      if (mounted) setState(() => _visibleSections = i);
+    await _saveReport();
+
+    // Sequentially animate sections
+    for (int i = 0; i < report.sections.length; i++) {
+      await Future.delayed(const Duration(milliseconds: 600));
+      if (mounted) setState(() => _visibleSections++);
     }
   }
 

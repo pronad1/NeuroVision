@@ -9,6 +9,8 @@ import '../../../widgets/nv_top_bar.dart';
 import '../../../widgets/nv_glass_card.dart';
 import '../../../widgets/nv_stat_card.dart';
 import '../../../../utils/download_helper.dart';
+import '../../../../services/medical_service.dart';
+import '../../../../models/medical_case.dart';
 
 class SegmentationScreen extends StatefulWidget {
   const SegmentationScreen({super.key});
@@ -34,12 +36,29 @@ class _SegmentationScreenState extends State<SegmentationScreen>
     _SegRegion('Uncertainty Zone', '2.1 cc', '0.7%', NVColors.info, 0.43),
   ];
 
+  List<MedicalCase> _cases = [];
+  String _selectedCase = '';
+
   @override
   void initState() {
     super.initState();
+    _loadCases();
     _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
     _fade = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
     _ctrl.forward();
+  }
+
+  Future<void> _loadCases() async {
+    final medService = MedicalService();
+    final cases = await medService.getCases();
+    if (mounted) {
+      setState(() {
+        _cases = cases;
+        if (_cases.isNotEmpty) {
+          _selectedCase = _cases.first.caseId;
+        }
+      });
+    }
   }
 
   @override
@@ -61,6 +80,34 @@ class _SegmentationScreenState extends State<SegmentationScreen>
         Expanded(child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            if (_cases.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.only(bottom: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(color: NVColors.bgCard, borderRadius: BorderRadius.circular(12), border: Border.all(color: NVColors.border)),
+                child: Row(
+                  children: [
+                    const Icon(Icons.folder_shared_rounded, color: NVColors.doctorColor, size: 18),
+                    const SizedBox(width: 12),
+                    const Text('Select Case: ', style: TextStyle(color: NVColors.textSecondary, fontSize: 13, fontWeight: FontWeight.w500)),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedCase,
+                          isExpanded: true,
+                          dropdownColor: NVColors.bgDeep,
+                          style: const TextStyle(color: NVColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
+                          items: _cases.map((c) => DropdownMenuItem(value: c.caseId, child: Text('Anonymous Patient / ${c.caseId}'))).toList(),
+                          onChanged: (v) {
+                            if (v != null) setState(() => _selectedCase = v);
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             _buildStats(),
             const SizedBox(height: 24),
             LayoutBuilder(builder: (context, constraints) {
@@ -159,7 +206,7 @@ class _SegmentationScreenState extends State<SegmentationScreen>
               )),
               CustomPaint(painter: _BrainScanPainter(showMask: _showMask, showContour: _showContour, opacity: _opacity), size: Size.infinite),
               // Info overlays
-              Positioned(top: 10, left: 10, child: _ScanLabel(text: 'CASE-2026-047')),
+              Positioned(top: 10, left: 10, child: _ScanLabel(text: _selectedCase.isEmpty ? 'CASE-2026-047' : _selectedCase)),
               Positioned(top: 10, right: 10, child: _ScanLabel(text: 'SegResNet · Dice 0.892')),
               Positioned(bottom: 10, left: 10, child: _ScanLabel(text: 'Slice 42/86')),
               Positioned(bottom: 10, right: 10, child: Row(children: [
