@@ -111,3 +111,28 @@ flutter build apk --debug
 # Build for iOS
 flutter build ios
 ```
+
+```bash
+flutter build web
+
+node -v
+
+npm -v
+
+
+npm install -g firebase-tools
+
+firebase --version
+
+
+
+firebase login
+
+cd your_flutter_project
+
+firebase init hosting
+
+flutter build web
+
+firebase deploy
+```
