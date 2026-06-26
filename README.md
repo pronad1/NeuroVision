@@ -112,27 +112,27 @@ flutter build apk --debug
 flutter build ios
 ```
 
+### Deploy to Firebase Hosting
 ```bash
-flutter build web
-
+# Ensure Node and npm are installed
 node -v
-
 npm -v
 
-
+# Install Firebase CLI globally
 npm install -g firebase-tools
 
-firebase --version
-
-
-
+# Login to Firebase
 firebase login
 
-cd your_flutter_project
+# Navigate to the Flutter project directory
+cd software
 
+# Initialize Firebase Hosting
 firebase init hosting
 
+# Build the web app
 flutter build web
 
+# Deploy to Firebase Hosting
 firebase deploy
 ```
