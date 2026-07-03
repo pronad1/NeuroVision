@@ -6,6 +6,8 @@ An Enterprise Multimodal Explainable Medical Diagnosis and Lesion Localization E
 
 **NeuroVision AI** is a cutting-edge medical imaging platform designed to assist doctors, radiologists, and researchers in diagnosing neurological and cardiovascular conditions through advanced deep learning models. The platform integrates multiple AI pipelines for brain, spine, heart, and chest imaging, providing lesion detection, segmentation, explainable AI (Grad-CAM), and research monitoring in a secure, enterprise-grade environment.
 
+## [![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen)](https://reuse-hub-4b3f7.web.app/)
+
 ## ✨ Key Features
 
 ### Multimodal Imaging Analysis
