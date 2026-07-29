@@ -131,7 +131,7 @@ cd software
 
 # Initialize Firebase Hosting
 firebase init hosting
-
+```
 # Build the web app
 flutter build web
 
