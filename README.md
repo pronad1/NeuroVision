@@ -137,4 +137,3 @@ flutter build web
 
 # Deploy to Firebase Hosting
 firebase deploy
-```
